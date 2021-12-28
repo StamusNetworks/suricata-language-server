@@ -48,17 +48,12 @@ class suricata_file:
             result = test_rules.check_rule_buffer(fhandle.read())
         if result['status']:
             return diagnostics
-        i = 0
         for error in result['errors']:
             if 'line' in error:
                 diagnostics.append({ "range": { "start": {"line": error['line'], "character": 0}, "end": {"line": error['line'], "character": 10} }, "message": error['message'], "severity": 1 })
-            else:
-                diagnostics.append({ "range": { "start": {"line": i, "character": 0}, "end": {"line": i, "character": 10} }, "message": error['message'], "severity": 1 })
-            i += 1
         for warning in result['warnings']:
             if 'line' in warning:
-                diagnostics.append({ "range": { "start": {"line": warning['line'], "character": 0}, "end": {"line": warning['line'], "character": 10} }, "message": warning['message'], "severity": 1 })
-            i += 1
+                diagnostics.append({ "range": { "start": {"line": warning['line'], "character": 0}, "end": {"line": warning['line'], "character": 10} }, "message": warning['message'], "severity": 2 })
         return diagnostics
 
 
