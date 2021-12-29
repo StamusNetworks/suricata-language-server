@@ -271,6 +271,10 @@ config classification: command-and-control,Malware Command and Control Activity 
         cf.write("default-rule-path: " + tmpdir + "\n")
         cf.write("reference-config-file: " + tmpdir + "/reference.config\n")
         cf.write("classification-file: " + tmpdir + "/classification.config\n")
+        cf.write("""
+engine-analysis:
+  rules-fast-pattern: yes
+  rules: yes""")
 
         cf.close()
         related_files = related_files or {}
@@ -284,45 +288,88 @@ config classification: command-and-control,Malware Command and Control Activity 
         # start suricata in test mode
         suriprocess = subprocess.Popen(suri_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         (outdata, errdata) = suriprocess.communicate()
+        result = {'status': True, 'errors': "", 'warnings': [], 'info': [] }
+        # if not a success
+        if suriprocess.returncode != 0:
+            result['status'] = False
+            result['errors'] = errdata.decode('utf-8')
+        # runs rules analysis to have warnings
+        suri_cmd = [SURICATA_BINARY, '--engine-analysis', '-l', tmpdir, '-S', rule_file, '-c', config_file]
+        # start suricata in test mode
+        suriprocess = subprocess.Popen(suri_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        (outdata, errdata) = suriprocess.communicate()
+        engine_analysis = self.parse_engine_analysis(tmpdir)
+        result['analysis'] = engine_analysis
+        # FIXME gruick we need a sid to line mapping
+        i = 0
+        for signature in engine_analysis:
+            for warning in signature.get('warnings', []):
+                result['warnings'].append({'line': i, 'message': warning})
+            for info in signature.get('info', []):
+                result['info'].append({'line': i, 'message': info})
+            i += 1
         shutil.rmtree(tmpdir)
-        # if success ok
-        if suriprocess.returncode == 0:
-            return {'status': True, 'errors': ''}
-        # if not return error
-        return {'status': False, 'errors': errdata.decode('utf-8')}
+        return result
 
     def check_rule_buffer(self, rule_buffer, config_buffer=None, related_files=None, single=False):
         related_files = related_files or {}
         prov_result = self.rule_buffer(rule_buffer, config_buffer=config_buffer, related_files=related_files)
-        if prov_result['status'] and 'warnings' not in prov_result:
-            return prov_result
-        res = self.parse_suricata_error(prov_result['errors'], single=single)
-        prov_result['errors'] = res['errors']
-        prov_result['warnings'] = res['warnings']
-        i = 6  # support only 6 unknown variables per rule
-        prov_result['iter'] = 0
-        while len(res['warnings']) and i > 0:
-            modified = False
-            for warning in res['warnings']:
-                if warning['error_code'] == self.VARIABLE_ERROR:
-                    var = warning['message'].split("\"")[1]
-                    # transform rule_buffer to remove the faulty variable
-                    if not var.endswith('_PORTS') and not var.endswith('_PORT'):
-                        rule_buffer = rule_buffer.replace("!" + var, "192.0.2.0/24")
-                        rule_buffer = rule_buffer.replace(var, "192.0.2.0/24")
-                    else:
-                        rule_buffer = rule_buffer.replace("!" + var, "21")
-                        rule_buffer = rule_buffer.replace(var, "21")
-                    modified = True
-            if modified is False:
-                break
-            result = self.rule_buffer(rule_buffer, config_buffer=config_buffer, related_files=related_files)
-            res = self.parse_suricata_error(result['errors'], single=single)
+        if len(prov_result.get('errors', [])):
+            res = self.parse_suricata_error(prov_result['errors'], single=single)
             prov_result['errors'] = res['errors']
-            if len(res['warnings']):
-                prov_result['warnings'] = prov_result['warnings'] + res['warnings']
-            i = i - 1
-            prov_result['iter'] = prov_result['iter'] + 1
-        if len(prov_result['errors']) == 0:
-            prov_result['status'] = True
+        # FIXME can be useful to resolve variable
+        #i = 6  # support only 6 unknown variables per rule
+        #prov_result['iter'] = 0
+        #while len(res['warnings']) and i > 0:
+        #    modified = False
+        #    for warning in res['warnings']:
+        #        if warning['error_code'] == self.VARIABLE_ERROR:
+        #            var = warning['message'].split("\"")[1]
+        #            # transform rule_buffer to remove the faulty variable
+        #            if not var.endswith('_PORTS') and not var.endswith('_PORT'):
+        #                rule_buffer = rule_buffer.replace("!" + var, "192.0.2.0/24")
+        #                rule_buffer = rule_buffer.replace(var, "192.0.2.0/24")
+        #            else:
+        #                rule_buffer = rule_buffer.replace("!" + var, "21")
+        #                rule_buffer = rule_buffer.replace(var, "21")
+        #            modified = True
+        #    if modified is False:
+        #        break
+        #    result = self.rule_buffer(rule_buffer, config_buffer=config_buffer, related_files=related_files)
+        #    res = self.parse_suricata_error(result['errors'], single=single)
+        #    prov_result['errors'] = res['errors']
+        #    if len(res['warnings']):
+        #        prov_result['warnings'] = prov_result['warnings'] + res['warnings']
+        #    i = i - 1
+        #    prov_result['iter'] = prov_result['iter'] + 1
+        #if len(prov_result['errors']) == 0:
+        #    prov_result['status'] = True
         return prov_result
+
+    def parse_engine_analysis(self, log_dir):
+        analysis = []
+        with open(os.path.join(log_dir, 'rules_analysis.txt'), 'r', encoding='utf-8') as analysis_file:
+            in_sid_data = False
+            signature = {}
+            for line in analysis_file:
+                if line.startswith("=="):
+                    in_sid_data = True
+                    signature = {'sid': line.split(' ')[2]}
+                    continue
+                elif in_sid_data and len(line) == 1:
+                    in_sid_data = False
+                    analysis.append(signature)
+                    signature = {}
+                elif in_sid_data and not 'content' in signature:
+                    signature['content'] = line.strip()
+                    continue
+                elif in_sid_data and 'Warning: ' in line:
+                    warning = line.split('arning: ')[1]
+                    if not 'warnings' in signature:
+                        signature['warnings'] = []
+                    signature['warnings'].append(warning.strip())
+                elif in_sid_data and 'Fast Pattern' in line:
+                    if not 'info' in signature:
+                        signature['info'] = []
+                    signature['info'].append(line.strip())
+        return analysis
