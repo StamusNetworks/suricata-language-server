@@ -1,6 +1,5 @@
 import os
 import hashlib
-import re
 
 from suricatals.tests_rules import TestRules
 
@@ -9,6 +8,7 @@ class suricata_file:
         self.path = path
         self.contents_split = []
         self.contents_pp = []
+        self.content_line_map= {}
         self.nLines = 0
         self.ast = None
         self.hash = None
@@ -30,7 +30,7 @@ class suricata_file:
         """Read file from disk"""
         try:
             with open(self.path, 'r', encoding='utf-8', errors='replace') as fhandle:
-                contents = re.sub(r'\t', r' ', fhandle.read())
+                contents = fhandle.read()
                 self.hash = hashlib.md5(contents.encode('utf-8')).hexdigest()
                 self.contents_split = contents.splitlines()
             self.contents_pp = self.contents_split
@@ -53,12 +53,22 @@ class suricata_file:
             if 'line' in warning:
                 diagnostics.append({ "range": { "start": {"line": warning['line'], "character": 0}, "end": {"line": warning['line'], "character": 10} }, "message": warning['message'], "severity": 2 })
         for info in result.get('info', []):
+            line = None
             if 'line' in info:
-                diagnostics.append({ "range": { "start": {"line": info['line'], "character": 0}, "end": {"line": info['line'], "character": 10} }, "message": info['message'], "severity": 4 })
+                line = info['line']
+            elif 'content' in info:
+                line = self.content_line_map.get(info['content'])
+            if line:
+                diagnostics.append({ "range": { "start": {"line": line, "character": 0}, "end": {"line": line, "character": 10} }, "message": info['message'], "severity": 4 })
         return diagnostics
 
-
-
-def parse_file(file_obj, close_open_scopes, debug=False, pp_defs={}, include_dirs=[]):
-    """Build file AST by parsing file"""
-
+    def parse_file(self, debug=False):
+        """Build file Info by parsing file"""
+        i = 0
+        self.content_line_map= {}
+        for line in self.contents_split:
+            if line.startswith("#"):
+                i += 1
+                continue
+            self.content_line_map[line] = i
+            i += 1

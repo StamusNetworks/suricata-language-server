@@ -300,14 +300,11 @@ engine-analysis:
         (outdata, errdata) = suriprocess.communicate()
         engine_analysis = self.parse_engine_analysis(tmpdir)
         result['analysis'] = engine_analysis
-        # FIXME gruick we need a sid to line mapping
-        i = 0
         for signature in engine_analysis:
             for warning in signature.get('warnings', []):
-                result['warnings'].append({'line': i, 'message': warning})
+                result['warnings'].append({'message': warning, 'content': signature['content']})
             for info in signature.get('info', []):
-                result['info'].append({'line': i, 'message': info})
-            i += 1
+                result['info'].append({'message': info, 'content': signature['content']})
         shutil.rmtree(tmpdir)
         return result
 

@@ -4,7 +4,7 @@ import traceback
 import re
 
 from suricatals.jsonrpc import path_to_uri, path_from_uri
-from suricatals.parse_signatures import suricata_file, parse_file
+from suricatals.parse_signatures import suricata_file
 
 log = logging.getLogger(__name__)
 
@@ -18,11 +18,10 @@ def init_file(filepath, pp_defs, pp_suffixes, include_dirs):
         return None, err_str
     #
     try:
-        file_ast = parse_file(file_obj, True, pp_defs=pp_defs, include_dirs=include_dirs)
+        file_obj.parse_file()
     except:
         log.error("Error while parsing file %s", filepath, exc_info=True)
         return None, 'Error during parsing'
-    file_obj.ast = file_ast
     return file_obj, None
 
 
@@ -1170,17 +1169,10 @@ class LangServer:
                     return False, err_string  # Error during file read
                 if hash_old == file_obj.hash:
                     return False, None
-            ast_new = parse_file(file_obj, True, pp_defs=self.pp_defs, include_dirs=self.include_dirs)
+            file_obj.parse_file()
         except:
             log.error("Error while parsing file %s", filepath, exc_info=True)
             return False, 'Error during parsing'  # Error during parsing
-        # Remove old objects from tree
-        ast_old = file_obj.ast
-        if ast_old is not None:
-            for key in ast_old.global_dict:
-                self.obj_tree.pop(key, None)
-        # Add new file to workspace
-        file_obj.ast = ast_new
         if filepath not in self.workspace:
             self.workspace[filepath] = file_obj
         return True, None
