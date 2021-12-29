@@ -304,7 +304,12 @@ engine-analysis:
             for warning in signature.get('warnings', []):
                 result['warnings'].append({'message': warning, 'content': signature['content']})
             for info in signature.get('info', []):
-                result['info'].append({'message': info, 'content': signature['content']})
+                msg = {'message': info, 'content': signature['content']}
+                if "Fast Pattern \"" in info:
+                    pattern = info.split('"')[1]
+                    msg['start_char'] = signature['content'].index(pattern)
+                    msg['end_char'] = signature['content'].index(pattern) + len(pattern)
+                result['info'].append(msg)
         shutil.rmtree(tmpdir)
         return result
 
