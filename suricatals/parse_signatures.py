@@ -50,18 +50,25 @@ class suricata_file:
             if 'line' in error:
                 diagnostics.append({ "range": { "start": {"line": error['line'], "character": 0}, "end": {"line": error['line'], "character": 0} }, "message": error['message'], "severity": 1 })
         for warning in result.get('warnings', []):
+            line = None
             if 'line' in warning:
-                diagnostics.append({ "range": { "start": {"line": warning['line'], "character": 0}, "end": {"line": warning['line'], "character": 0} }, "message": warning['message'], "severity": 2 })
+                line = warning['line']
+            elif 'content' in warning:
+                line = self.content_line_map.get(warning['content'])
+            if line is None:
+                continue
+            diagnostics.append({ "range": { "start": {"line": line, "character": 0}, "end": {"line": line, "character": 0} }, "message": warning['message'], "severity": 2 })
         for info in result.get('info', []):
             line = None
             if 'line' in info:
                 line = info['line']
             elif 'content' in info:
                 line = self.content_line_map.get(info['content'])
+            if line is None:
+                continue
             start_char = info.get('start_char', 0)
             end_char = info.get('end_char', 0)
-            if line:
-                diagnostics.append({ "range": { "start": {"line": line, "character": start_char}, "end": {"line": line, "character": end_char} }, "message": info['message'], "severity": 4 })
+            diagnostics.append({ "range": { "start": {"line": line, "character": start_char}, "end": {"line": line, "character": end_char} }, "message": info['message'], "severity": 4 })
         return diagnostics
 
     def parse_file(self, debug=False):

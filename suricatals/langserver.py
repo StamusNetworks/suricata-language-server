@@ -91,7 +91,7 @@ class LangServer:
             "textDocument/didOpen": self.serve_onOpen,
             "textDocument/didSave": self.serve_onSave,
             "textDocument/didClose": self.serve_onClose,
-            "textDocument/didChange": self.serve_onChange,
+            "textDocument/didChange": noop,
             "textDocument/codeAction": self.serve_codeActions,
             "initialized": noop,
             "workspace/didChangeWatchedFiles": noop,
