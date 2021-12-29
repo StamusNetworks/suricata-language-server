@@ -43,32 +43,38 @@ class suricata_file:
     def check_file(self, obj_tree):
         diagnostics = []
         result = {}
+        lines_list = []
         with open(self.path, 'r', encoding='utf-8', errors='replace') as fhandle:
             test_rules = TestRules()
             result = test_rules.check_rule_buffer(fhandle.read())
         for error in result.get('errors', []):
             if 'line' in error:
+                if error['line'] in lines_list:
+                    continue
                 diagnostics.append({ "range": { "start": {"line": error['line'], "character": 0}, "end": {"line": error['line'], "character": 0} }, "message": error['message'], "severity": 1 })
+                lines_list.append(error['line'])
         for warning in result.get('warnings', []):
             line = None
             if 'line' in warning:
                 line = warning['line']
             elif 'content' in warning:
                 line = self.content_line_map.get(warning['content'])
-            if line is None:
+            if line is None or line in lines_list:
                 continue
             diagnostics.append({ "range": { "start": {"line": line, "character": 0}, "end": {"line": line, "character": 0} }, "message": warning['message'], "severity": 2 })
+            lines_list.append(line)
         for info in result.get('info', []):
             line = None
             if 'line' in info:
                 line = info['line']
             elif 'content' in info:
                 line = self.content_line_map.get(info['content'])
-            if line is None:
+            if line is None or line in lines_list:
                 continue
             start_char = info.get('start_char', 0)
             end_char = info.get('end_char', 0)
             diagnostics.append({ "range": { "start": {"line": line, "character": start_char}, "end": {"line": line, "character": end_char} }, "message": info['message'], "severity": 4 })
+            lines_list.append(line)
         return diagnostics
 
     def parse_file(self, debug=False):
