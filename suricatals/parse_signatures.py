@@ -3,7 +3,7 @@ import hashlib
 
 from suricatals.tests_rules import TestRules
 
-class suricata_file:
+class SuricataFile:
     def __init__(self, path=None, pp_suffixes=None):
         self.path = path
         self.contents_split = []
@@ -23,7 +23,7 @@ class suricata_file:
 
     def copy(self):
         """Copy content to new file object (does not copy objects)"""
-        copy_obj = suricata_file(self.path)
+        copy_obj = SuricataFile(self.path)
         return copy_obj
 
     def load_from_disk(self):

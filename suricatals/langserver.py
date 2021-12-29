@@ -4,7 +4,7 @@ import traceback
 import re
 
 from suricatals.jsonrpc import path_to_uri, path_from_uri
-from suricatals.parse_signatures import suricata_file
+from suricatals.parse_signatures import SuricataFile
 
 log = logging.getLogger(__name__)
 
@@ -12,7 +12,7 @@ SURICATA_RULES_EXT_REGEX = re.compile(r'^\.rules?$', re.I)
 
 def init_file(filepath, pp_defs, pp_suffixes, include_dirs):
     #
-    file_obj = suricata_file(filepath, pp_suffixes)
+    file_obj = SuricataFile(filepath, pp_suffixes)
     err_str = file_obj.load_from_disk()
     if err_str is not None:
         return None, err_str
@@ -1153,7 +1153,7 @@ class LangServer:
             file_obj = self.workspace.get(filepath)
             if read_file:
                 if file_obj is None:
-                    file_obj = suricata_file(filepath, self.pp_suffixes)
+                    file_obj = SuricataFile(filepath, self.pp_suffixes)
                     # Create empty file if not yet saved to disk
                     if not os.path.isfile(filepath):
                         if allow_empty:
