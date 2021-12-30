@@ -60,13 +60,17 @@ class SuricataFile:
                 lines_list.append(error['line'])
         for warning in result.get('warnings', []):
             line = None
+            range_start = 0
+            range_end = 1000
             if 'line' in warning:
                 line = warning['line']
             elif 'content' in warning:
                 line = self.content_line_map.get(warning['content'])
+                range_start = warning['content'].index('sid:')
+                range_end = range_start + len('sid:')
             if line is None or line in lines_list:
                 continue
-            diagnostics.append({ "range": { "start": {"line": line, "character": 0}, "end": {"line": line, "character": 0} }, "message": warning['message'], "severity": 2 })
+            diagnostics.append({ "range": { "start": {"line": line, "character": range_start}, "end": {"line": line, "character": range_end} }, "message": warning['message'], "severity": 2 })
             lines_list.append(line)
         for info in result.get('info', []):
             line = None
