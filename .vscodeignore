@@ -1,0 +1,10 @@
+**/*.ts
+**/tsconfig.json
+suricatals/**
+**/node_modules/**
+tests/**
+build/**
+dist/**
+.gitignore
+setup.py
+suricata_language_server.egg-info/**
