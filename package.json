@@ -4,7 +4,7 @@
     "description": "VSCode interface to the Suricata Language Server",
     "author": "Stamus Networks",
     "license": "MIT",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "publisher": "StamusNetworks",
     "repository": {
         "type": "git",
@@ -15,6 +15,8 @@
     },
     "keywords": [
         "suricata",
+        "ids",
+        "security",
         "intellisense",
         "autocompletion",
         "ide"
@@ -30,6 +32,20 @@
     ],
     "main": "./client/out/extension",
     "contributes": {
+        "languages": [
+            {
+                "id": "suricata",
+                "aliases": [
+                    "Suricata",
+                    "suricata"
+                ],
+                "extensions": [
+                    ".rules",
+                    ".suricata"
+                ],
+                "configuration": "suricata.configuration.json"
+            }
+        ],
         "configuration": {
             "type": "object",
             "title": "Suricata Signatures IntelliSense",
@@ -38,7 +54,7 @@
                     "scope": "resource",
                     "type": "string",
                     "default": "suricata-language-server",
-                    "description": "Path to the Suricata language server (suricata-language-server)."
+                    "description": "Path to the Suricata Language Server (suricata-language-server)."
                 },
                 "suricata-ls.suricataPath": {
                     "scope": "resource",
@@ -50,20 +66,25 @@
         }
     },
     "scripts": {
-		"vscode:prepublish": "npm run compile",
-		"compile": "tsc -b",
-		"watch": "tsc -b -w",
-		"lint": "eslint ./client/src --ext .ts,.tsx",
-		"postinstall": "cd client && npm install && cd ..",
-		"test": "sh ./scripts/e2e.sh"
-	},
+        "vscode:prepublish": "npm run -S esbuild-base -- --minify",
+        "esbuild-base": "rimraf out && esbuild ./client/src/extension.ts --bundle --outfile=client/out/extension.js --external:vscode --format=cjs --platform=node",
+        "build": "npm run -S esbuild-base -- --sourcemap",
+    "    watch": "npm run -S esbuild-base -- --sourcemap --watch",
+    "    fmt": "prettier --write \"src/**/*.ts\"&& npm run test -- --fix",
+    "    test": "eslint src --ext ts && tsc --noEmit",
+        "compile": "tsc -b",
+        "watch": "tsc -b -w",
+        "lint": "eslint ./client/src --ext .ts,.tsx",
+        "postinstall": "cd client && npm install && cd .."
+    },
     "devDependencies": {
         "@types/mocha": "^8.2.2",
-		"@types/node": "^12.12.0",
-		"@typescript-eslint/eslint-plugin": "^4.23.0",
-		"@typescript-eslint/parser": "^4.23.0",
-		"eslint": "^7.26.0",
-		"mocha": "^8.3.2",
-		"typescript": "^4.4.3"
+        "@types/node": "^12.12.0",
+        "@typescript-eslint/eslint-plugin": "^4.23.0",
+        "@typescript-eslint/parser": "^4.23.0",
+        "esbuild": "^0.14.9",
+        "eslint": "^7.26.0",
+        "mocha": "^8.3.2",
+        "typescript": "^4.4.3"
     }
 }

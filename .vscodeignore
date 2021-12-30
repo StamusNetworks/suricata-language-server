@@ -1,7 +1,7 @@
 **/*.ts
 **/tsconfig.json
 suricatals/**
-**/node_modules/**
+node_modules/**
 tests/**
 build/**
 dist/**
