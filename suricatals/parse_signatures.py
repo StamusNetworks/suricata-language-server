@@ -52,7 +52,11 @@ class SuricataFile:
             if 'line' in error:
                 if error['line'] in lines_list:
                     continue
-                diagnostics.append({ "range": { "start": {"line": error['line'], "character": 0}, "end": {"line": error['line'], "character": 0} }, "message": error['message'], "severity": 1 })
+                range_end = 1000
+                line_content = self.line_content_map.get(error['line'])
+                if line_content:
+                    range_end = len(line_content.rstrip())
+                diagnostics.append({ "range": { "start": {"line": error['line'], "character": 0}, "end": {"line": error['line'], "character": range_end} }, "message": error['message'], "severity": 1 })
                 lines_list.append(error['line'])
         for warning in result.get('warnings', []):
             line = None
@@ -82,9 +86,11 @@ class SuricataFile:
         """Build file Info by parsing file"""
         i = 0
         self.content_line_map= {}
+        self.line_content_map= {}
         for line in self.contents_split:
             if line.startswith("#"):
                 i += 1
                 continue
             self.content_line_map[line] = i
+            self.line_content_map[i] = line
             i += 1
