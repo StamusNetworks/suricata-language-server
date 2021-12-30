@@ -24,7 +24,7 @@ class SuricataFile:
 
     def copy(self):
         """Copy content to new file object (does not copy objects)"""
-        copy_obj = SuricataFile(self.path)
+        copy_obj = SuricataFile(self.path, suricata_binary=self.suricata_binary)
         return copy_obj
 
     def load_from_disk(self):
