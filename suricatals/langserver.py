@@ -50,7 +50,7 @@ class LangServer:
         self.nthreads = settings.get("nthreads", 4)
         self.notify_init = settings.get("notify_init", False)
         self.sync_type = settings.get("sync_type", 1)
-        self.suricata_binary = settings.get("suricata_binary", '/home/eric/builds/suricata/bin/suricata')
+        self.suricata_binary = settings.get("suricata_binary", 'suricata')
 
     def post_message(self, message, type=1):
         self.conn.send_notification("window/showMessage", {
