@@ -1,0 +1,69 @@
+{
+    "name": "suricata-ls",
+    "displayName": "Suricata Signatures IntelliSense",
+    "description": "VSCode interface to the Suricata language server",
+    "author": "Stamus Networks",
+    "license": "MIT",
+    "version": "0.0.1",
+    "publisher": "StamusNetworks",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/StamusNetworks/suricata-language-server"
+    },
+    "bugs": {
+        "url": "https://github.com/StamusNetworks/suricata-language-server/issues"
+    },
+    "keywords": [
+        "suricata",
+        "intellisense",
+        "autocompletion",
+        "ide"
+    ],
+    "categories": [
+        "Programming Languages"
+    ],
+    "engines": {
+        "vscode": "^1.43.0"
+    },
+    "activationEvents": [
+        "onLanguage:suricata"
+    ],
+    "main": "./client/out/extension",
+    "contributes": {
+        "configuration": {
+            "type": "object",
+            "title": "Suricata Signatures IntelliSense",
+            "properties": {
+                "suricata-ls.serverPath": {
+                    "scope": "resource",
+                    "type": "string",
+                    "default": "suricata-language-server",
+                    "description": "Path to the Suricata language server (suricata-language-server)."
+                },
+                "suricata-ls.suricataPath": {
+                    "scope": "resource",
+                    "type": "string",
+                    "default": "suricata",
+                    "description": "Path to the Suricata binary (suricata)."
+                }
+            }
+        }
+    },
+    "scripts": {
+		"vscode:prepublish": "npm run compile",
+		"compile": "tsc -b",
+		"watch": "tsc -b -w",
+		"lint": "eslint ./client/src ./server/src --ext .ts,.tsx",
+		"postinstall": "cd client && npm install && cd ..",
+		"test": "sh ./scripts/e2e.sh"
+	},
+    "devDependencies": {
+        "@types/mocha": "^8.2.2",
+		"@types/node": "^12.12.0",
+		"@typescript-eslint/eslint-plugin": "^4.23.0",
+		"@typescript-eslint/parser": "^4.23.0",
+		"eslint": "^7.26.0",
+		"mocha": "^8.3.2",
+		"typescript": "^4.4.3"
+    }
+}
