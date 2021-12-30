@@ -12,7 +12,7 @@ export function activate(context: ExtensionContext) {
 
   const conf = workspace.getConfiguration('suricata-ls', null);
   const serverPath = conf.get<string>('serverPath') || 'suricata-language-server';
-  const suricataPath = conf.get<string>('suricataPath') || '/home/eric/builds/suricata/bin/suricata';
+  const suricataPath = conf.get<string>('suricataPath') || 'suricata';
 
   let args_server = [];
   args_server.push(`--suricata-binary=${suricataPath}`)
