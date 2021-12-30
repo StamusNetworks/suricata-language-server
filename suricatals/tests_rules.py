@@ -26,7 +26,7 @@ import json
 import io
 import re
 
-SURICATA_BINARY = "/home/eric/builds/suricata/bin/suricata"
+import suricatals
 
 
 class TestRules():
@@ -156,6 +156,9 @@ config classification: coin-mining,Crypto Currency Mining Activity Detected,2
 config classification: command-and-control,Malware Command and Control Activity Detected,1
 """
 
+    def __init__(self, suricata_binary='suricata') -> None:
+        self.suricata_binary = suricata_binary
+
     def parse_suricata_error(self, error, single=False):
         ret = {
             'errors': [],
@@ -284,7 +287,7 @@ engine-analysis:
             rf.write(related_files[rfile])
             rf.close()
 
-        suri_cmd = [SURICATA_BINARY, '-T', '-l', tmpdir, '-S', rule_file, '-c', config_file]
+        suri_cmd = [self.suricata_binary, '-T', '-l', tmpdir, '-S', rule_file, '-c', config_file]
         # start suricata in test mode
         suriprocess = subprocess.Popen(suri_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         (outdata, errdata) = suriprocess.communicate()
@@ -294,7 +297,7 @@ engine-analysis:
             result['status'] = False
             result['errors'] = errdata.decode('utf-8')
         # runs rules analysis to have warnings
-        suri_cmd = [SURICATA_BINARY, '--engine-analysis', '-l', tmpdir, '-S', rule_file, '-c', config_file]
+        suri_cmd = [self.suricata_binary, '--engine-analysis', '-l', tmpdir, '-S', rule_file, '-c', config_file]
         # start suricata in test mode
         suriprocess = subprocess.Popen(suri_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         (outdata, errdata) = suriprocess.communicate()

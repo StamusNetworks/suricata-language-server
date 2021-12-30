@@ -10,9 +10,9 @@ log = logging.getLogger(__name__)
 
 SURICATA_RULES_EXT_REGEX = re.compile(r'^\.rules?$', re.I)
 
-def init_file(filepath, pp_defs, pp_suffixes, include_dirs):
+def init_file(filepath, suricata_binary, pp_defs, pp_suffixes, include_dirs):
     #
-    file_obj = SuricataFile(filepath, pp_suffixes)
+    file_obj = SuricataFile(filepath, pp_suffixes, suricata_binary=suricata_binary)
     err_str = file_obj.load_from_disk()
     if err_str is not None:
         return None, err_str
@@ -50,6 +50,7 @@ class LangServer:
         self.nthreads = settings.get("nthreads", 4)
         self.notify_init = settings.get("notify_init", False)
         self.sync_type = settings.get("sync_type", 1)
+        self.suricata_binary = settings.get("suricata_binary", '/home/eric/builds/suricata/bin/suricata')
 
     def post_message(self, message, type=1):
         self.conn.send_notification("window/showMessage", {
@@ -91,7 +92,7 @@ class LangServer:
             "textDocument/didOpen": self.serve_onOpen,
             "textDocument/didSave": self.serve_onSave,
             "textDocument/didClose": self.serve_onClose,
-            "textDocument/didChange": noop,
+            "textDocument/didChange": self.serve_onChange,
             "textDocument/codeAction": self.serve_codeActions,
             "initialized": noop,
             "workspace/didChangeWatchedFiles": noop,
@@ -1153,7 +1154,7 @@ class LangServer:
             file_obj = self.workspace.get(filepath)
             if read_file:
                 if file_obj is None:
-                    file_obj = SuricataFile(filepath, self.pp_suffixes)
+                    file_obj = SuricataFile(filepath, self.pp_suffixes, suricata_binary=self.suricata_binary)
                     # Create empty file if not yet saved to disk
                     if not os.path.isfile(filepath):
                         if allow_empty:
@@ -1200,7 +1201,7 @@ class LangServer:
         results = {}
         for filepath in file_list:
             results[filepath] = pool.apply_async(init_file, args=(
-                filepath, self.pp_defs, self.pp_suffixes, self.include_dirs
+                filepath, self.suricata_binary, self.pp_defs, self.pp_suffixes, self.include_dirs
             ))
         pool.close()
         pool.join()

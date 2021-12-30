@@ -22,7 +22,7 @@ def main():
         help="Print server version number and exit"
     )
     parser.add_argument(
-        '--suricata-binary', action="store_true",
+        '--suricata-binary', default="suricata",
         help="Path to Suricata binary"
     )
     parser.add_argument(
