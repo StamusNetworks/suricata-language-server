@@ -1,7 +1,7 @@
 {
     "name": "suricata-ls",
     "displayName": "Suricata Signatures IntelliSense",
-    "description": "VSCode interface to the Suricata language server",
+    "description": "VSCode interface to the Suricata Language Server",
     "author": "Stamus Networks",
     "license": "MIT",
     "version": "0.0.1",
@@ -53,7 +53,7 @@
 		"vscode:prepublish": "npm run compile",
 		"compile": "tsc -b",
 		"watch": "tsc -b -w",
-		"lint": "eslint ./client/src ./server/src --ext .ts,.tsx",
+		"lint": "eslint ./client/src --ext .ts,.tsx",
 		"postinstall": "cd client && npm install && cd ..",
 		"test": "sh ./scripts/e2e.sh"
 	},
