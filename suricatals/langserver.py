@@ -1110,14 +1110,6 @@ class LangServer:
             if err_str is not None:
                 self.post_message('Change request failed for file "{0}": {1}'.format(path, err_str))
                 return
-            # Update include statements linking to this file
-            for _, tmp_file in self.workspace.items():
-                tmp_file.ast.resolve_includes(self.workspace, path=path)
-            file_obj.ast.resolve_includes(self.workspace)
-            # Update inheritance (currently file only)
-            # tmp_file.ast.resolve_links(self.obj_tree, self.link_version)
-        elif file_obj.preproc:
-            file_obj.preprocess(pp_defs=self.pp_defs)
 
     def serve_onOpen(self, request):
         self.serve_onSave(request, did_open=True)
