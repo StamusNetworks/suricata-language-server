@@ -25,6 +25,9 @@ import os
 import json
 import io
 import re
+import logging
+
+log = logging.getLogger(__name__)
 
 import suricatals
 
@@ -241,15 +244,7 @@ config classification: command-and-control,Malware Command and Control Activity 
                     ret['errors'].append(s_err['engine'])
         return ret
 
-    def rule_buffer(self, rule_buffer, config_buffer=None, related_files=None, reference_config=None, classification_config=None):
-        # create temp directory
-        tmpdir = tempfile.mkdtemp()
-        # write the rule file in temp dir
-        rule_file = os.path.join(tmpdir, "file.rules")
-        rf = open(rule_file, 'w')
-        rf.write(rule_buffer)
-        rf.close()
-
+    def generate_config(self, tmpdir, config_buffer=None, related_files=None, reference_config=None, classification_config=None):
         if not reference_config:
             reference_config = self.REFERENCE_CONFIG
         reference_file = os.path.join(tmpdir, "reference.config")
@@ -286,6 +281,19 @@ engine-analysis:
             rf = open(related_file, 'w')
             rf.write(related_files[rfile])
             rf.close()
+
+        return config_file
+
+    def rule_buffer(self, rule_buffer, config_buffer=None, related_files=None, reference_config=None, classification_config=None):
+        # create temp directory
+        tmpdir = tempfile.mkdtemp()
+        # write the rule file in temp dir
+        rule_file = os.path.join(tmpdir, "file.rules")
+        rf = open(rule_file, 'w')
+        rf.write(rule_buffer)
+        rf.close()
+
+        config_file = self.generate_config(tmpdir, config_buffer=config_buffer, related_files=related_files, reference_config=reference_config, classification_config=classification_config)
 
         suri_cmd = [self.suricata_binary, '-T', '-l', tmpdir, '-S', rule_file, '-c', config_file]
         # start suricata in test mode
@@ -378,3 +386,32 @@ engine-analysis:
                         signature['info'] = []
                     signature['info'].append(line.strip())
         return analysis
+
+
+    def build_keywords_list(self):
+        tmpdir = tempfile.mkdtemp()
+        config_file = self.generate_config(tmpdir)
+        suri_cmd = [self.suricata_binary, '--list-keywords=csv', '-l', tmpdir, '-c', config_file]
+        # start suricata in test mode
+        suriprocess = subprocess.Popen(suri_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        (outdata, errdata) = suriprocess.communicate()
+        shutil.rmtree(tmpdir)
+        keywords = outdata.decode('utf-8').splitlines()
+        keywords.pop(0)
+        keywords_list = []
+        for keyword in keywords:
+            keyword_array = keyword.split(';')
+            try:
+                detail = 'No option'
+                if 'sticky' in keyword_array[3]:
+                    detail = 'Sticky Buffer'
+                elif keyword_array[3] == 'none':
+                    detail = 'No option'
+                else:
+                    detail = keyword_array[3]
+                keyword_item = {'label': keyword_array[0], 'kind': 14, 'detail': detail, 'documentation': keyword_array[1]}
+                keywords_list.append(keyword_item)
+            except:
+                pass
+        return keywords_list
+    

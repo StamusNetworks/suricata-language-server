@@ -5,6 +5,7 @@ import re
 
 from suricatals.jsonrpc import path_to_uri, path_from_uri
 from suricatals.parse_signatures import SuricataFile
+from suricatals.tests_rules import TestRules
 
 log = logging.getLogger(__name__)
 
@@ -51,6 +52,7 @@ class LangServer:
         self.notify_init = settings.get("notify_init", False)
         self.sync_type = settings.get("sync_type", 1)
         self.suricata_binary = settings.get("suricata_binary", 'suricata')
+        self.keywords_list = TestRules(suricata_binary=self.suricata_binary).build_keywords_list()
 
     def post_message(self, message, type=1):
         self.conn.send_notification("window/showMessage", {
@@ -330,278 +332,34 @@ class LangServer:
         return test_output
 
     def serve_autocomplete(self, request):
-        #
-        def map_types(type):
-            if type == 1:
-                return 9
-            elif type == 2:
-                return 3
-            elif type == 4:
-                return 7
-            elif type == 6:
-                return 6
-            else:
-                return type
-
-        def set_type_mask(def_value):
-            return [def_value if i < 8 else True for i in range(16)]
-
-        def get_candidates(scope_list, var_prefix, inc_globals=True,
-                           public_only=False, abstract_only=False, no_use=False):
-            #
-            def child_candidates(scope, only_list=[], filter_public=True, req_abstract=False):
-                tmp_list = []
-                # Filter children
-                nonly = len(only_list)
-                for child in scope.get_children(filter_public):
-                    if req_abstract:
-                        if child.is_abstract():
-                            tmp_list += child_candidates(child, only_list, filter_public)
-                    else:
-                        if child.is_external_int():
-                            tmp_list += child_candidates(child, only_list, filter_public)
-                        else:
-                            if (nonly > 0) and (child.name.lower() not in only_list):
-                                continue
-                            tmp_list.append(child)
-                return tmp_list
-            var_list = []
-            use_dict = {}
-            for scope in scope_list:
-                var_list += child_candidates(scope, filter_public=public_only, req_abstract=abstract_only)
-                # Traverse USE tree and add to list
-                if not no_use:
-                    use_dict = get_use_tree(scope, use_dict, self.obj_tree)
-            # Look in found use modules
-            rename_list = [None for _ in var_list]
-            for use_mod, use_info in use_dict.items():
-                scope = self.obj_tree[use_mod][0]
-                only_list = use_info.only_list
-                if len(use_info.rename_map) > 0:
-                    only_list = [use_info.rename_map.get(only_name, only_name) for only_name in only_list]
-                tmp_list = child_candidates(scope, only_list, req_abstract=abstract_only)
-                # Setup renaming
-                if len(use_info.rename_map) > 0:
-                    rename_reversed = {value: key for (key, value) in use_info.rename_map.items()}
-                    for tmp_obj in tmp_list:
-                        var_list.append(tmp_obj)
-                        rename_list.append(rename_reversed.get(tmp_obj.name.lower(), None))
-                else:
-                    var_list += tmp_list
-                    rename_list += [None for _ in tmp_list]
-            # Add globals
-            if inc_globals:
-                tmp_list = [obj[0] for (_, obj) in self.obj_tree.items()]
-                var_list += tmp_list + self.intrinsic_funs
-                rename_list += [None for _ in tmp_list + self.intrinsic_funs]
-            # Filter by prefix if necessary
-            if var_prefix == '':
-                return var_list, rename_list
-            else:
-                tmp_list = []
-                tmp_rename = []
-                for (i, var) in enumerate(var_list):
-                    var_name = rename_list[i]
-                    if var_name is None:
-                        var_name = var.name
-                    if var_name.lower().startswith(var_prefix):
-                        tmp_list.append(var)
-                        tmp_rename.append(rename_list[i])
-                return tmp_list, tmp_rename
-
-        def build_comp(candidate, name_only=self.autocomplete_name_only,
-                       name_replace=None, is_interface=False, is_member=False):
-            comp_obj = {}
-            call_sig = None
-            if name_only:
-                comp_obj["label"] = candidate.name
-            else:
-                comp_obj["label"] = candidate.name
-                if name_replace is not None:
-                    comp_obj["label"] = name_replace
-                call_sig, snippet = candidate.get_snippet(name_replace)
-                if self.autocomplete_no_snippets:
-                    snippet = call_sig
-                if snippet is not None:
-                    if self.use_signature_help and (not is_interface):
-                        arg_open = snippet.find('(')
-                        if arg_open > 0:
-                            snippet = snippet[:arg_open]
-                    comp_obj["insertText"] = snippet
-                    comp_obj["insertTextFormat"] = 2
-            comp_obj["kind"] = map_types(candidate.get_type())
-            if is_member and (comp_obj["kind"] == 3):
-                comp_obj["kind"] = 2
-            comp_obj["detail"] = candidate.get_desc()
-            if call_sig is not None:
-                comp_obj["detail"] += ' ' + call_sig
-            doc_str, _ = candidate.get_hover()
-            if doc_str is not None:
-                comp_obj["documentation"] = doc_str
-            return comp_obj
-        # Get parameters from request
         params = request["params"]
         uri = params["textDocument"]["uri"]
         path = path_from_uri(uri)
         file_obj = self.workspace.get(path)
         if file_obj is None:
             return None
-        # Check line
-        ac_line = params["position"]["line"]
-        ac_char = params["position"]["character"]
-        # Get full line (and possible continuations) from file
-        pre_lines, curr_line, _ = file_obj.get_code_line(ac_line, forward=False, strip_comment=True)
-        line_prefix = get_line_prefix(pre_lines, curr_line, ac_char)
-        if line_prefix is None:
+        sig_content = file_obj.line_content_map[params['position']['line']]
+        sig_index = params['position']['character'] 
+        log.debug(sig_content)
+        cursor = sig_index - 1
+        while cursor > 0:
+            log.debug("At index: %d of %d (%s)" % (cursor, len(sig_content), sig_content[cursor:sig_index]))
+            if not sig_content[cursor].isalnum() and not sig_content[cursor] in ['.', '_']:
+                break
+            cursor -= 1
+        log.debug("Final is: %d : %d" % (cursor, sig_index))
+        if cursor == sig_index - 1:
             return None
-        is_member = False
-        try:
-            var_stack = get_var_stack(line_prefix)
-            is_member = (len(var_stack) > 1)
-            var_prefix = var_stack[-1].strip()
-        except:
-            return None
-        # print(var_stack)
-        item_list = []
-        # Get context
-        name_only = self.autocomplete_name_only
-        public_only = False
-        include_globals = True
-        line_context, context_info = get_line_context(line_prefix)
-        if (line_context == 'skip') or (var_prefix == '' and (not is_member)):
-            return None
-        if self.autocomplete_no_prefix:
-            var_prefix = ''
-        # Suggestions for user-defined type members
-        if is_member:
-            curr_scope = file_obj.ast.get_inner_scope(ac_line+1)
-            type_scope = climb_type_tree(var_stack, curr_scope, self.obj_tree)
-            # Set enclosing type as scope
-            if type_scope is None:
-                return None
-            else:
-                include_globals = False
-                scope_list = [type_scope]
-        else:
-            scope_list = file_obj.ast.get_scopes(ac_line+1)
-        # Setup based on context
-        req_callable = False
-        abstract_only = False
-        no_use = False
-        type_mask = set_type_mask(False)
-        type_mask[MODULE_TYPE_ID] = True
-        type_mask[CLASS_TYPE_ID] = True
-        if line_context == 'mod_only':
-            # Module names only (USE statement)
-            for key in self.obj_tree:
-                candidate = self.obj_tree[key][0]
-                if (candidate.get_type() == MODULE_TYPE_ID) and \
-                   candidate.name.lower().startswith(var_prefix):
-                    item_list.append(build_comp(candidate, name_only=True))
-            return item_list
-        elif line_context == 'mod_mems':
-            # Public module members only (USE ONLY statement)
-            name_only = True
-            mod_name = context_info.lower()
-            if mod_name in self.obj_tree:
-                scope_list = [self.obj_tree[mod_name][0]]
-                public_only = True
-                include_globals = False
-                type_mask[CLASS_TYPE_ID] = False
-            else:
-                return None
-        elif line_context == 'pro_link':
-            # Link to local subroutine/functions
-            type_mask = set_type_mask(True)
-            type_mask[SUBROUTINE_TYPE_ID] = False
-            type_mask[FUNCTION_TYPE_ID] = False
-            name_only = True
-            include_globals = False
-            no_use = True
-        elif line_context == 'call':
-            # Callable objects only ("CALL" statements)
-            req_callable = True
-        elif line_context == 'type_only':
-            # User-defined types only (variable definitions, select clauses)
-            type_mask = set_type_mask(True)
-            type_mask[CLASS_TYPE_ID] = False
-        elif line_context == 'import':
-            # Import statement (variables and user-defined types only)
-            name_only = True
-            type_mask = set_type_mask(True)
-            type_mask[CLASS_TYPE_ID] = False
-            type_mask[VAR_TYPE_ID] = False
-        elif line_context == 'vis':
-            # Visibility statement (local objects only)
-            include_globals = False
-            name_only = True
-            type_mask = set_type_mask(True)
-            type_mask[CLASS_TYPE_ID] = False
-            type_mask[VAR_TYPE_ID] = False
-            type_mask[SUBROUTINE_TYPE_ID] = False
-            type_mask[FUNCTION_TYPE_ID] = False
-            curr_scope = [file_obj.ast.get_inner_scope(ac_line+1)]
-        elif line_context == 'int_only':
-            # Interfaces only (procedure definitions)
-            abstract_only = True
-            include_globals = False
-            name_only = True
-            type_mask = set_type_mask(True)
-            type_mask[SUBROUTINE_TYPE_ID] = False
-            type_mask[FUNCTION_TYPE_ID] = False
-        elif line_context == 'var_only':
-            # Variables only (variable definitions)
-            name_only = True
-            type_mask[SUBROUTINE_TYPE_ID] = True
-            type_mask[FUNCTION_TYPE_ID] = True
-        elif line_context == 'var_key':
-            # Variable definition keywords only (variable definition)
-            key_context = 0
-            enc_scope_type = scope_list[-1].get_type()
-            if enc_scope_type == MODULE_TYPE_ID:
-                key_context = 1
-            elif (enc_scope_type == SUBROUTINE_TYPE_ID) or (enc_scope_type == FUNCTION_TYPE_ID):
-                key_context = 2
-            elif enc_scope_type == CLASS_TYPE_ID:
-                key_context = 3
-            for candidate in get_intrinsic_keywords(self.statements, self.keywords, key_context):
-                if candidate.name.lower().startswith(var_prefix):
-                    item_list.append(build_comp(candidate))
-            return item_list
-        elif line_context == 'first':
-            # First word -> default context plus Fortran statements
-            for candidate in get_intrinsic_keywords(self.statements, self.keywords, 0):
-                if candidate.name.lower().startswith(var_prefix):
-                    item_list.append(build_comp(candidate))
-        # Build completion list
-        candidate_list, rename_list = get_candidates(
-            scope_list, var_prefix, include_globals, public_only, abstract_only, no_use
-        )
-        for (i, candidate) in enumerate(candidate_list):
-            # Skip module names (only valid in USE)
-            candidate_type = candidate.get_type()
-            if type_mask[candidate_type]:
-                continue
-            if req_callable and (not candidate.is_callable()):
-                continue
-            #
-            name_replace = rename_list[i]
-            if candidate_type == INTERFACE_TYPE_ID:
-                tmp_list = []
-                if name_replace is None:
-                    name_replace = candidate.name
-                for member in candidate.mems:
-                    tmp_text, _ = member.get_snippet(name_replace)
-                    if tmp_list.count(tmp_text) > 0:
-                        continue
-                    tmp_list.append(tmp_text)
-                    item_list.append(build_comp(
-                        member, name_replace=name_replace, is_interface=True, is_member=is_member
-                    ))
-                continue
-            #
-            item_list.append(build_comp(candidate, name_only=name_only, name_replace=name_replace))
-        return item_list
+        cursor += 1
+        partial_keyword = sig_content[cursor:sig_index]
+        log.debug("Got keyword start: '%s'" % (partial_keyword))
+        items_list = []
+        for item in self.keywords_list:
+            if item['label'].startswith(partial_keyword):
+                items_list.append(item)
+        if len(items_list):
+            return items_list
+        return None
 
     def get_definition(self, def_file, def_line, def_char):
         # Get full line (and possible continuations) from file
