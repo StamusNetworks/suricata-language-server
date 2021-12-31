@@ -3,7 +3,7 @@
 	"description": "VSCode part of Suricata language server",
 	"author": "Stamus Networks",
 	"license": "MIT",
-	"version": "0.0.1",
+	"version": "0.1.0",
 	"publisher": "stamusnetworks",
 	"repository": {
 		"type": "git",
