@@ -409,7 +409,16 @@ engine-analysis:
                     detail = 'No option'
                 else:
                     detail = keyword_array[3]
-                keyword_item = {'label': keyword_array[0], 'kind': 14, 'detail': detail, 'documentation': keyword_array[1]}
+                documentation = keyword_array[1]
+                if len(keyword_array) > 5:
+                    if 'https' in keyword_array[4]:
+                        documentation += "\n\n"
+                        documentation += "[Documentation](" + keyword_array[4] + ")"
+                        documentation = {'kind': 'markdown', 'value': documentation}
+                keyword_item = {'label': keyword_array[0], 'kind': 14, 'detail': detail, 'documentation': documentation}
+                if 'content modifier' in keyword_array[3]:
+                    keyword_item['tags'] = [1]
+                    keyword_item['detail'] = 'Content Modifier'
                 keywords_list.append(keyword_item)
             except:
                 pass
