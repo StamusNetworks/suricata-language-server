@@ -92,3 +92,7 @@ class SuricataFile:
             self.content_line_map[line] = i
             self.line_content_map[i] = line
             i += 1
+
+    def apply_change(self, content_update):
+        self.contents_split = content_update['text'].splitlines()
+        self.parse_file()
