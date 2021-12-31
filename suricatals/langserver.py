@@ -341,6 +341,9 @@ class LangServer:
         sig_content = file_obj.line_content_map[params['position']['line']]
         sig_index = params['position']['character'] 
         log.debug(sig_content)
+        # not yet in content matching so just return nothing
+        if not '(' in sig_content[0:sig_index]:
+            return None
         cursor = sig_index - 1
         while cursor > 0:
             log.debug("At index: %d of %d (%s)" % (cursor, len(sig_content), sig_content[cursor:sig_index]))
