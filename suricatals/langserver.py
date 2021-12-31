@@ -353,6 +353,9 @@ class LangServer:
         log.debug("Final is: %d : %d" % (cursor, sig_index))
         if cursor == sig_index - 1:
             return None
+        # this is an option edit so dont list keyword
+        if sig_content[cursor] in [':', ',']:
+            return None
         cursor += 1
         partial_keyword = sig_content[cursor:sig_index]
         log.debug("Got keyword start: '%s'" % (partial_keyword))
