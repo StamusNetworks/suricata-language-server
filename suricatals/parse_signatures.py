@@ -44,20 +44,16 @@ class SuricataFile:
     def check_file(self, obj_tree):
         diagnostics = []
         result = {}
-        lines_list = []
         with open(self.path, 'r', encoding='utf-8', errors='replace') as fhandle:
             test_rules = TestRules(suricata_binary=self.suricata_binary)
             result = test_rules.check_rule_buffer(fhandle.read())
         for error in result.get('errors', []):
             if 'line' in error:
-                if error['line'] in lines_list:
-                    continue
                 range_end = 1000
                 line_content = self.line_content_map.get(error['line'])
                 if line_content:
                     range_end = len(line_content.rstrip())
                 diagnostics.append({ "range": { "start": {"line": error['line'], "character": 0}, "end": {"line": error['line'], "character": range_end} }, "message": error['message'], "severity": 1 })
-                lines_list.append(error['line'])
         for warning in result.get('warnings', []):
             line = None
             range_start = 0
@@ -68,29 +64,27 @@ class SuricataFile:
                 line = self.content_line_map.get(warning['content'])
                 range_start = warning['content'].index('sid:')
                 range_end = range_start + len('sid:')
-            if line is None or line in lines_list:
+            if line is None:
                 continue
             diagnostics.append({ "range": { "start": {"line": line, "character": range_start}, "end": {"line": line, "character": range_end} }, "message": warning['message'], "severity": 2 })
-            lines_list.append(line)
         for info in result.get('info', []):
             line = None
             if 'line' in info:
                 line = info['line']
             elif 'content' in info:
                 line = self.content_line_map.get(info['content'])
-            if line is None or line in lines_list:
+            if line is None:
                 continue
             start_char = info.get('start_char', 0)
             end_char = info.get('end_char', 0)
             diagnostics.append({ "range": { "start": {"line": line, "character": start_char}, "end": {"line": line, "character": end_char} }, "message": info['message'], "severity": 4 })
-            lines_list.append(line)
         return diagnostics
 
     def parse_file(self, debug=False):
         """Build file Info by parsing file"""
         i = 0
-        self.content_line_map= {}
-        self.line_content_map= {}
+        self.content_line_map = {}
+        self.line_content_map = {}
         for line in self.contents_split:
             if line.startswith("#"):
                 i += 1
