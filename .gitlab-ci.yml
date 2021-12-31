@@ -1,0 +1,18 @@
+default:
+  tags:
+  - aws
+
+vscode-pkg:
+  image: node
+  stage: build
+  artifacts:
+    paths:
+    - "client/*.vsix"
+  script:
+  - npm install -g vsce
+  - npm install
+  - cd client
+  - npm install
+  - vsce package
+
+
