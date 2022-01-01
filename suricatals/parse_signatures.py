@@ -41,7 +41,7 @@ class SuricataFile:
         else:
             return None
 
-    def check_file(self, obj_tree):
+    def check_file(self):
         diagnostics = []
         result = {}
         with open(self.path, 'r', encoding='utf-8', errors='replace') as fhandle:

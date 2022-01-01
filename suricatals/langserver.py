@@ -276,7 +276,7 @@ class LangServer:
         file_obj = self.workspace.get(filepath)
         if file_obj is not None:
             try:
-                diags = file_obj.check_file(self.obj_tree)
+                diags = file_obj.check_file()
             except Exception as e:
                 return None, e
             else:
