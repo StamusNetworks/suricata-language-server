@@ -262,7 +262,10 @@ class LangServer:
             try:
                 diags = file_obj.check_file()
             except Exception as e:
-                return None, e
+                if os.path.isfile(file_obj.path):
+                    return None, e
+                else:
+                    return None, None
             else:
                 return diags, None
         return None, None
@@ -319,7 +322,7 @@ class LangServer:
             return
         if did_change:
             file_obj = self.workspace.get(filepath)
-            self.send_diagnostics(uri)
+        self.send_diagnostics(uri)
 
     def update_workspace_file(self, filepath, read_file=False, allow_empty=False):
         # Update workspace from file contents and path
