@@ -44,6 +44,7 @@ snippet to your configuration ::
         root_dir = function(fname)
           return lspconfig.util.find_git_ancestor(fname)
         end;
+        single_file_support = true;
         settings = {};
       };
     }
