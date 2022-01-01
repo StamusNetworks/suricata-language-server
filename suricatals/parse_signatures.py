@@ -4,23 +4,13 @@ import hashlib
 from suricatals.tests_rules import TestRules
 
 class SuricataFile:
-    def __init__(self, path=None, pp_suffixes=None, suricata_binary='suricata'):
+    def __init__(self, path=None, suricata_binary='suricata'):
         self.path = path
         self.suricata_binary = suricata_binary
         self.contents_split = []
-        self.contents_pp = []
         self.content_line_map= {}
         self.nLines = 0
-        self.ast = None
         self.hash = None
-        if path is not None:
-            _, file_ext = os.path.splitext(os.path.basename(path))
-            if pp_suffixes is not None:
-                self.preproc = (file_ext in pp_suffixes)
-            else:
-                self.preproc = (file_ext == file_ext.upper())
-        else:
-            self.preproc = False
 
     def copy(self):
         """Copy content to new file object (does not copy objects)"""
@@ -30,12 +20,13 @@ class SuricataFile:
     def load_from_disk(self):
         """Read file from disk"""
         try:
+            contents = ''
             with open(self.path, 'r', encoding='utf-8', errors='replace') as fhandle:
                 contents = fhandle.read()
-                self.hash = hashlib.md5(contents.encode('utf-8')).hexdigest()
-                self.contents_split = contents.splitlines()
-            self.contents_pp = self.contents_split
+            self.hash = hashlib.md5(contents.encode('utf-8')).hexdigest()
+            self.contents_split = contents.splitlines()
             self.nLines = len(self.contents_split)
+            self.parse_file()
         except:
             return 'Could not read/decode file'
         else:
@@ -95,4 +86,5 @@ class SuricataFile:
 
     def apply_change(self, content_update):
         self.contents_split = content_update['text'].splitlines()
+        self.nLines = len(self.contents_split)
         self.parse_file()

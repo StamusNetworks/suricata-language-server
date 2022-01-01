@@ -11,18 +11,13 @@ log = logging.getLogger(__name__)
 
 SURICATA_RULES_EXT_REGEX = re.compile(r'^\.rules?$', re.I)
 
-def init_file(filepath, suricata_binary, pp_defs, pp_suffixes, include_dirs):
+def init_file(filepath, suricata_binary):
     #
-    file_obj = SuricataFile(filepath, pp_suffixes, suricata_binary=suricata_binary)
+    file_obj = SuricataFile(filepath, suricata_binary=suricata_binary)
     err_str = file_obj.load_from_disk()
     if err_str is not None:
         return None, err_str
     #
-    try:
-        file_obj.parse_file()
-    except:
-        log.error("Error while parsing file %s", filepath, exc_info=True)
-        return None, 'Error during parsing'
     return file_obj, None
 
 
@@ -310,7 +305,7 @@ class LangServer:
                     return
         # Parse newly updated file
         if reparse_req:
-            _, err_str = self.update_workspace_file(path, update_links=True)
+            _, err_str = self.update_workspace_file(path)
             if err_str is not None:
                 self.post_message('Change request failed for file "{0}": {1}'.format(path, err_str))
                 return
@@ -328,13 +323,6 @@ class LangServer:
         filepath = path_from_uri(uri)
         # Skip update and remove objects if file is deleted
         if did_close and (not os.path.isfile(filepath)):
-            # Remove old objects from tree
-            file_obj = self.workspace.get(filepath)
-            if file_obj is not None:
-                ast_old = file_obj.ast
-                if ast_old is not None:
-                    for key in ast_old.global_dict:
-                        self.obj_tree.pop(key, None)
             return
         did_change, err_str = self.update_workspace_file(filepath, read_file=True, allow_empty=did_open)
         if err_str is not None:
@@ -342,31 +330,32 @@ class LangServer:
             return
         if did_change:
             file_obj = self.workspace.get(filepath)
-        self.send_diagnostics(uri)
+            self.send_diagnostics(uri)
 
-    def update_workspace_file(self, filepath, read_file=False, allow_empty=False, update_links=False):
+    def update_workspace_file(self, filepath, read_file=False, allow_empty=False):
         # Update workspace from file contents and path
         try:
             file_obj = self.workspace.get(filepath)
             if read_file:
                 if file_obj is None:
-                    file_obj = SuricataFile(filepath, self.pp_suffixes, suricata_binary=self.suricata_binary)
+                    file_obj = SuricataFile(filepath, suricata_binary=self.suricata_binary)
                     # Create empty file if not yet saved to disk
                     if not os.path.isfile(filepath):
                         if allow_empty:
-                            file_obj.ast = fortran_ast(file_obj)
                             self.workspace[filepath] = file_obj
                             return False, None
                         else:
                             return False, 'File does not exist'  # Error during load
                 hash_old = file_obj.hash
-                err_string = file_obj.load_from_disk()
+                err_string = None
+                if os.path.isfile(filepath):
+                    err_string = file_obj.load_from_disk()
+                    file_obj.parse_file()
                 if err_string is not None:
                     log.error(err_string + ": %s", filepath)
                     return False, err_string  # Error during file read
                 if hash_old == file_obj.hash:
                     return False, None
-            file_obj.parse_file()
         except:
             log.error("Error while parsing file %s", filepath, exc_info=True)
             return False, 'Error during parsing'  # Error during parsing
@@ -396,9 +385,7 @@ class LangServer:
         pool = Pool(processes=self.nthreads)
         results = {}
         for filepath in file_list:
-            results[filepath] = pool.apply_async(init_file, args=(
-                filepath, self.suricata_binary, self.pp_defs, self.pp_suffixes, self.include_dirs
-            ))
+            results[filepath] = pool.apply_async(init_file, args=(filepath, self.suricata_binary))
         pool.close()
         pool.join()
         for path, result in results.items():
