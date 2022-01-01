@@ -35,13 +35,8 @@ class LangServer:
         self.excl_paths = []
         self.excl_suffixes = []
         self.post_messages = []
-        self.pp_suffixes = None
-        self.pp_defs = {}
-        self.include_dirs = []
         self.streaming = True
         self.debug_log = debug_log
-        # FIXME
-        self.debug_log = True
         # Get launch settings
         self.nthreads = settings.get("nthreads", 4)
         self.notify_init = settings.get("notify_init", False)
@@ -166,14 +161,8 @@ class LangServer:
                                 [2, r'External source directory "{0}" specified in '
                                  r'".suricatals" settings file does not exist'.format(ext_source_dir)]
                             )
-                    if isinstance(self.pp_defs, list):
-                        self.pp_defs = {key: "" for key in self.pp_defs}
             except:
                 self.post_messages.append([1, 'Error while parsing ".suricatals" settings file'])
-            # Make relative include paths absolute
-            for (i, include_dir) in enumerate(self.include_dirs):
-                if not os.path.isabs(include_dir):
-                    self.include_dirs[i] = os.path.abspath(os.path.join(self.root_path, include_dir))
         # Recursively add sub-directories
         if len(self.source_dirs) == 1:
             self.source_dirs = []
