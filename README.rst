@@ -13,10 +13,16 @@ incorporate code from `Stamus Networks' scirius <https://github.com/StamusNetwor
 Installation
 ============
 
+You can use pip to install the Suricata language server ::
+
+ pip install suricata-language-server
+
+Run this command with sudo if you want to install it globally.
+
 Manual Installation
 -------------------
 
-You need to install first the server by running in the root directory of the project ::
+After cloning the repository, you need to install first the server by running in the root directory of the project ::
 
  sudo python setup.py install
 
