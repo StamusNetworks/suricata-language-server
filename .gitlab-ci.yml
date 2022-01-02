@@ -22,4 +22,5 @@ python-egg:
     paths:
     - "dist/*"
   script:
+  - pip install build
   - python -m build
