@@ -4,7 +4,7 @@
 	"author": "Stamus Networks",
 	"license": "MIT",
 	"version": "0.1.0",
-	"publisher": "stamusnetworks",
+	"publisher": "StamusNetworks",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/StamusNetworks/suricata-language-server"
