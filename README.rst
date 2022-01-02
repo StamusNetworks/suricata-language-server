@@ -50,6 +50,10 @@ snippet to your configuration ::
     }
   end
 
+And then add the suricata file type by creating a `~/.config/nvim/ftdetect/suricata.vim` with the following content ::
+
+ au BufRead,BufNewFile *.rules		set filetype=suricata
+
 If you want to setup a custom suricata binary, you can use the following trick: ::
 
  local suricata_ls_cmd = {'suricata-language-server', '--suricata-binary=/home/eric/builds/suricata/bin/suricata'}
