@@ -42,7 +42,7 @@ class TestRules():
 %YAML 1.1
 ---
 logging:
-  default-log-level: error
+  default-log-level: warning
   outputs:
   - console:
       enabled: yes
@@ -304,6 +304,19 @@ engine-analysis:
         if suriprocess.returncode != 0:
             result['status'] = False
             result['errors'] = errdata.decode('utf-8')
+        # analyse potential warnings
+        message_stream = io.StringIO(outdata.decode('utf-8'))
+        for message in message_stream:
+            try:
+                struct_msg = json.loads(message)
+            except:
+                continue
+            if not 'engine' in struct_msg:
+                continue
+            # Check for duplicate signatures
+            if struct_msg['engine'].get('error_code', 0) == 176:
+                warning, sig_content = struct_msg['engine']['message'].split('"', 1)
+                result['warnings'].append({'message': warning.rstrip(), 'content': sig_content.rstrip('"')})
         # runs rules analysis to have warnings
         suri_cmd = [self.suricata_binary, '--engine-analysis', '-l', tmpdir, '-S', rule_file, '-c', config_file]
         # start suricata in test mode
