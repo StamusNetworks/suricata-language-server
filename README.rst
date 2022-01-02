@@ -46,7 +46,7 @@ snippet to your configuration ::
     configs.suricata_language_server = {
       default_config = {
         cmd = {'suricata-language-server'};
-        filetypes = {'suricata'};
+        filetypes = {'suricata', 'hog'};
         root_dir = function(fname)
           return lspconfig.util.find_git_ancestor(fname)
         end;
@@ -55,10 +55,6 @@ snippet to your configuration ::
       };
     }
   end
-
-And then add the suricata file type by creating a `~/.config/nvim/ftdetect/suricata.vim` with the following content ::
-
- au BufRead,BufNewFile *.rules		set filetype=suricata
 
 If you want to setup a custom suricata binary, you can use the following trick: ::
 
