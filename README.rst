@@ -76,7 +76,7 @@ If you want to setup a custom suricata binary, you can use the following trick: 
 Visual Studio code
 ------------------
 
-Download the suricata-ls extension (suricata-ls-x.x.x.vsix) published by `Stamus Networks <https://www.stamus-networks.com/>`_
+Download the Suricata IntelliSense extension (suricata-ls-x.x.x.vsix) published by `Stamus Networks <https://www.stamus-networks.com/>`_
 and install it into your Visual Studio Code instance.
 
 Then you can configure it via the settings. Main settings are the path to the Suricata Language

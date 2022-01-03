@@ -1,7 +1,7 @@
 {
     "name": "suricata-ls",
-    "displayName": "Suricata Signatures IntelliSense",
-    "description": "VSCode interface to the Suricata Language Server",
+    "displayName": "Suricata IntelliSense",
+    "description": "VSCode interface to the Suricata Language Server by Stamus Networks",
     "author": "Stamus Networks",
     "license": "MIT",
     "version": "0.1.0",
