@@ -3,7 +3,7 @@ Suricata Language Server
 ========================
 
 Suricata Language Server is an implementation of the Language Server Protocol for Suricata signatures.
-It adds syntax check and hints as well as auto-completion to your prefered editor once it is configured.
+It adds syntax check and hints as well as auto-completion to your preferred editor once it is configured.
 
 .. image:: https://raw.githubusercontent.com/StamusNetworks/suricata-language-server/main/images/vscode-sample.png
 
