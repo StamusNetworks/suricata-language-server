@@ -1,10 +1,9 @@
 from __future__ import print_function
 import sys
 import os
-import json
 import argparse
 from .langserver import LangServer
-from .jsonrpc import JSONRPC2Connection, ReadWriter, path_from_uri
+from .jsonrpc import JSONRPC2Connection, ReadWriter
 __version__ = '0.1.0'
 
 

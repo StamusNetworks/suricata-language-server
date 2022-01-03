@@ -3,7 +3,7 @@ import os
 import traceback
 import re
 
-from suricatals.jsonrpc import path_to_uri, path_from_uri
+from suricatals.jsonrpc import path_from_uri
 from suricatals.parse_signatures import SuricataFile
 from suricatals.tests_rules import TestRules
 
@@ -27,10 +27,7 @@ class LangServer:
         self.running = True
         self.root_path = None
         self.fs = None
-        self.all_symbols = None
         self.workspace = {}
-        self.obj_tree = {}
-        self.link_version = 0
         self.source_dirs = []
         self.excl_paths = []
         self.excl_suffixes = []
@@ -390,7 +387,6 @@ class LangServer:
     def serve_exit(self, request):
         # Exit server
         self.workspace = {}
-        self.obj_tree = {}
         self.running = False
 
     def serve_default(self, request):
