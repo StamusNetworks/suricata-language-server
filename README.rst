@@ -30,6 +30,14 @@ This will add a ``suricata-language-server`` command to the system that will be 
 transparently by the editors that are configured to use it. You can use ``sudo pip install .``
 to install it system wide if needed.
 
+Server options
+--------------
+
+See `suricata-language-server -h` for complete and up-to-date help.
+
+* --suricata-binary: path to the suricata binary used for signatures testing
+* --max-lines: don't run suricata tests if file is bigger then this limit (auto-completion only)
+
 
 Editors Configuration
 =====================
