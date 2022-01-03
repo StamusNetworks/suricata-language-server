@@ -85,3 +85,26 @@ from the marketplace and install it into your Visual Studio Code instance.
 
 Then you can configure it via the settings. Main settings are the path to the Suricata Language
 Server binary and the path to the Suricata binary.
+
+Sublime Text 3
+--------------
+
+You can use the `LSP <https://lsp.sublimetext.io/>`_ Package to provide support for LSP to Sublime Text 3.
+
+To acticate Suricata Language Server on .rules file, you need to create a new syntax for Suricata file by using the content of `Suricata Sublime syntax from justjamesnow <https://github.com/justjamesnow/SublimeSuricata/blob/master/suricata.sublime-syntax>`_
+
+To do so you can click on ``Tools -> Developer -> New Syntax`` then paste the content of the file. This will provide syntax highlighting as well as a `text.suricata` Sublime selector that can be used to trigger the Suricata Language Server activation.
+
+To do that, you can setup the Suricata Language Server by following the documentation for the LSP package on `client configuration <https://lsp.sublimetext.io/guides/client_configuration/>`_. You will need to open `Preferences > Package Settings > LSP > Settings` and edit the configuration to add the Suricata Language Server.
+
+The following configuration is known to work ::
+
+ {
+   "clients": {
+     "suricatals": {
+       "enabled": true,
+       "command": ["/path/to/suricata-language-server", "--suricata-binary=/path/to/suricata"],
+       "selector": "text.suricata",
+     },
+   },
+ }
