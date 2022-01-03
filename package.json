@@ -69,12 +69,10 @@
         "vscode:prepublish": "npm run -S esbuild-base -- --minify",
         "esbuild-base": "rimraf out && esbuild ./client/src/extension.ts --bundle --outfile=client/out/extension.js --external:vscode --format=cjs --platform=node",
         "build": "npm run -S esbuild-base -- --sourcemap",
-    "    watch": "npm run -S esbuild-base -- --sourcemap --watch",
-    "    fmt": "prettier --write \"src/**/*.ts\"&& npm run test -- --fix",
-    "    test": "eslint src --ext ts && tsc --noEmit",
+        "watch": "npm run -S esbuild-base -- --sourcemap --watch",
+        "fmt": "prettier --write \"src/**/*.ts\"&& npm run test -- --fix",
+        "test": "eslint ./client/src --ext ts && tsc --noEmit",
         "compile": "tsc -b",
-        "watch": "tsc -b -w",
-        "lint": "eslint ./client/src --ext .ts,.tsx",
         "postinstall": "cd client && npm install && cd .."
     },
     "devDependencies": {
