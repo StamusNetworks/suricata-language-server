@@ -207,12 +207,17 @@ class LangServer:
         file_obj = self.workspace.get(path)
         if file_obj is None:
             return None
-        sig_content = file_obj.line_content_map[params['position']['line']]
+        edit_index = params['position']['line']
+        sig_content = file_obj.contents_split[edit_index]
         sig_index = params['position']['character'] 
         log.debug(sig_content)
         # not yet in content matching so just return nothing
         if not '(' in sig_content[0:sig_index]:
-            return None
+            if edit_index == 0:
+                return None
+            elif not re.search(r'\\ *$', file_obj.contents_split[edit_index - 1]):
+                return None
+                
         cursor = sig_index - 1
         while cursor > 0:
             log.debug("At index: %d of %d (%s)" % (cursor, len(sig_content), sig_content[cursor:sig_index]))
