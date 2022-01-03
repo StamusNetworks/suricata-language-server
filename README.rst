@@ -71,7 +71,7 @@ snippet to your configuration ::
 
 If you want to setup a custom suricata binary, you can use the following trick: ::
 
- local suricata_ls_cmd = {'suricata-language-server', '--suricata-binary=/home/eric/builds/suricata/bin/suricata'}
+ local suricata_ls_cmd = {'suricata-language-server', '--suricata-binary=/my/own/suricata'}
  require'lspconfig'.suricata_language_server.setup{
    cmd = suricata_ls_cmd,
    on_attach = on_attach,
