@@ -84,12 +84,38 @@ class SuricataFile:
         self.line_content_map = {}
         self.sid_line_map = {}
         getsid = re.compile(r"sid *:(\d+)")
+        get_multilines = re.compile(r"\\ *$" )
+        multi_lines_index = -1
         for line in self.contents_split:
+            log.debug("'%s'" % (line))
             if line.startswith("#"):
                 i += 1
                 continue
-            self.content_line_map[line] = i
-            self.line_content_map[i] = line
+            if multi_lines_index >= 0:
+                self.line_content_map[multi_lines_index] += line.rstrip('\\')
+                log.debug("Building " + self.line_content_map[multi_lines_index])
+                if get_multilines.search(line):
+                    i += 1
+                    continue
+                else:
+                    self.content_line_map[self.line_content_map[multi_lines_index]] = multi_lines_index
+                    match = getsid.search(self.line_content_map[multi_lines_index])
+                    if match:
+                        sid = int(match.groups()[0])
+                        self.sid_line_map[sid] = multi_lines_index
+                    log.debug(self.line_content_map[multi_lines_index])
+                    multi_lines_index = -1
+                    i += 1
+                    continue
+            elif get_multilines.search(line):
+                log.debug("Got multiline signature")
+                multi_lines_index = i
+                self.line_content_map[multi_lines_index] = line.rstrip('\\')
+                i += 1
+                continue
+            else:
+                self.content_line_map[line] = i
+                self.line_content_map[i] = line
             match = getsid.search(line)
             if match:
                 sid = int(match.groups()[0])
