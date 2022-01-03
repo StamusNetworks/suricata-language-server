@@ -47,6 +47,8 @@ Editors Configuration
 Neovim
 ------
 
+.. image:: https://raw.githubusercontent.com/StamusNetworks/suricata-language-server/main/images/nvim-completion.png
+
 One simple way tis to use `nvim-lspconfig <https://github.com/neovim/nvim-lspconfig>`_ and add the following
 snippet to your configuration ::
 
