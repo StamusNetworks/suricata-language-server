@@ -1,6 +1,8 @@
 import os
 import hashlib
 
+import re
+
 from suricatals.tests_rules import TestRules
 
 class SuricataFile:
@@ -9,6 +11,8 @@ class SuricataFile:
         self.suricata_binary = suricata_binary
         self.contents_split = []
         self.content_line_map= {}
+        self.line_content_map= {}
+        self.sid_line_map= {}
         self.nLines = 0
         self.hash = None
 
@@ -55,6 +59,8 @@ class SuricataFile:
                 line = self.content_line_map.get(warning['content'])
                 range_start = warning['content'].index('sid:')
                 range_end = range_start + len('sid:')
+            elif 'sid' in warning:
+                line = self.sid_line_map.get(warning['sid'])
             if line is None:
                 continue
             diagnostics.append({ "range": { "start": {"line": line, "character": range_start}, "end": {"line": line, "character": range_end} }, "message": warning['message'], "severity": 2 })
@@ -76,12 +82,18 @@ class SuricataFile:
         i = 0
         self.content_line_map = {}
         self.line_content_map = {}
+        self.sid_line_map = {}
+        getsid = re.compile(r"sid *:(\d+)")
         for line in self.contents_split:
             if line.startswith("#"):
                 i += 1
                 continue
             self.content_line_map[line] = i
             self.line_content_map[i] = line
+            match = getsid.search(line)
+            if match:
+                sid = int(match.groups()[0])
+                self.sid_line_map[sid] = i
             i += 1
 
     def apply_change(self, content_update):

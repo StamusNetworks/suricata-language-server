@@ -237,7 +237,8 @@ config classification: command-and-control,Malware Command and Control Activity 
                             match = getline.search(message)
                             if match:
                                 line_nb = int(match.groups()[0])
-                                ret['errors'][-1]['line'] = line_nb - 1
+                                if len(ret['errors']):
+                                    ret['errors'][-1]['line'] = line_nb - 1
                                 continue
                     if errno == 42:
                         s_err['engine']['message'] = s_err['engine']['message'].split(' from')[0]
@@ -314,9 +315,16 @@ engine-analysis:
             if not 'engine' in struct_msg:
                 continue
             # Check for duplicate signatures
-            if struct_msg['engine'].get('error_code', 0) == 176:
+            error_code = struct_msg['engine'].get('error_code', 0) 
+            if error_code == 176:
                 warning, sig_content = struct_msg['engine']['message'].split('"', 1)
                 result['warnings'].append({'message': warning.rstrip(), 'content': sig_content.rstrip('"')})
+            # Message for invalid signature
+            elif error_code == 276:
+                rule, warning = struct_msg['engine']['message'].split(': ', 1)
+                rule = int(rule.split(' ')[1])
+                result['warnings'].append({'message': warning.rstrip(), 'sid': rule})
+
         # runs rules analysis to have warnings
         suri_cmd = [self.suricata_binary, '--engine-analysis', '-l', tmpdir, '-S', rule_file, '-c', config_file]
         # start suricata in test mode
