@@ -12,7 +12,6 @@ log = logging.getLogger(__name__)
 SURICATA_RULES_EXT_REGEX = re.compile(r'^\.rules?$', re.I)
 
 def init_file(filepath, suricata_binary):
-    #
     file_obj = SuricataFile(filepath, suricata_binary=suricata_binary)
     err_str = file_obj.load_from_disk()
     if err_str is not None:
@@ -39,6 +38,7 @@ class LangServer:
         self.notify_init = settings.get("notify_init", False)
         self.sync_type = settings.get("sync_type", 1)
         self.suricata_binary = settings.get("suricata_binary", 'suricata')
+        self.max_lines = settings.get("max_lines", 1000)
         self.keywords_list = TestRules(suricata_binary=self.suricata_binary).build_keywords_list()
 
     def post_message(self, message, type=1):
@@ -255,7 +255,7 @@ class LangServer:
     def get_diagnostics(self, uri):
         filepath = path_from_uri(uri)
         file_obj = self.workspace.get(filepath)
-        if file_obj is not None:
+        if file_obj is not None and file_obj.nLines < self.max_lines:
             try:
                 diags = file_obj.check_file()
             except Exception as e:

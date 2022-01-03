@@ -28,6 +28,10 @@ def main():
         '--debug_log', action="store_true",
         help="Generate debug log in project root folder"
     )
+    parser.add_argument(
+        '--max-lines', default=1000, type=int,
+        help="Don't start suricata analysis over this file size"
+    )
     args = parser.parse_args()
     if args.version:
         print("{0}".format(__version__))
@@ -35,6 +39,7 @@ def main():
     #
     settings = {
         "suricata_binary": args.suricata_binary,
+        "max_lines": args.max_lines,
     }
     #
     stdin, stdout = _binary_stdio()
