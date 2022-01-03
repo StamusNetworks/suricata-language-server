@@ -5,6 +5,8 @@ Suricata Language Server
 Suricata Language Server is an implementation of the Language Server Protocol for Suricata signatures.
 It adds syntax check and hints to your prefered editor once it is configured.
 
+.. image:: https://raw.githubusercontent.com/StamusNetworks/suricata-language-server/main/images/vscode-sample.png
+
 Suricata Language Server requires Python and a Suricata binary.
 
 The code is based on `Chris Hansen's fortran language server  <https://github.com/hansec/fortran-language-server>`_ and
@@ -77,7 +79,7 @@ Visual Studio code
 ------------------
 
 Download the Suricata IntelliSense extension (suricata-ls-x.x.x.vsix) published by `Stamus Networks <https://www.stamus-networks.com/>`_
-and install it into your Visual Studio Code instance.
+from the marketplace and install it into your Visual Studio Code instance.
 
 Then you can configure it via the settings. Main settings are the path to the Suricata Language
 Server binary and the path to the Suricata binary.
