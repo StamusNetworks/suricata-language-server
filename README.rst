@@ -24,10 +24,11 @@ Manual Installation
 
 After cloning the repository, you need to install first the server by running in the root directory of the project ::
 
- sudo pip install .
+ pip install .
 
 This will add a ``suricata-language-server`` command to the system that will be invoked
-transparently by the editors that are configured to use it.
+transparently by the editors that are configured to use it. You can use ``sudo pip install .``
+to install it system wide if needed.
 
 
 Editors Configuration
