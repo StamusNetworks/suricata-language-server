@@ -7,12 +7,13 @@ vscode-pkg:
   stage: build
   artifacts:
     paths:
-    - "client/*.vsix"
+    - "*.vsix"
   script:
   - npm install -g vsce
   - npm install
   - cd client
   - npm install
+  - cd ..
   - vsce package
 
 python-egg:
