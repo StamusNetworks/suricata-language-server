@@ -21,6 +21,9 @@ You can use pip to install the Suricata language server ::
 
 Run this command with sudo if you want to install it globally.
 
+If you are a Microsoft Windows user and need to install Suricata, you can use the MSI available on 'Suricata download page <https://suricata.io/download/>'.
+For Python, the installer from Python website available on their `Download page <https://www.python.org/downloads/windows/>`_ is working well.
+
 Manual Installation
 -------------------
 
@@ -85,6 +88,12 @@ from the marketplace and install it into your Visual Studio Code instance.
 
 Then you can configure it via the settings. Main settings are the path to the Suricata Language
 Server binary and the path to the Suricata binary.
+
+For the setings on Microsoft Windows, you will need to escape the backslash in the paths you need to enter. With a standard Suricata msi installation
+and a standard installation of the server with ``pip`` the settings look like:
+
+ * Server Path: C:\\Users\\User\\AppData\\Local\\Programs\\Python\\Python310\\Scripts\\suricata-language-server.exe
+ * Suricata Path: C:\\Program Files\\Suricata\\suricata.exe
 
 Sublime Text 3
 --------------
