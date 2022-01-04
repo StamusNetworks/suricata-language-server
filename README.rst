@@ -83,8 +83,9 @@ If you want to setup a custom suricata binary, you can use the following trick: 
 Visual Studio code
 ------------------
 
-Download the Suricata IntelliSense extension (suricata-ls-x.x.x.vsix) published by `Stamus Networks <https://www.stamus-networks.com/>`_
-from the marketplace and install it into your Visual Studio Code instance.
+Download the Suricata IntelliSense extension published by `Stamus Networks <https://www.stamus-networks.com/>`_
+from `Visual studio Marketplace <https://marketplace.visualstudio.com/items?itemName=StamusNetworks.suricata-ls>`_ and install it into your Visual Studio Code instance.
+You can also direcly install it from Visual Studio Code via the Extensions menu.
 
 Then you can configure it via the settings. Main settings are the path to the Suricata Language
 Server binary and the path to the Suricata binary.
