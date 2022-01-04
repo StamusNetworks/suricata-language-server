@@ -18,7 +18,7 @@ export function activate(context: ExtensionContext) {
   args_server.push(`--suricata-binary=${suricataPath}`)
 
   let serverOptions: ServerOptions = {
-     run: {
+    run: {
         command: serverPath,
         args: args_server
     },
