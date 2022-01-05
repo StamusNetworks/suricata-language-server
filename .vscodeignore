@@ -6,5 +6,10 @@ tests/**
 build/**
 dist/**
 .gitignore
-setup.py
+setup.cfg
+pyproject.toml
 suricata_language_server.egg-info/**
+images/**
+.github
+.gitlab-ci.yml
+LICENSE
