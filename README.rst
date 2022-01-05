@@ -96,6 +96,8 @@ and a standard installation of the server with ``pip`` the settings look like:
 * Server Path: ``C:\\Users\\User\\AppData\\Local\\Programs\\Python\\Python310\\Scripts\\suricata-language-server.exe``
 * Suricata Path: ``C:\\Program Files\\Suricata\\suricata.exe``
 
+The Suricata IntelliSense extension is hosted on its `own project on GitHub <https://github.com/StamusNetworks/suricata-ls-vscode>`_.
+
 Sublime Text 3
 --------------
 
