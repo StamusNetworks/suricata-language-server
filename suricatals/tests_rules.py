@@ -29,9 +29,6 @@ import logging
 
 log = logging.getLogger(__name__)
 
-import suricatals
-
-
 class TestRules():
     VARIABLE_ERROR = 101
     OPENING_RULE_FILE = 41  # Error when opening a file referenced in the source
@@ -174,7 +171,7 @@ config classification: command-and-control,Malware Command and Control Activity 
         for line in error_stream:
             try:
                 s_err = json.loads(line)
-            except Exception:
+            except json.JSONDecodeError:
                 ret['errors'].append({'message': error, 'format': 'raw'})
                 return ret
             errno = s_err['engine']['error_code']
@@ -249,21 +246,21 @@ config classification: command-and-control,Malware Command and Control Activity 
         if not reference_config:
             reference_config = self.REFERENCE_CONFIG
         reference_file = os.path.join(tmpdir, "reference.config")
-        rf = open(reference_file, 'w')
+        rf = open(reference_file, 'w', encoding='utf-8')
         rf.write(reference_config)
         rf.close()
 
         if not classification_config:
             classification_config = self.CLASSIFICATION_CONFIG
         classification_file = os.path.join(tmpdir, "classification.config")
-        cf = open(classification_file, 'w')
+        cf = open(classification_file, 'w', encoding='utf-8')
         cf.write(classification_config)
         cf.close()
 
         if not config_buffer:
             config_buffer = self.CONFIG_FILE
         config_file = os.path.join(tmpdir, "suricata.yaml")
-        cf = open(config_file, 'w')
+        cf = open(config_file, 'w', encoding='utf-8')
         # write the config file in temp dir
         cf.write(config_buffer)
         cf.write("mpm-algo: ac-bs\n")
@@ -279,7 +276,7 @@ engine-analysis:
         related_files = related_files or {}
         for rfile in related_files:
             related_file = os.path.join(tmpdir, rfile)
-            rf = open(related_file, 'w')
+            rf = open(related_file, 'w', encoding='utf-8')
             rf.write(related_files[rfile])
             rf.close()
 
@@ -290,7 +287,7 @@ engine-analysis:
         tmpdir = tempfile.mkdtemp()
         # write the rule file in temp dir
         rule_file = os.path.join(tmpdir, "file.rules")
-        rf = open(rule_file, 'w')
+        rf = open(rule_file, 'w', encoding='utf-8')
         rf.write(rule_buffer)
         rf.close()
 
@@ -310,7 +307,7 @@ engine-analysis:
         for message in message_stream:
             try:
                 struct_msg = json.loads(message)
-            except:
+            except json.JSONDecodeError:
                 continue
             if not 'engine' in struct_msg:
                 continue
@@ -355,33 +352,6 @@ engine-analysis:
         if len(prov_result.get('errors', [])):
             res = self.parse_suricata_error(prov_result['errors'], single=single)
             prov_result['errors'] = res['errors']
-        # FIXME can be useful to resolve variable
-        #i = 6  # support only 6 unknown variables per rule
-        #prov_result['iter'] = 0
-        #while len(res['warnings']) and i > 0:
-        #    modified = False
-        #    for warning in res['warnings']:
-        #        if warning['error_code'] == self.VARIABLE_ERROR:
-        #            var = warning['message'].split("\"")[1]
-        #            # transform rule_buffer to remove the faulty variable
-        #            if not var.endswith('_PORTS') and not var.endswith('_PORT'):
-        #                rule_buffer = rule_buffer.replace("!" + var, "192.0.2.0/24")
-        #                rule_buffer = rule_buffer.replace(var, "192.0.2.0/24")
-        #            else:
-        #                rule_buffer = rule_buffer.replace("!" + var, "21")
-        #                rule_buffer = rule_buffer.replace(var, "21")
-        #            modified = True
-        #    if modified is False:
-        #        break
-        #    result = self.rule_buffer(rule_buffer, config_buffer=config_buffer, related_files=related_files)
-        #    res = self.parse_suricata_error(result['errors'], single=single)
-        #    prov_result['errors'] = res['errors']
-        #    if len(res['warnings']):
-        #        prov_result['warnings'] = prov_result['warnings'] + res['warnings']
-        #    i = i - 1
-        #    prov_result['iter'] = prov_result['iter'] + 1
-        #if len(prov_result['errors']) == 0:
-        #    prov_result['status'] = True
         return prov_result
 
     def parse_engine_analysis(self, log_dir):
@@ -419,7 +389,7 @@ engine-analysis:
         suri_cmd = [self.suricata_binary, '--list-keywords=csv', '-l', tmpdir, '-c', config_file]
         # start suricata in test mode
         suriprocess = subprocess.Popen(suri_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        (outdata, errdata) = suriprocess.communicate()
+        (outdata, _) = suriprocess.communicate()
         shutil.rmtree(tmpdir)
         keywords = outdata.decode('utf-8').splitlines()
         keywords.pop(0)
@@ -445,7 +415,7 @@ engine-analysis:
                     keyword_item['tags'] = [1]
                     keyword_item['detail'] = 'Content Modifier'
                 keywords_list.append(keyword_item)
-            except:
+            except IndexError:
                 pass
         return keywords_list
     

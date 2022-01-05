@@ -21,7 +21,7 @@ def init_file(filepath, suricata_binary):
 
 
 class LangServer:
-    def __init__(self, conn, debug_log=False, settings={}):
+    def __init__(self, conn, debug_log=False, settings=None):
         self.conn = conn
         self.running = True
         self.root_path = None
@@ -34,6 +34,8 @@ class LangServer:
         self.streaming = True
         self.debug_log = debug_log
         # Get launch settings
+        if settings is None:
+            settings = {}
         self.nthreads = settings.get("nthreads", 4)
         self.notify_init = settings.get("notify_init", False)
         self.sync_type = settings.get("sync_type", 1)
@@ -41,9 +43,9 @@ class LangServer:
         self.max_lines = settings.get("max_lines", 1000)
         self.keywords_list = TestRules(suricata_binary=self.suricata_binary).build_keywords_list()
 
-    def post_message(self, message, type=1):
+    def post_message(self, message, msg_type=1):
         self.conn.send_notification("window/showMessage", {
-            "type": type,
+            "type": msg_type,
             "message": message
         })
 
@@ -55,6 +57,7 @@ class LangServer:
                 self.handle(request)
             except EOFError:
                 break
+            # pylint: disable=W0703
             except Exception as e:
                 log.error("Unexpected error: %s", e, exc_info=True)
                 break
@@ -64,6 +67,7 @@ class LangServer:
                 self.post_messages = []
 
     def handle(self, request):
+        # pylint: disable=unused-argument
         def noop(request):
             return None
         # Request handler
@@ -97,9 +101,10 @@ class LangServer:
         if "id" not in request:
             try:
                 handler(request)
-            except:
+            # pylint: disable=W0703
+            except Exception:
                 log.warning(
-                    "error handling notification %s", request, exc_info=True)
+                        "error handling notification %s", request, exc_info=True)
             return
         #
         try:
@@ -108,6 +113,7 @@ class LangServer:
             self.conn.write_error(
                 request["id"], code=e.code, message=e.message, data=e.data)
             log.warning("RPC error handling request %s", request, exc_info=True)
+        # pylint: disable=W0703
         except Exception as e:
             self.conn.write_error(
                 request["id"],
@@ -132,7 +138,7 @@ class LangServer:
         if config_exists:
             try:
                 import json
-                with open(config_path, 'r') as fhandle:
+                with open(config_path, 'r', encoding='utf-8') as fhandle:
                     config_dict = json.load(fhandle)
                     for excl_path in config_dict.get("excl_paths", []):
                         self.excl_paths.append(os.path.join(self.root_path, excl_path))
@@ -158,7 +164,8 @@ class LangServer:
                                 [2, r'External source directory "{0}" specified in '
                                  r'".suricatals" settings file does not exist'.format(ext_source_dir)]
                             )
-            except:
+            # pylint: disable=W0703
+            except Exception:
                 self.post_messages.append([1, 'Error while parsing ".suricatals" settings file'])
         # Recursively add sub-directories
         if len(self.source_dirs) == 1:
@@ -220,11 +227,11 @@ class LangServer:
                 
         cursor = sig_index - 1
         while cursor > 0:
-            log.debug("At index: %d of %d (%s)" % (cursor, len(sig_content), sig_content[cursor:sig_index]))
+            log.debug("At index: %d of %d (%s)", cursor, len(sig_content), sig_content[cursor:sig_index])
             if not sig_content[cursor].isalnum() and not sig_content[cursor] in ['.', '_']:
                 break
             cursor -= 1
-        log.debug("Final is: %d : %d" % (cursor, sig_index))
+        log.debug("Final is: %d : %d", cursor, sig_index)
         if cursor == sig_index - 1:
             return None
         # this is an option edit so dont list keyword
@@ -232,7 +239,7 @@ class LangServer:
             return None
         cursor += 1
         partial_keyword = sig_content[cursor:sig_index]
-        log.debug("Got keyword start: '%s'" % (partial_keyword))
+        log.debug("Got keyword start: '%s'", partial_keyword)
         items_list = []
         for item in self.keywords_list:
             if item['label'].startswith(partial_keyword):
@@ -263,6 +270,7 @@ class LangServer:
         if file_obj is not None and file_obj.nLines < self.max_lines:
             try:
                 diags = file_obj.check_file()
+            # pylint: disable=W0703
             except Exception as e:
                 if os.path.isfile(file_obj.path):
                     return None, e
@@ -293,7 +301,8 @@ class LangServer:
                     for change in params["contentChanges"]:
                         reparse_flag = file_obj.apply_change(change)
                         reparse_req = (reparse_req or reparse_flag)
-                except:
+                # pylint: disable=W0703
+                except Exception:
                     self.post_message('Change request failed for file "{0}": Could not apply change'.format(path))
                     log.error('Change request failed for file "%s": Could not apply change', path, exc_info=True)
                     return
@@ -323,8 +332,7 @@ class LangServer:
             self.post_message('Save request failed for file "{0}": {1}'.format(filepath, err_str))
             return
         if did_change:
-            file_obj = self.workspace.get(filepath)
-        self.send_diagnostics(uri)
+            self.send_diagnostics(uri)
 
     def update_workspace_file(self, filepath, read_file=False, allow_empty=False):
         # Update workspace from file contents and path
@@ -346,11 +354,12 @@ class LangServer:
                     err_string = file_obj.load_from_disk()
                     file_obj.parse_file()
                 if err_string is not None:
-                    log.error(err_string + ": %s", filepath)
+                    log.error("%s: %s", err_string, filepath)
                     return False, err_string  # Error during file read
                 if hash_old == file_obj.hash:
                     return False, None
-        except:
+        # pylint: disable=W0703
+        except Exception:
             log.error("Error while parsing file %s", filepath, exc_info=True)
             return False, 'Error during parsing'  # Error during parsing
         if filepath not in self.workspace:
@@ -389,6 +398,7 @@ class LangServer:
                 continue
             self.workspace[path] = result_obj[0]
 
+    # pylint: disable=unused-argument
     def serve_exit(self, request):
         # Exit server
         self.workspace = {}
@@ -403,6 +413,7 @@ class LangServer:
 
 class JSONRPC2Error(Exception):
     def __init__(self, code, message, data=None):
+        super().__init__(message)
         self.code = code
         self.message = message
         self.data = data

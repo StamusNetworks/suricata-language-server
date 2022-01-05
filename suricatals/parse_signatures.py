@@ -1,4 +1,3 @@
-import os
 import hashlib
 
 import re
@@ -31,7 +30,8 @@ class SuricataFile:
             self.contents_split = contents.splitlines()
             self.nLines = len(self.contents_split)
             self.parse_file()
-        except:
+        # pylint: disable=W0703
+        except Exception:
             return 'Could not read/decode file'
         else:
             return None
@@ -77,7 +77,7 @@ class SuricataFile:
             diagnostics.append({ "range": { "start": {"line": line, "character": start_char}, "end": {"line": line, "character": end_char} }, "message": info['message'], "severity": 4 })
         return diagnostics
 
-    def parse_file(self, debug=False):
+    def parse_file(self):
         """Build file Info by parsing file"""
         i = 0
         self.content_line_map = {}

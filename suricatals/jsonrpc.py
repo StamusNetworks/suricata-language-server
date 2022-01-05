@@ -84,9 +84,9 @@ class JSONRPC2Connection:
             value = value.strip()
             try:
                 return int(value)
-            except ValueError:
+            except ValueError as error_value:
                 raise JSONRPC2ProtocolError(
-                    "Invalid Content-Length header: {0}".format(value))
+                    "Invalid Content-Length header: {0}".format(value)) from error_value
 
     def _receive(self):
         line = self.conn.readline()
@@ -262,9 +262,9 @@ def read_rpc_messages(content):
             value = value.strip()
             try:
                 return int(value)
-            except ValueError:
+            except ValueError as error_value:
                 raise JSONRPC2ProtocolError(
-                    "Invalid Content-Length header: {0}".format(value))
+                    "Invalid Content-Length header: {0}".format(value)) from error_value
 
     def receive_next():
         line = content.readline()
