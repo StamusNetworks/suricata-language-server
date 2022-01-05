@@ -37,7 +37,7 @@ You can use pip to install the Suricata language server ::
 
 Run this command with sudo if you want to install it globally.
 
-If you are a Microsoft Windows user and need to install Suricata, you can use the MSI available on 'Suricata download page <https://suricata.io/download/>'.
+If you are a Microsoft Windows user and need to install Suricata, you can use the MSI available on `Suricata download page <https://suricata.io/download/>`_.
 For Python, the installer from Python website available on their `Download page <https://www.python.org/downloads/windows/>`_ is working well.
 
 Manual Installation
