@@ -13,10 +13,6 @@ SURICATA_RULES_EXT_REGEX = re.compile(r'^\.rules?$', re.I)
 
 def init_file(filepath, suricata_binary):
     file_obj = SuricataFile(filepath, suricata_binary=suricata_binary)
-    err_str = file_obj.load_from_disk()
-    if err_str is not None:
-        return None, err_str
-    #
     return file_obj, None
 
 
