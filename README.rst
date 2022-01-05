@@ -12,6 +12,22 @@ Suricata Language Server requires Python and a Suricata binary.
 The code is based on `Chris Hansen's fortran language server  <https://github.com/hansec/fortran-language-server>`_ and
 incorporate code from `Stamus Networks' scirius <https://github.com/StamusNetworks/scirius>`_.
 
+Features and architecture
+=========================
+
+Suricata Language Server currently supports auto-completion and advanced syntax checking. Both features are
+using the capabilities of the Suricata available on the system. This means that the list of keywords (with
+documentation information) is coming for Suricata itself and it is the same for the syntax checking. This
+comes at the cost to have Suricata installed on your system but at the same time, it guarantees a strict
+checking of signatures with respect to the Suricata version you are running. Pushing signatures to
+production will not result in bad surprise as the syntax has already been checked by the same engine.
+
+Syntax checking is done when saving the files. A configuration test is started using Suricata. This
+is providing errors to the diagnostic. Warnings and hints are also provided by using a
+detection engine analysis done by Suricata. This is returning warnings and hints about the potential
+issues seen of the signatures.
+
+
 Installation
 ============
 
@@ -90,7 +106,7 @@ You can also direcly install it from Visual Studio Code via the Extensions menu.
 Then you can configure it via the settings. Main settings are the path to the Suricata Language
 Server binary and the path to the Suricata binary.
 
-For the setings on Microsoft Windows, you will need to escape the backslash in the paths you need to enter. With a standard Suricata msi installation
+For the settings on Microsoft Windows, you will need to escape the backslash in the paths you need to enter. With a standard Suricata msi installation
 and a standard installation of the server with ``pip`` the settings look like:
 
 * Server Path: ``C:\\Users\\User\\AppData\\Local\\Programs\\Python\\Python310\\Scripts\\suricata-language-server.exe``
@@ -103,7 +119,7 @@ Sublime Text 3
 
 You can use the `LSP <https://lsp.sublimetext.io/>`_ Package to provide support for LSP to Sublime Text 3.
 
-To acticate Suricata Language Server on .rules file, you need to create a new syntax for Suricata file by using the content of `Suricata Sublime syntax from justjamesnow <https://github.com/justjamesnow/SublimeSuricata/blob/master/suricata.sublime-syntax>`_
+To activate Suricata Language Server on .rules file, you need to create a new syntax for Suricata file by using the content of `Suricata Sublime syntax from justjamesnow <https://github.com/justjamesnow/SublimeSuricata/blob/master/suricata.sublime-syntax>`_
 
 To do so you can click on ``Tools > Developer > New Syntax`` then paste the content of the file and modify the text `text.suricata` to `source.suricata`. This will provide syntax highlighting as well as a `source.suricata` Sublime selector that can be used to trigger the Suricata Language Server activation.
 
