@@ -2,21 +2,7 @@ default:
   tags:
   - aws
 
-vscode-pkg:
-  image: node
-  stage: build
-  artifacts:
-    paths:
-    - "*.vsix"
-  script:
-  - npm install -g vsce
-  - npm install
-  - cd client
-  - npm install
-  - cd ..
-  - vsce package
-
-python-egg:
+python-build:
   image: python
   stage: build
   artifacts:
