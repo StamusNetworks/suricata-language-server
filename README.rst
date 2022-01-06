@@ -136,3 +136,24 @@ The following configuration is known to work ::
      },
    },
  }
+
+Kate
+----
+
+You can use Suricata Language Server in Kate by activating the `LSP Client Plugin <https://docs.kde.org/stable5/en/kate/kate/kate-application-plugin-lspclient.html>`_.
+
+.. image:: https://raw.githubusercontent.com/StamusNetworks/suricata-language-server/main/images/kate-sample.png
+ 
+Once activated, you can go to ``Settings > Configure Kate > LSP Client`` then open the ``User Server Settings`` tab and add the configuration
+for the Language Server Protocol ::
+
+  {
+    "servers": {
+        "suricata": {
+            "command": ["/path/to/suricata-language-server", "--suricata-binary=/path/to/suricata"],
+            "highlightingModeRegex": "^.*Suricata.*$"
+          }
+        }
+  }
+
+The second option giving the path to suricata binary is only necessary if you have a binary in a custom location.
