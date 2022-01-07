@@ -83,11 +83,12 @@ class SuricataFile:
         self.content_line_map = {}
         self.line_content_map = {}
         self.sid_line_map = {}
+        is_comment = re.compile(r"[ \t]*#")
         getsid = re.compile(r"sid *:(\d+)")
         get_multilines = re.compile(r"\\ *$" )
         multi_lines_index = -1
         for line in self.contents_split:
-            if line.startswith("#"):
+            if is_comment.match(line):
                 i += 1
                 continue
             if multi_lines_index >= 0:
