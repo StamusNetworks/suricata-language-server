@@ -4,7 +4,7 @@ import os
 import argparse
 from .langserver import LangServer
 from .jsonrpc import JSONRPC2Connection, ReadWriter
-__version__ = '0.2.0'
+__version__ = '0.3.0'
 
 
 def error_exit(error_str):
