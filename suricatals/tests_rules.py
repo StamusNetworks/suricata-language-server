@@ -340,8 +340,12 @@ engine-analysis:
                     if signature['content'].count('content:') <= 1:
                         continue
                     pattern = info.split('"')[1]
-                    msg['start_char'] = signature['content'].index(pattern)
-                    msg['end_char'] = signature['content'].index(pattern) + len(pattern)
+                    try:
+                        msg['start_char'] = signature['content'].index(pattern)
+                        msg['end_char'] = signature['content'].index(pattern) + len(pattern)
+                    except ValueError:
+                        msg['start_char'] = 0
+                        msg['end_char'] = 1
                     result['info'].append(msg)
         shutil.rmtree(tmpdir)
         return result
