@@ -155,6 +155,8 @@ config classification: social-engineering,Possible Social Engineering Attempted,
 config classification: coin-mining,Crypto Currency Mining Activity Detected,2
 config classification: command-and-control,Malware Command and Control Activity Detected,1
 """
+    SURICATA_SYNTAX_CHECK = "Suricata Syntax Check"
+    SURICATA_ENGINE_ANALYSIS = "Suricata Engine Analysis"
 
     def __init__(self, suricata_binary='suricata') -> None:
         self.suricata_binary = suricata_binary
@@ -172,8 +174,9 @@ config classification: command-and-control,Malware Command and Control Activity 
             try:
                 s_err = json.loads(line)
             except json.JSONDecodeError:
-                ret['errors'].append({'message': error, 'format': 'raw'})
+                ret['errors'].append({'message': error, 'format': 'raw', 'source': self.SURICATA_SYNTAX_CHECK})
                 return ret
+            s_err['engine']['source'] = self.SURICATA_SYNTAX_CHECK
             errno = s_err['engine']['error_code']
             if not single or errno not in self.RULEFILE_ERRNO:
                 if errno == self.VARIABLE_ERROR:
@@ -315,12 +318,12 @@ engine-analysis:
             error_code = struct_msg['engine'].get('error_code', 0) 
             if error_code == 176:
                 warning, sig_content = struct_msg['engine']['message'].split('"', 1)
-                result['warnings'].append({'message': warning.rstrip(), 'content': sig_content.rstrip('"')})
+                result['warnings'].append({'message': warning.rstrip(), 'source': self.SURICATA_SYNTAX_CHECK, 'content': sig_content.rstrip('"')})
             # Message for invalid signature
             elif error_code == 276:
                 rule, warning = struct_msg['engine']['message'].split(': ', 1)
                 rule = int(rule.split(' ')[1])
-                result['warnings'].append({'message': warning.rstrip(), 'sid': rule})
+                result['warnings'].append({'message': warning.rstrip(), 'source': self.SURICATA_SYNTAX_CHECK, 'sid': rule})
 
         # runs rules analysis to have warnings
         suri_cmd = [self.suricata_binary, '--engine-analysis', '-l', tmpdir, '-S', rule_file, '-c', config_file]
@@ -328,12 +331,11 @@ engine-analysis:
         suriprocess = subprocess.Popen(suri_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         (outdata, errdata) = suriprocess.communicate()
         engine_analysis = self.parse_engine_analysis(tmpdir)
-        result['analysis'] = engine_analysis
         for signature in engine_analysis:
             for warning in signature.get('warnings', []):
-                result['warnings'].append({'message': warning, 'content': signature['content']})
+                result['warnings'].append({'message': warning, 'source': self.SURICATA_ENGINE_ANALYSIS, 'content': signature['content']})
             for info in signature.get('info', []):
-                msg = {'message': info, 'content': signature['content']}
+                msg = {'message': info, 'source': self.SURICATA_ENGINE_ANALYSIS, 'content': signature['content']}
                 if "Fast Pattern \"" in info:
                     if 'fast_pattern' in signature['content']:
                         continue

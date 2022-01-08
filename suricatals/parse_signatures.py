@@ -48,7 +48,7 @@ class SuricataFile:
                 line_content = self.line_content_map.get(error['line'])
                 if line_content:
                     range_end = len(line_content.rstrip())
-                diagnostics.append({ "range": { "start": {"line": error['line'], "character": 0}, "end": {"line": error['line'], "character": range_end} }, "message": error['message'], "severity": 1 })
+                diagnostics.append({ "range": { "start": {"line": error['line'], "character": 0}, "end": {"line": error['line'], "character": range_end} }, "message": error['message'], "source": error['source'], "severity": 1 })
         for warning in result.get('warnings', []):
             line = None
             range_start = 0
@@ -63,7 +63,7 @@ class SuricataFile:
                 line = self.sid_line_map.get(warning['sid'])
             if line is None:
                 continue
-            diagnostics.append({ "range": { "start": {"line": line, "character": range_start}, "end": {"line": line, "character": range_end} }, "message": warning['message'], "severity": 2 })
+            diagnostics.append({ "range": { "start": {"line": line, "character": range_start}, "end": {"line": line, "character": range_end} }, "message": warning['message'], "source": warning['source'], "severity": 2 })
         for info in result.get('info', []):
             line = None
             if 'line' in info:
@@ -74,7 +74,7 @@ class SuricataFile:
                 continue
             start_char = info.get('start_char', 0)
             end_char = info.get('end_char', 0)
-            diagnostics.append({ "range": { "start": {"line": line, "character": start_char}, "end": {"line": line, "character": end_char} }, "message": info['message'], "severity": 4 })
+            diagnostics.append({ "range": { "start": {"line": line, "character": start_char}, "end": {"line": line, "character": end_char} }, "message": info['message'], "source": info['source'], "severity": 4 })
         return diagnostics
 
     def parse_file(self):
