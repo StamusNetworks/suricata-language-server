@@ -18,6 +18,7 @@ You should have received a copy of the GNU General Public License
 along with Scirius.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+from json.decoder import JSONDecodeError
 import subprocess
 import tempfile
 import shutil
@@ -173,7 +174,7 @@ config classification: command-and-control,Malware Command and Control Activity 
         for line in error_stream:
             try:
                 s_err = json.loads(line)
-            except json.JSONDecodeError:
+            except JSONDecodeError:
                 ret['errors'].append({'message': error, 'format': 'raw', 'source': self.SURICATA_SYNTAX_CHECK})
                 return ret
             s_err['engine']['source'] = self.SURICATA_SYNTAX_CHECK
@@ -310,7 +311,7 @@ engine-analysis:
         for message in message_stream:
             try:
                 struct_msg = json.loads(message)
-            except json.JSONDecodeError:
+            except JSONDecodeError:
                 continue
             if not 'engine' in struct_msg:
                 continue
@@ -361,6 +362,12 @@ engine-analysis:
         return prov_result
 
     def parse_engine_analysis(self, log_dir):
+        json_path = os.path.join(log_dir, 'rules.json')
+        if os.path.isfile(json_path):
+            return self.parse_engine_analysis_v2(json_path)
+        return self.parse_engine_analysis_v1(log_dir)
+
+    def parse_engine_analysis_v1(self, log_dir):
         analysis = []
         with open(os.path.join(log_dir, 'rules_analysis.txt'), 'r', encoding='utf-8') as analysis_file:
             in_sid_data = False
@@ -388,6 +395,57 @@ engine-analysis:
                     signature['info'].append(line.strip())
         return analysis
 
+    def parse_engine_analysis_v2(self, json_path):
+        analysis = []
+        with open(json_path, 'r', encoding='utf-8') as analysis_file:
+            for line in analysis_file:
+                signature_info = {}
+                try:
+                    signature_info = json.loads(line)
+                except JSONDecodeError:
+                    pass
+                signature_msg = {'content': signature_info['raw']}
+                if 'id' in signature_info:
+                    signature_msg['sid'] = signature_info['id']
+                if 'mpm' in signature_info:
+                    if not 'info' in signature_msg:
+                        signature_msg['info'] = []
+                    signature_msg['info'].append('Fast Pattern "%s" on %s' % (signature_info['mpm']['pattern'], signature_info['mpm']['buffer']))
+                if 'engines' in signature_info:
+                    app_proto = None
+                    multiple_app_proto = False
+                    got_raw_match = False
+                    got_content = False
+                    got_pcre = False
+                    for engine in signature_info['engines']:
+                        if 'app_proto' in engine:
+                            if app_proto is None:
+                                app_proto = engine.get('app_proto')
+                            else:
+                                if app_proto != engine.get('app_proto'):
+                                    if not app_proto in ['http', 'http2'] or not engine.get('app_proto') in ['http', 'http2']:
+                                        multiple_app_proto = True
+                        else:
+                            got_raw_match = True
+                        for match in engine.get('matches', []):
+                            if match['name'] == 'content':
+                                got_content = True
+                            elif match['name'] == 'pcre':
+                                got_pcre = True
+                    if got_pcre and not got_content:
+                        if not 'warnings' in signature_msg:
+                            signature_msg['warnings'] = []
+                        signature_msg['warnings'].append('Rule with pcre without content match (possible perfomance issue)')
+                    if app_proto is not None and got_raw_match:
+                        if not 'warnings' in signature_msg:
+                            signature_msg['warnings'] = []
+                        signature_msg['warnings'].append('Application layer "%s" combined with raw match, consider using a match on application buffer' %  (app_proto))
+                    if multiple_app_proto:
+                        if not 'warnings' in signature_msg:
+                            signature_msg['warnings'] = []
+                        signature_msg['warnings'].append('Multiple application layers in same sig')
+                analysis.append(signature_msg)
+        return analysis
 
     def build_keywords_list(self):
         tmpdir = tempfile.mkdtemp()
