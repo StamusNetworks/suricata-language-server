@@ -416,6 +416,10 @@ engine-analysis:
                     if not 'info' in signature_msg:
                         signature_msg['info'] = []
                     signature_msg['info'].append('Fast Pattern "%s" on %s' % (signature_info['mpm']['pattern'], signature_info['mpm']['buffer']))
+                if 'warnings' in signature_info:
+                    if not 'warnings' in signature_msg:
+                        signature_msg['warnings'] = []
+                    signature_msg['warnings'].extend(signature_info.get('warnings', []))
                 if 'engines' in signature_info:
                     app_proto = None
                     multiple_app_proto = False
