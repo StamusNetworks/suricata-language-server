@@ -407,6 +407,11 @@ engine-analysis:
                 signature_msg = {'content': signature_info['raw']}
                 if 'id' in signature_info:
                     signature_msg['sid'] = signature_info['id']
+                if 'flags' in signature_info:
+                    if 'toserver' in signature_info['flags'] and 'toclient' in signature_info['flags']:
+                        if not 'warnings' in signature_msg:
+                            signature_msg['warnings'] = []
+                        signature_msg['warnings'].append('Rule inspect server and client side, consider adding a flow keyword')
                 if 'mpm' in signature_info:
                     if not 'info' in signature_msg:
                         signature_msg['info'] = []
@@ -443,7 +448,7 @@ engine-analysis:
                     if multiple_app_proto:
                         if not 'warnings' in signature_msg:
                             signature_msg['warnings'] = []
-                        signature_msg['warnings'].append('Multiple application layers in same sig')
+                        signature_msg['warnings'].append('Multiple application layers in same signature')
                 analysis.append(signature_msg)
         return analysis
 
