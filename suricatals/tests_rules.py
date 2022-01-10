@@ -336,7 +336,7 @@ engine-analysis:
             for warning in signature.get('warnings', []):
                 result['warnings'].append({'message': warning, 'source': self.SURICATA_ENGINE_ANALYSIS, 'content': signature['content']})
             for info in signature.get('info', []):
-                msg = {'message': info, 'source': self.SURICATA_ENGINE_ANALYSIS, 'content': signature['content']}
+                msg = {'message': info, 'source': self.SURICATA_ENGINE_ANALYSIS, 'content': signature['content'], 'start_char': 0, 'end_char': 1}
                 if "Fast Pattern \"" in info:
                     if 'fast_pattern' in signature['content']:
                         continue
@@ -349,7 +349,7 @@ engine-analysis:
                     except ValueError:
                         msg['start_char'] = 0
                         msg['end_char'] = 1
-                    result['info'].append(msg)
+                result['info'].append(msg)
         shutil.rmtree(tmpdir)
         return result
 
@@ -420,6 +420,10 @@ engine-analysis:
                     if not 'warnings' in signature_msg:
                         signature_msg['warnings'] = []
                     signature_msg['warnings'].extend(signature_info.get('warnings', []))
+                if 'notes' in signature_info:
+                    if not 'info' in signature_msg:
+                        signature_msg['info'] = []
+                    signature_msg['info'].extend(signature_info.get('notes', []))
                 if 'engines' in signature_info:
                     app_proto = None
                     multiple_app_proto = False
