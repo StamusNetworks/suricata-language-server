@@ -416,6 +416,20 @@ engine-analysis:
                     if not 'info' in signature_msg:
                         signature_msg['info'] = []
                     signature_msg['info'].append('Fast Pattern "%s" on %s' % (signature_info['mpm']['pattern'], signature_info['mpm']['buffer']))
+                elif 'engines' in signature_info:
+                    # Suricata 6.0.x don't have the mpm sub object
+                    fp_buffer = None
+                    fp_pattern = None
+                    for engine in signature_info['engines']:
+                        if engine['is_mpm']:
+                            fp_buffer = engine['name']
+                            for match in engine.get('matches', []):
+                                if match.get('content', {}).get('is_mpm', False):
+                                    fp_pattern = match['content']['pattern']
+                    if fp_buffer and fp_pattern:
+                        if not 'info' in signature_msg:
+                            signature_msg['info'] = []
+                        signature_msg['info'].append('Fast Pattern "%s" on %s' % (fp_pattern, fp_buffer))
                 if 'warnings' in signature_info:
                     if not 'warnings' in signature_msg:
                         signature_msg['warnings'] = []
