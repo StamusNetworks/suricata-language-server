@@ -5,9 +5,9 @@ import re
 from suricatals.tests_rules import TestRules
 
 class SuricataFile:
-    def __init__(self, path=None, suricata_binary='suricata'):
+    def __init__(self, path=None, rules_tester=None):
         self.path = path
-        self.suricata_binary = suricata_binary
+        self.rules_tester = rules_tester
         self.contents_split = []
         self.content_line_map= {}
         self.line_content_map= {}
@@ -40,8 +40,7 @@ class SuricataFile:
         diagnostics = []
         result = {}
         with open(self.path, 'r', encoding='utf-8', errors='replace') as fhandle:
-            test_rules = TestRules(suricata_binary=self.suricata_binary)
-            result = test_rules.check_rule_buffer(fhandle.read())
+            result = self.rules_tester.check_rule_buffer(fhandle.read())
         for error in result.get('errors', []):
             if 'line' in error:
                 range_end = 1000

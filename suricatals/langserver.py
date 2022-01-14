@@ -11,8 +11,8 @@ log = logging.getLogger(__name__)
 
 SURICATA_RULES_EXT_REGEX = re.compile(r'^\.rules?$', re.I)
 
-def init_file(filepath, suricata_binary):
-    file_obj = SuricataFile(filepath, suricata_binary=suricata_binary)
+def init_file(filepath, rules_tester):
+    file_obj = SuricataFile(filepath, rules_tester=rules_tester)
     return file_obj, None
 
 
@@ -37,7 +37,8 @@ class LangServer:
         self.sync_type = settings.get("sync_type", 1)
         self.suricata_binary = settings.get("suricata_binary", 'suricata')
         self.max_lines = settings.get("max_lines", 1000)
-        self.keywords_list = TestRules(suricata_binary=self.suricata_binary).build_keywords_list()
+        self.rules_tester = TestRules(suricata_binary=self.suricata_binary)
+        self.keywords_list = self.rules_tester.build_keywords_list()
 
     def post_message(self, message, msg_type=1):
         self.conn.send_notification("window/showMessage", {
@@ -336,7 +337,7 @@ class LangServer:
             file_obj = self.workspace.get(filepath)
             if read_file:
                 if file_obj is None:
-                    file_obj = SuricataFile(filepath, suricata_binary=self.suricata_binary)
+                    file_obj = SuricataFile(filepath, rules_tester=self.rules_tester)
                     # Create empty file if not yet saved to disk
                     if not os.path.isfile(filepath):
                         if allow_empty:
@@ -384,7 +385,7 @@ class LangServer:
         pool = Pool(processes=self.nthreads)
         results = {}
         for filepath in file_list:
-            results[filepath] = pool.apply_async(init_file, args=(filepath, self.suricata_binary))
+            results[filepath] = pool.apply_async(init_file, args=(filepath, self.rules_tester))
         pool.close()
         pool.join()
         for path, result in results.items():
