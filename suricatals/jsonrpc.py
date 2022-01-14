@@ -21,18 +21,14 @@ def path_from_uri(uri):
     if not uri.startswith("file://"):
         return uri
     if os.name == "nt":
-        _, path = uri.split("file:///", 1)
+        if uri.startswith("file:///"):
+            _, path = uri.split("file:///", 1)
+        else: # we should have an UNC path
+            _, path = uri.split("file:", 1)
+            return path
     else:
         _, path = uri.split("file://", 1)
     return os.path.normpath(unquote(path))
-
-
-def path_to_uri(path):
-    # Convert path to file uri (add html like head part)
-    if os.name == "nt":
-        return "file:///" + quote(path.replace('\\', '/'))
-    else:
-        return "file://" + quote(path)
 
 
 class JSONRPC2ProtocolError(Exception):
