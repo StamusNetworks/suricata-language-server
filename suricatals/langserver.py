@@ -129,41 +129,6 @@ class LangServer:
         self.root_path = path_from_uri(
             params.get("rootUri") or params.get("rootPath") or "")
         self.source_dirs.append(self.root_path)
-        # Check for config file
-        config_path = os.path.join(self.root_path, ".suricatals")
-        config_exists = os.path.isfile(config_path)
-        if config_exists:
-            try:
-                import json
-                with open(config_path, 'r', encoding='utf-8') as fhandle:
-                    config_dict = json.load(fhandle)
-                    for excl_path in config_dict.get("excl_paths", []):
-                        self.excl_paths.append(os.path.join(self.root_path, excl_path))
-                    source_dirs = config_dict.get("source_dirs", [])
-                    ext_source_dirs = config_dict.get("ext_source_dirs", [])
-                    # Legacy definition
-                    if len(source_dirs) == 0:
-                        source_dirs = config_dict.get("mod_dirs", [])
-                    for source_dir in source_dirs:
-                        dir_path = os.path.join(self.root_path, source_dir)
-                        if os.path.isdir(dir_path):
-                            self.source_dirs.append(dir_path)
-                        else:
-                            self.post_messages.append(
-                                [2, r'Source directory "{0}" specified in '
-                                 r'".suricatals" settings file does not exist'.format(dir_path)]
-                            )
-                    for ext_source_dir in ext_source_dirs:
-                        if os.path.isdir(ext_source_dir):
-                            self.source_dirs.append(ext_source_dir)
-                        else:
-                            self.post_messages.append(
-                                [2, r'External source directory "{0}" specified in '
-                                 r'".suricatals" settings file does not exist'.format(ext_source_dir)]
-                            )
-            # pylint: disable=W0703
-            except Exception:
-                self.post_messages.append([1, 'Error while parsing ".suricatals" settings file'])
         # Recursively add sub-directories
         if len(self.source_dirs) == 1:
             self.source_dirs = []
