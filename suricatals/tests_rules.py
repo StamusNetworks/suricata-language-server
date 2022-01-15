@@ -161,6 +161,24 @@ config classification: command-and-control,Malware Command and Control Activity 
 
     def __init__(self, suricata_binary='suricata') -> None:
         self.suricata_binary = suricata_binary
+        self.suricata_version = self.get_suricata_version()
+
+    def get_suricata_version(self):
+        suri_cmd = [self.suricata_binary, '-V']
+        suriprocess = subprocess.Popen(suri_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        (outdata, _) = suriprocess.communicate()
+        for line in io.StringIO(outdata.decode('utf-8')):
+            mm = re.match(r'This is Suricata version (\d+\.\d+\.\d+)', line)
+            if mm is not None:
+                return mm.group(1)
+
+    def json_compat_version(self):
+        (major, minor, fix) = self.suricata_version.split('.')
+        if int(major) < 6:
+            return True
+        elif int(major) == 6 and int(minor) == 0 and int(fix) < 4:
+            return False
+        return True
 
     def parse_suricata_error(self, error, single=False):
         ret = {
@@ -363,7 +381,7 @@ engine-analysis:
 
     def parse_engine_analysis(self, log_dir):
         json_path = os.path.join(log_dir, 'rules.json')
-        if os.path.isfile(json_path):
+        if os.path.isfile(json_path) and self.json_compat_version():
             return self.parse_engine_analysis_v2(json_path)
         return self.parse_engine_analysis_v1(log_dir)
 
