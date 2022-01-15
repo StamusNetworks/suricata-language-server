@@ -2,8 +2,6 @@ import hashlib
 
 import re
 
-from suricatals.tests_rules import TestRules
-
 class SuricataFile:
     def __init__(self, path=None, rules_tester=None):
         self.path = path
@@ -17,7 +15,7 @@ class SuricataFile:
 
     def copy(self):
         """Copy content to new file object (does not copy objects)"""
-        copy_obj = SuricataFile(self.path, suricata_binary=self.suricata_binary)
+        copy_obj = SuricataFile(self.path, rules_tester=self.rules_tester)
         return copy_obj
 
     def load_from_disk(self):
