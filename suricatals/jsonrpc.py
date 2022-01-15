@@ -8,9 +8,8 @@ import threading
 from collections import deque
 import os
 try:
-    from urllib.parse import unquote, quote
+    from urllib.parse import unquote
 except ImportError:
-    from urllib2 import quote
     from urlparse import unquote
 
 log = logging.getLogger(__name__)
