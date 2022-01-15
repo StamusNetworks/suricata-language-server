@@ -480,7 +480,7 @@ engine-analysis:
                     if got_pcre and not got_content:
                         if not 'warnings' in signature_msg:
                             signature_msg['warnings'] = []
-                        signature_msg['warnings'].append('Rule with pcre without content match (possible perfomance issue)')
+                        signature_msg['warnings'].append('Rule with pcre without content match (possible performance issue)')
                     if app_proto is not None and got_raw_match:
                         if not 'warnings' in signature_msg:
                             signature_msg['warnings'] = []
