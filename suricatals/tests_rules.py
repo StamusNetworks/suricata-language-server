@@ -356,8 +356,6 @@ engine-analysis:
             for info in signature.get('info', []):
                 msg = {'message': info, 'source': self.SURICATA_ENGINE_ANALYSIS, 'content': signature['content'], 'start_char': 0, 'end_char': 1}
                 if "Fast Pattern \"" in info:
-                    if 'fast_pattern' in signature['content']:
-                        continue
                     if signature['content'].count('content:') <= 1:
                         continue
                     pattern = info.split('"')[1]
