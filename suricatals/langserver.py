@@ -11,6 +11,17 @@ log = logging.getLogger(__name__)
 
 SURICATA_RULES_EXT_REGEX = re.compile(r'^\.rules?$', re.I)
 
+ACTIONS_ITEMS = [
+        {'label': 'alert', 'kind': 14, 'detail': 'Alert action', 'documentation': 'Trigger alert' },
+        {'label': 'configt', 'kind': 14, 'detail': 'Alert action', 'documentation': 'Configuration signature. Used mostly for conditional logging.' },
+        {'label': 'drop', 'kind': 14, 'detail': 'Alert action', 'documentation': 'Trigger alert and drop flow' },
+        {'label': 'pass', 'kind': 14, 'detail': 'Alert action', 'documentation': 'Stop inspecting the data' },
+        {'label': 'reject', 'kind': 14, 'detail': 'Alert action', 'documentation': 'Trigger alert and reset session' },
+        {'label': 'rejectsrc', 'kind': 14, 'detail': 'Alert action', 'documentation': 'Trigger alert and reset session for source IP' },
+        {'label': 'rejectdst', 'kind': 14, 'detail': 'Alert action', 'documentation': 'Trigger alert and reset session for destination IP' },
+        {'label': 'rejectboth', 'kind': 14, 'detail': 'Alert action', 'documentation': 'Trigger alert and reset session for both IPs' },
+        ]
+
 def init_file(filepath, rules_tester):
     file_obj = SuricataFile(filepath, rules_tester=rules_tester)
     return file_obj, None
@@ -182,6 +193,8 @@ class LangServer:
         log.debug(sig_content)
         # not yet in content matching so just return nothing
         if not '(' in sig_content[0:sig_index]:
+            if not ' ' in sig_content[0:sig_index]:
+                return ACTIONS_ITEMS
             if edit_index == 0:
                 return None
             elif not re.search(r'\\ *$', file_obj.contents_split[edit_index - 1]):
