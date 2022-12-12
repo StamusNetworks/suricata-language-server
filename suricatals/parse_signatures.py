@@ -1,6 +1,7 @@
 import hashlib
 
 import re
+import json
 
 class SuricataFile:
     def __init__(self, path=None, rules_tester=None):
@@ -12,6 +13,8 @@ class SuricataFile:
         self.sid_line_map= {}
         self.nLines = 0
         self.hash = None
+        self.mpm = None
+        self.diagnosis = None
 
     def copy(self):
         """Copy content to new file object (does not copy objects)"""
@@ -39,6 +42,7 @@ class SuricataFile:
         result = {}
         with open(self.path, 'r', encoding='utf-8', errors='replace') as fhandle:
             result = self.rules_tester.check_rule_buffer(fhandle.read())
+            self.mpm = result['mpm']
         for error in result.get('errors', []):
             if 'line' in error:
                 range_end = 1000
@@ -72,6 +76,7 @@ class SuricataFile:
             start_char = info.get('start_char', 0)
             end_char = info.get('end_char', 0)
             diagnostics.append({ "range": { "start": {"line": line, "character": start_char}, "end": {"line": line, "character": end_char} }, "message": info['message'], "source": info['source'], "severity": 4 })
+        self.diagnosis = diagnostics
         return diagnostics
 
     def parse_file(self):
