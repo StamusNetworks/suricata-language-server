@@ -24,6 +24,7 @@ ACTIONS_ITEMS = [
 
 def init_file(filepath, rules_tester):
     file_obj = SuricataFile(filepath, rules_tester=rules_tester)
+    file_obj.check_file()
     return file_obj, None
 
 

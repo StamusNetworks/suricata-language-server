@@ -366,6 +366,8 @@ engine-analysis:
                         msg['start_char'] = 0
                         msg['end_char'] = 1
                 result['info'].append(msg)
+        mpm_analysis = self.parse_rules_json(tmpdir)
+        result['mpm'] = mpm_analysis
         shutil.rmtree(tmpdir)
         return result
 
@@ -489,6 +491,32 @@ engine-analysis:
                         signature_msg['warnings'].append('Multiple application layers in same signature')
                 analysis.append(signature_msg)
         return analysis
+
+    def parse_rules_json(self, log_dir):
+        mpm_data = []
+        with open(os.path.join(log_dir, 'rules.json'), 'r') as rules_json:
+            for line in rules_json:
+                # some suricata version have an invalid JSON formatted message
+                try:
+                    rule_analysis = json.loads(line)        
+                except json.JSONDecodeError:
+                    return None
+                rule_analysis['mpm']['id'] = rule_analysis['id']
+                rule_analysis['mpm']['gid'] = rule_analysis['gid']
+                mpm_data.append(rule_analysis['mpm'])
+        # target to have
+        # { 'http.host': { 'grosminet': { 'count': 34, sigs: [{'id': 2, 'gid':1}]} } }
+        mpm_analysis = {}
+        for sig in mpm_data:
+            if sig['buffer'] in mpm_analysis:
+                if sig['pattern'] in mpm_analysis[sig['buffer']]:
+                    mpm_analysis[sig['buffer']][sig['pattern']]['count'] += 1
+                    mpm_analysis[sig['buffer']][sig['pattern']]['sigs'].append({'id': sig['id'], 'gid': sig['gid']})
+                else:
+                    mpm_analysis[sig['buffer']][sig['pattern']] = {'count': 1, 'sigs': [{'id': sig['id'], 'gid': sig['gid']}]}
+            else:
+                mpm_analysis[sig['buffer']] = { sig['pattern']: {'count': 1, 'sigs': [{'id': sig['id'], 'gid': sig['gid']}]}}
+        return mpm_analysis
 
     def build_keywords_list(self):
         tmpdir = tempfile.mkdtemp()
