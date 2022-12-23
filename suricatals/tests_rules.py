@@ -180,7 +180,64 @@ config classification: command-and-control,Malware Command and Control Activity 
             return False
         return True
 
-    def parse_suricata_error(self, error, single=False):
+    def parse_suricata_error_after_7(self, error, single=False):
+        ret = {
+            'errors': [],
+            'warnings': [],
+        }
+        error_stream = io.StringIO(error)
+        wait_line = False
+        for line in error_stream:
+            try:
+                s_err = json.loads(line)
+            except JSONDecodeError:
+                ret['errors'].append({'message': error, 'format': 'raw', 'source': self.SURICATA_SYNTAX_CHECK})
+                return ret
+            s_err['engine']['source'] = self.SURICATA_SYNTAX_CHECK
+
+            if not s_err['engine']['module'].startswith('detect') and s_err['engine']['module'] not in ['rule-vars']:
+                continue
+            if s_err['engine']['module'] == 'detect-parse':
+                ret['errors'].append(s_err['engine'])
+                continue
+            elif s_err['engine']['module'] == 'detect-dataset':
+                if not wait_line:
+                    if s_err['engine']['message'].startswith("bad type"):
+                        s_err['engine']['message'] = "dataset: " + s_err['engine']['message']
+                    ret['errors'].append(s_err['engine'])
+                    wait_line = True
+                continue
+            elif s_err['engine']['module'] == 'rules-vars':
+                # TODO handle error as warning
+                ret['errors'].append(s_err['engine'])
+                continue
+            elif s_err['engine']['module'] == 'detect':
+                if 'error parsing signature' in s_err['engine']['message']:
+                    message = s_err['engine']['message']
+                    s_err['engine']['message'] = s_err['engine']['message'].split(' from file')[0]
+                    getsid = re.compile(r"sid *:(\d+)")
+                    match = getsid.search(line)
+                    if match:
+                        s_err['engine']['sid'] = int(match.groups()[0])
+                    getline = re.compile(r"at line (\d+)$")
+                    match = getline.search(message)
+                    if match:
+                        line_nb = int(match.groups()[0])
+                        if len(ret['errors']):
+                            ret['errors'][-1]['line'] = line_nb - 1
+                        wait_line = False
+                        continue
+                    wait_line = False
+                else:
+                    ret['errors'].append(s_err['engine'])
+            else:
+                if not wait_line:
+                    ret['errors'].append(s_err['engine'])
+                    wait_line = True
+                continue
+        return ret
+
+    def parse_suricata_error_before_7(self, error, single=False):
         ret = {
             'errors': [],
             'warnings': [],
@@ -263,6 +320,13 @@ config classification: command-and-control,Malware Command and Control Activity 
                         s_err['engine']['message'] = s_err['engine']['message'].split(' from')[0]
                     ret['errors'].append(s_err['engine'])
         return ret
+
+    def parse_suricata_error(self, error, single=False):
+        (major, _, _) = self.suricata_version.split('.')
+        if int(major) < 7:
+           return self.parse_suricata_error_before_7(error, single)
+        else:
+           return self.parse_suricata_error_after_7(error, single)
 
     def generate_config(self, tmpdir, config_buffer=None, related_files=None, reference_config=None, classification_config=None):
         if not reference_config:
