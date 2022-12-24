@@ -49,6 +49,9 @@ app-layer:
   protocols:
     tls:
       ja3-fingerprints: yes
+engine-analysis:
+  rules-fast-pattern: yes
+  rules: yes
 vars:
   address-groups:
     HOME_NET: "[192.168.0.0/16,10.0.0.0/8,172.16.0.0/12]"
@@ -558,19 +561,23 @@ engine-analysis:
 
     def parse_rules_json(self, log_dir):
         mpm_data = []
-        with open(os.path.join(log_dir, 'rules.json'), 'r') as rules_json:
-            for line in rules_json:
-                # some suricata version have an invalid JSON formatted message
-                try:
-                    rule_analysis = json.loads(line)        
-                except json.JSONDecodeError:
-                    return None
-                rule_analysis['mpm']['id'] = rule_analysis['id']
-                rule_analysis['mpm']['gid'] = rule_analysis['gid']
-                mpm_data.append(rule_analysis['mpm'])
+        mpm_analysis = {}
+        try:
+            with open(os.path.join(log_dir, 'rules.json'), 'r') as rules_json:
+                for line in rules_json:
+                    # some suricata version have an invalid JSON formatted message
+                    try:
+                        rule_analysis = json.loads(line)
+                    except json.JSONDecodeError:
+                        return None
+                    if 'mpm' in rule_analysis:
+                        rule_analysis['mpm']['id'] = rule_analysis['id']
+                        rule_analysis['mpm']['gid'] = rule_analysis['gid']
+                        mpm_data.append(rule_analysis['mpm'])
+        except FileNotFoundError as e:
+            return mpm_analysis
         # target to have
         # { 'http.host': { 'grosminet': { 'count': 34, sigs: [{'id': 2, 'gid':1}]} } }
-        mpm_analysis = {}
         for sig in mpm_data:
             if sig['buffer'] in mpm_analysis:
                 if sig['pattern'] in mpm_analysis[sig['buffer']]:
