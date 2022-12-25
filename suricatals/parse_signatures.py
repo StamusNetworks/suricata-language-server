@@ -63,7 +63,7 @@ class SuricataFile:
     IS_COMMENT = re.compile(r"[ \t]*#")
     GET_MULTILINES = re.compile(r"\\ *$" )
 
-    def __init__(self, path=None, rules_tester=None):
+    def __init__(self, path, rules_tester):
         self.path = path
         self.rules_tester = rules_tester
         self.contents_split = []
@@ -75,7 +75,7 @@ class SuricataFile:
 
     def copy(self):
         """Copy content to new file object (does not copy objects)"""
-        copy_obj = SuricataFile(self.path, rules_tester=self.rules_tester)
+        copy_obj = SuricataFile(self.path, self.rules_tester)
         return copy_obj
 
     def load_from_disk(self):
