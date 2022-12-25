@@ -561,7 +561,7 @@ engine-analysis:
 
     def parse_rules_json(self, log_dir):
         mpm_data = []
-        mpm_analysis = {}
+        mpm_analysis = {'buffer': {}, 'sids': {}}
         try:
             with open(os.path.join(log_dir, 'rules.json'), 'r') as rules_json:
                 for line in rules_json:
@@ -579,14 +579,15 @@ engine-analysis:
         # target to have
         # { 'http.host': { 'grosminet': { 'count': 34, sigs: [{'id': 2, 'gid':1}]} } }
         for sig in mpm_data:
-            if sig['buffer'] in mpm_analysis:
-                if sig['pattern'] in mpm_analysis[sig['buffer']]:
-                    mpm_analysis[sig['buffer']][sig['pattern']]['count'] += 1
-                    mpm_analysis[sig['buffer']][sig['pattern']]['sigs'].append({'id': sig['id'], 'gid': sig['gid']})
+            if sig['buffer'] in mpm_analysis['buffer']:
+                if sig['pattern'] in mpm_analysis['buffer'][sig['buffer']]:
+                    mpm_analysis['buffer'][sig['buffer']][sig['pattern']]['count'] += 1
+                    mpm_analysis['buffer'][sig['buffer']][sig['pattern']]['sigs'].append({'id': sig['id'], 'gid': sig['gid']})
                 else:
-                    mpm_analysis[sig['buffer']][sig['pattern']] = {'count': 1, 'sigs': [{'id': sig['id'], 'gid': sig['gid']}]}
+                    mpm_analysis['buffer'][sig['buffer']][sig['pattern']] = {'count': 1, 'sigs': [{'id': sig['id'], 'gid': sig['gid']}]}
             else:
-                mpm_analysis[sig['buffer']] = { sig['pattern']: {'count': 1, 'sigs': [{'id': sig['id'], 'gid': sig['gid']}]}}
+                mpm_analysis['buffer'][sig['buffer']] = { sig['pattern']: {'count': 1, 'sigs': [{'id': sig['id'], 'gid': sig['gid']}]}}
+            mpm_analysis['sids'][sig['id']]={'buffer': sig['buffer'], 'pattern': sig['pattern']}
         return mpm_analysis
 
     def build_keywords_list(self):
