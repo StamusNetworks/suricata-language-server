@@ -11,6 +11,7 @@ class Signature:
         self.multiline = multiline
         self.sid = 0
         self._search_sid(content)
+        self.mpm = None
 
     def append_content(self, content):
         self.content += content
@@ -22,6 +23,11 @@ class Signature:
         if match:
             self.sid = int(match.groups()[0])
 
+    def __repr__(self):
+        return "Signature()"
+
+    def __str__(self):
+        return "%d:%s" % (self.sid, self.content)
 
 class SignatureSet:
     def __init__(self):
@@ -58,6 +64,7 @@ class SignatureSet:
 
     def get_sig_by_sid(self, sid):
         return self.sid_map.get(sid)
+
 
 class SuricataFile:
     IS_COMMENT = re.compile(r"[ \t]*#")
@@ -99,7 +106,11 @@ class SuricataFile:
         result = {}
         with open(self.path, 'r', encoding='utf-8', errors='replace') as fhandle:
             result = self.rules_tester.check_rule_buffer(fhandle.read())
-            self.mpm = result['mpm']
+            self.mpm = result.get('mpm', {}).get('buffer')
+            for sid in result.get('mpm', {}).get('sids'):
+                signature = self.sigset.get_sig_by_sid(sid)
+                if signature is not None:
+                    signature.mpm = result.get('mpm', {}).get('sids', {}).get(sid)
         for error in result.get('errors', []):
             if 'line' in error:
                 range_end = 1000
@@ -141,6 +152,18 @@ class SuricataFile:
             start_char = info.get('start_char', 0)
             end_char = info.get('end_char', 0)
             diagnostics.append({ "range": { "start": {"line": line, "character": start_char}, "end": {"line": line, "character": end_char} }, "message": info['message'], "source": info['source'], "severity": 4 })
+        for sig in self.sigset.signatures:
+            if sig.mpm is None:
+                continue
+            # mpm is content:"$pattern"
+            pattern = self.mpm.get(sig.mpm['buffer'], {}).get(sig.mpm['pattern'])
+            if pattern is None:
+                continue
+            if pattern['count'] > 1:
+                range_start = 0 
+                range_end = 1000
+                message = "Fast pattern '%s' on '%s' buffer is used in %d different signatures, consider using a unique fast pattern to improve performance." % (sig.mpm['pattern'], sig.mpm['buffer'], pattern['count'])
+                diagnostics.append({ "range": { "start": {"line": sig.line, "character": range_start}, "end": {"line": sig.line, "character": range_end} }, "message": message, "source": "Suricata MPM Analysis", "severity": 4 })
         self.diagnosis = diagnostics
         return diagnostics
 
