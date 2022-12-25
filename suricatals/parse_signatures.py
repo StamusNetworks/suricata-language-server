@@ -4,6 +4,10 @@ import re
 import json
 
 class SuricataFile:
+    IS_COMMENT = re.compile(r"[ \t]*#")
+    GETSID = re.compile(r"sid *:(\d+)")
+    GET_MULTILINES = re.compile(r"\\ *$" )
+
     def __init__(self, path=None, rules_tester=None):
         self.path = path
         self.rules_tester = rules_tester
@@ -90,24 +94,24 @@ class SuricataFile:
         get_multilines = re.compile(r"\\ *$" )
         multi_lines_index = -1
         for line in self.contents_split:
-            if is_comment.match(line):
+            if self.IS_COMMENT.match(line):
                 i += 1
                 continue
             if multi_lines_index >= 0:
                 self.line_content_map[multi_lines_index] += line.rstrip('\\')
-                if get_multilines.search(line):
+                if self.GET_MULTILINES.search(line):
                     i += 1
                     continue
                 else:
                     self.content_line_map[self.line_content_map[multi_lines_index]] = multi_lines_index
-                    match = getsid.search(self.line_content_map[multi_lines_index])
+                    match = self.GETSID.search(self.line_content_map[multi_lines_index])
                     if match:
                         sid = int(match.groups()[0])
                         self.sid_line_map[sid] = multi_lines_index
                     multi_lines_index = -1
                     i += 1
                     continue
-            elif get_multilines.search(line):
+            elif self.GET_MULTILINES.search(line):
                 multi_lines_index = i
                 self.line_content_map[multi_lines_index] = line.rstrip('\\')
                 i += 1
@@ -115,7 +119,7 @@ class SuricataFile:
             else:
                 self.content_line_map[line] = i
                 self.line_content_map[i] = line
-            match = getsid.search(line)
+            match = self.GETSID.search(line)
             if match:
                 sid = int(match.groups()[0])
                 self.sid_line_map[sid] = i
