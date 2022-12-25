@@ -1,20 +1,73 @@
 import hashlib
 
 import re
-import json
+
+
+class Signature:
+    GETSID = re.compile(r"sid *:(\d+)")
+    def __init__(self, line, content, multiline = False):
+        self.line = line
+        self.content = content
+        self.multiline = multiline
+        self.sid = 0
+        self._search_sid(content)
+
+    def append_content(self, content):
+        self.content += content
+        if self.sid == 0:
+            self._search_sid(content)
+
+    def _search_sid(self, content):
+        match = self.GETSID.search(content)
+        if match:
+            self.sid = int(match.groups()[0])
+
+
+class SignatureSet:
+    def __init__(self):
+        self.content_map= {}
+        self.line_map= {}
+        self.sid_map= {}
+        self.signatures = []
+
+    def add_signature(self, line, content, multiline = False):
+        if multiline:
+            content = content.rstrip('\\')
+        signature = Signature(line, content, multiline = multiline)
+        self.signatures.append(signature)
+        self.content_map[content] = signature
+        self.line_map[line] = signature
+        if signature.sid:
+            self.sid_map[signature.sid] = signature
+        return signature
+
+    def add_content_to_signature(self, line, content):
+        signature = self.get_sig_by_line(line)
+        if signature is None:
+            return
+        signature.append_content(content.rstrip('\\'))
+        self.content_map[signature.content] = signature
+        if signature.sid != 0:
+            self.sid_map[signature.sid] = signature
+
+    def get_sig_by_line(self, line):
+        return self.line_map.get(line)
+
+    def get_sig_by_content(self, content):
+        return self.content_map.get(content)
+
+    def get_sig_by_sid(self, sid):
+        return self.sid_map.get(sid)
 
 class SuricataFile:
     IS_COMMENT = re.compile(r"[ \t]*#")
-    GETSID = re.compile(r"sid *:(\d+)")
     GET_MULTILINES = re.compile(r"\\ *$" )
 
     def __init__(self, path=None, rules_tester=None):
         self.path = path
         self.rules_tester = rules_tester
         self.contents_split = []
-        self.content_line_map= {}
-        self.line_content_map= {}
-        self.sid_line_map= {}
+        self.sigset = SignatureSet()
         self.nLines = 0
         self.hash = None
         self.mpm = None
@@ -50,9 +103,11 @@ class SuricataFile:
         for error in result.get('errors', []):
             if 'line' in error:
                 range_end = 1000
-                line_content = self.line_content_map.get(error['line'])
-                if line_content:
-                    range_end = len(line_content.rstrip())
+                signature = self.sigset.get_sig_by_line(error['line'])
+                if signature:
+                    line_content = signature.content
+                    if line_content:
+                        range_end = len(line_content.rstrip())
                 diagnostics.append({ "range": { "start": {"line": error['line'], "character": 0}, "end": {"line": error['line'], "character": range_end} }, "message": error['message'], "source": error['source'], "severity": 1 })
         for warning in result.get('warnings', []):
             line = None
@@ -61,11 +116,15 @@ class SuricataFile:
             if 'line' in warning:
                 line = warning['line']
             elif 'content' in warning:
-                line = self.content_line_map.get(warning['content'])
-                range_start = warning['content'].index('sid:')
-                range_end = range_start + len('sid:')
+                signature = self.sigset.get_sig_by_content(warning['content'])
+                if signature is not None:
+                    line = signature.line
+                    range_start = warning['content'].index('sid:')
+                    range_end = range_start + len('sid:')
             elif 'sid' in warning:
-                line = self.sid_line_map.get(warning['sid'])
+                signature = self.sigset.get_sig_by_sid(warning['sid'])
+                if signature is not None:
+                    line = signature.line
             if line is None:
                 continue
             diagnostics.append({ "range": { "start": {"line": line, "character": range_start}, "end": {"line": line, "character": range_end} }, "message": warning['message'], "source": warning['source'], "severity": 2 })
@@ -74,7 +133,9 @@ class SuricataFile:
             if 'line' in info:
                 line = info['line']
             elif 'content' in info:
-                line = self.content_line_map.get(info['content'])
+                signature = self.sigset.get_sig_by_content(info['content'])
+                if signature:
+                    line = signature.line
             if line is None:
                 continue
             start_char = info.get('start_char', 0)
@@ -86,43 +147,28 @@ class SuricataFile:
     def parse_file(self):
         """Build file Info by parsing file"""
         i = 0
-        self.content_line_map = {}
-        self.line_content_map = {}
-        self.sid_line_map = {}
-        is_comment = re.compile(r"[ \t]*#")
-        getsid = re.compile(r"sid *:(\d+)")
-        get_multilines = re.compile(r"\\ *$" )
+        self.sigset = SignatureSet()
         multi_lines_index = -1
-        for line in self.contents_split:
-            if self.IS_COMMENT.match(line):
+        for content_line in self.contents_split:
+            if self.IS_COMMENT.match(content_line):
                 i += 1
                 continue
             if multi_lines_index >= 0:
-                self.line_content_map[multi_lines_index] += line.rstrip('\\')
-                if self.GET_MULTILINES.search(line):
+                self.sigset.add_content_to_signature(multi_lines_index, content_line)
+                if self.GET_MULTILINES.search(content_line):
                     i += 1
                     continue
                 else:
-                    self.content_line_map[self.line_content_map[multi_lines_index]] = multi_lines_index
-                    match = self.GETSID.search(self.line_content_map[multi_lines_index])
-                    if match:
-                        sid = int(match.groups()[0])
-                        self.sid_line_map[sid] = multi_lines_index
                     multi_lines_index = -1
                     i += 1
                     continue
-            elif self.GET_MULTILINES.search(line):
+            elif self.GET_MULTILINES.search(content_line):
                 multi_lines_index = i
-                self.line_content_map[multi_lines_index] = line.rstrip('\\')
+                self.sigset.add_signature(i, content_line, multiline=True)
                 i += 1
                 continue
             else:
-                self.content_line_map[line] = i
-                self.line_content_map[i] = line
-            match = self.GETSID.search(line)
-            if match:
-                sid = int(match.groups()[0])
-                self.sid_line_map[sid] = i
+                self.sigset.add_signature(i, content_line, multiline=False)
             i += 1
 
     def apply_change(self, content_update):
