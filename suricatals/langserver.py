@@ -23,7 +23,7 @@ ACTIONS_ITEMS = [
         ]
 
 def init_file(filepath, rules_tester):
-    file_obj = SuricataFile(filepath, rules_tester=rules_tester)
+    file_obj = SuricataFile(filepath, rules_tester)
     file_obj.check_file()
     return file_obj, None
 
@@ -316,7 +316,7 @@ class LangServer:
             file_obj = self.workspace.get(filepath)
             if read_file:
                 if file_obj is None:
-                    file_obj = SuricataFile(filepath, rules_tester=self.rules_tester)
+                    file_obj = SuricataFile(filepath, self.rules_tester)
                     # Create empty file if not yet saved to disk
                     if not os.path.isfile(filepath):
                         if allow_empty:
