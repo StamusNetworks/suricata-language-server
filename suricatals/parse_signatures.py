@@ -12,6 +12,7 @@ class Signature:
         self.sid = 0
         self._search_sid(content)
         self.mpm = None
+        self.has_error = False
 
     def append_content(self, content):
         self.content += content
@@ -119,6 +120,7 @@ class SuricataFile:
                 range_end = 1000
                 signature = self.sigset.get_sig_by_line(error['line'])
                 if signature:
+                    signature.has_error = True
                     line_content = signature.content
                     if line_content:
                         range_end = len(line_content.rstrip())
@@ -159,7 +161,7 @@ class SuricataFile:
             if sig.mpm is None:
                 range_start = 0 
                 range_end = 1000
-                if sig.sid:
+                if sig.sid and sig.has_error == False:
                     message = "No Fast pattern used, consider adding one to improve performance if possible."
                     diagnostics.append({ "range": { "start": {"line": sig.line, "character": range_start}, "end": {"line": sig.line, "character": range_end} }, "message": message, "source": "Suricata MPM Analysis", "severity": 4 })
                 continue
