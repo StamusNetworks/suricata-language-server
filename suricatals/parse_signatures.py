@@ -101,6 +101,9 @@ class SuricataFile:
         else:
             return None
 
+    def sort_diagnosis(self, key):
+        return -key['severity']
+
     def check_file(self):
         diagnostics = []
         result = {}
@@ -156,8 +159,9 @@ class SuricataFile:
             if sig.mpm is None:
                 range_start = 0 
                 range_end = 1000
-                message = "No Fast pattern used, consider adding one to improve performance if possible."
-                diagnostics.append({ "range": { "start": {"line": sig.line, "character": range_start}, "end": {"line": sig.line, "character": range_end} }, "message": message, "source": "Suricata MPM Analysis", "severity": 4 })
+                if sig.sid:
+                    message = "No Fast pattern used, consider adding one to improve performance if possible."
+                    diagnostics.append({ "range": { "start": {"line": sig.line, "character": range_start}, "end": {"line": sig.line, "character": range_end} }, "message": message, "source": "Suricata MPM Analysis", "severity": 4 })
                 continue
             # mpm is content:"$pattern"
             pattern = self.mpm.get(sig.mpm['buffer'], {}).get(sig.mpm['pattern'])
@@ -169,7 +173,7 @@ class SuricataFile:
                 message = "Fast pattern '%s' on '%s' buffer is used in %d different signatures, consider using a unique fast pattern to improve performance." % (sig.mpm['pattern'], sig.mpm['buffer'], pattern['count'])
                 diagnostics.append({ "range": { "start": {"line": sig.line, "character": range_start}, "end": {"line": sig.line, "character": range_end} }, "message": message, "source": "Suricata MPM Analysis", "severity": 4 })
         self.diagnosis = diagnostics
-        return diagnostics
+        return sorted(diagnostics, key=self.sort_diagnosis)
 
     def parse_file(self):
         """Build file Info by parsing file"""
