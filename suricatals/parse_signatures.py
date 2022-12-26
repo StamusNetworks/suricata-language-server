@@ -154,6 +154,10 @@ class SuricataFile:
             diagnostics.append({ "range": { "start": {"line": line, "character": start_char}, "end": {"line": line, "character": end_char} }, "message": info['message'], "source": info['source'], "severity": 4 })
         for sig in self.sigset.signatures:
             if sig.mpm is None:
+                range_start = 0 
+                range_end = 1000
+                message = "No Fast pattern used, consider adding one to improve performance if possible."
+                diagnostics.append({ "range": { "start": {"line": sig.line, "character": range_start}, "end": {"line": sig.line, "character": range_end} }, "message": message, "source": "Suricata MPM Analysis", "severity": 4 })
                 continue
             # mpm is content:"$pattern"
             pattern = self.mpm.get(sig.mpm['buffer'], {}).get(sig.mpm['pattern'])
