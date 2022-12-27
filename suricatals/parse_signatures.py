@@ -20,7 +20,11 @@ class Signature:
     def __init__(self, line, content, multiline = False):
         self.line = line
         self.line_end = line
-        self.content = content
+        self.multiline = multiline
+        if self.multiline:
+            self.content = content.strip('\\')
+        else:
+            self.content = content
         self.raw_content = [content]
         self.multiline = multiline
         self.sid = 0
@@ -96,8 +100,6 @@ class SignatureSet:
         self.signatures = []
 
     def add_signature(self, line, content, multiline = False):
-        if multiline:
-            content = content.rstrip('\\')
         signature = Signature(line, content, multiline = multiline)
         self.signatures.append(signature)
         self.content_map[content] = signature
