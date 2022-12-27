@@ -216,7 +216,7 @@ class SuricataFile:
             if signature is not None:
                 l_diag.range = signature.get_diag_range(mode="sid")
             else:
-                w_range = FileRange(warning['line'], 0, warning['line'], 1000)
+                w_range = FileRange(line, 0, line, 1000)
                 l_diag.range = w_range
             diagnostics.append(l_diag)
         for info in result.get('info', []):
