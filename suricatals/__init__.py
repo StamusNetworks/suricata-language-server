@@ -25,7 +25,7 @@ def main():
         help="Path to Suricata binary"
     )
     parser.add_argument(
-        '--debug_log', action="store_true",
+        '--debug-log', action="store_true",
         help="Generate debug log in project root folder"
     )
     parser.add_argument(
