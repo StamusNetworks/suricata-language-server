@@ -502,8 +502,9 @@ engine-analysis:
                         if engine['is_mpm']:
                             fp_buffer = engine['name']
                             for match in engine.get('matches', []):
-                                if match.get('content', {}).get('is_mpm', False):
-                                    fp_pattern = match['content']['pattern']
+                                if match.get('name') == 'content':
+                                    if match.get('content', {}).get('is_mpm', False):
+                                        fp_pattern = match['content']['pattern']
                     if fp_buffer and fp_pattern:
                         if not 'info' in signature_msg:
                             signature_msg['info'] = []

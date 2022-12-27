@@ -142,7 +142,7 @@ class SuricataFile:
         self.sigset = SignatureSet()
         self.nLines = 0
         self.hash = None
-        self.mpm = None
+        self.mpm = {}
         self.diagnosis = None
 
     def copy(self):
@@ -175,7 +175,7 @@ class SuricataFile:
         with open(self.path, 'r', encoding='utf-8', errors='replace') as fhandle:
             result = self.rules_tester.check_rule_buffer(fhandle.read())
             self.mpm = result.get('mpm', {}).get('buffer')
-            for sid in result.get('mpm', {}).get('sids'):
+            for sid in result.get('mpm', {}).get('sids', []):
                 signature = self.sigset.get_sig_by_sid(sid)
                 if signature is not None:
                     signature.mpm = result.get('mpm', {}).get('sids', {}).get(sid)
@@ -237,7 +237,10 @@ class SuricataFile:
             sig_range = FileRange(line, 0, line, 1)
             if signature is not None:
                 if "Fast Pattern \"" in info['message']:
-                    sig_range = signature.get_diag_range(mode='pattern', pattern=signature.mpm['pattern'])
+                    if signature.mpm is not None:
+                        sig_range = signature.get_diag_range(mode='pattern', pattern=signature.mpm['pattern'])
+                    else:
+                        sig_range = signature.get_diag_range(mode='sid')
                 else:
                     sig_range = signature.get_diag_range(mode='sid')
             l_diag.range = sig_range
