@@ -17,6 +17,7 @@ class FileRange:
 
 class Signature:
     GETSID = re.compile(r"sid *:(\d+)")
+    SIG_END = re.compile(r"\) *$")
     def __init__(self, line, content, multiline = False):
         self.line = line
         self.line_end = line
@@ -80,6 +81,16 @@ class Signature:
             if found == False:
                 fr = self._get_diag_range_by_sid()
         return fr
+
+    def sls_syntax_check(self):
+        diagnosis = []
+        # check for incomplete signature
+        if self.SIG_END.search(self.raw_content[-1]) is None:
+            sig_range = self.get_diag_range(mode="all")
+            if sig_range:
+                end_diag = {"range": sig_range.to_range(), "message": "Missing closing parenthesis: incomplete signature", "source": "SLS syntax check", "severity": 1}
+                diagnosis.append(end_diag)
+        return diagnosis
 
     def _search_sid(self, content):
         match = self.GETSID.search(content)
@@ -238,6 +249,9 @@ class SuricataFile:
                 message = "Fast pattern '%s' on '%s' buffer is used in %d different signatures, consider using a unique fast pattern to improve performance." % (sig.mpm['pattern'], sig.mpm['buffer'], pattern['count'])
                 sig_range = sig.get_diag_range(mode="pattern", pattern=sig.mpm['pattern'])
                 diagnostics.append({ "range": sig_range.to_range(), "message": message, "source": "Suricata MPM Analysis", "severity": 4 })
+            sls_diag = sig.sls_syntax_check()
+            if len(sls_diag):
+                diagnostics.extend(sls_diag)
         self.diagnosis = diagnostics
         return sorted(diagnostics, key=self.sort_diagnosis)
 
