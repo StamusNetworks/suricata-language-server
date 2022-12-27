@@ -2,18 +2,7 @@ import hashlib
 
 import re
 
-class FileRange:
-    def __init__(self, line_start, col_start, line_end, col_end):
-        self.line_start = line_start
-        self.col_start = col_start
-        self.line_end = line_end
-        self.col_end = col_end
-
-    def __repr__(self):
-        return "FileRange()"
-
-    def to_range(self):
-        return {"start": {"line": self.line_start, "character": self.col_start}, "end": {"line": self.line_end, "character": self.col_end}}
+from .lsp_helpers import *
 
 class Signature:
     GETSID = re.compile(r"sid *:(\d+)")
@@ -88,7 +77,11 @@ class Signature:
         if self.SIG_END.search(self.raw_content[-1]) is None:
             sig_range = self.get_diag_range(mode="all")
             if sig_range:
-                end_diag = {"range": sig_range.to_range(), "message": "Missing closing parenthesis: incomplete signature", "source": "SLS syntax check", "severity": 1}
+                end_diag = Diagnosis()
+                end_diag.range = sig_range
+                end_diag.message = "Missing closing parenthesis: incomplete signature"
+                end_diag.severity = Diagnosis.ERROR_LEVEL
+                end_diag.source = "SLS syntax check"
                 diagnosis.append(end_diag)
         return diagnosis
 
@@ -174,7 +167,7 @@ class SuricataFile:
             return None
 
     def sort_diagnosis(self, key):
-        return -key['severity']
+        return -key.severity
 
     def check_file(self):
         diagnostics = []
@@ -188,19 +181,26 @@ class SuricataFile:
                     signature.mpm = result.get('mpm', {}).get('sids', {}).get(sid)
         for error in result.get('errors', []):
             if 'line' in error:
-                range_end = 1000
+                l_diag = Diagnosis()
+                l_diag.message = error['message']
+                l_diag.source = error['source']
+                l_diag.severity= Diagnosis.ERROR_LEVEL
                 signature = self.sigset.get_sig_by_line(error['line'])
                 if signature:
                     signature.has_error = True
                     sig_range = signature.get_diag_range(mode="all")
-                    diagnostics.append({ "range": sig_range.to_range(), "message": error['message'], "source": error['source'], "severity": 1 })
+                    l_diag.range= sig_range
                 else: 
-                    diagnostics.append({ "range": { "start": {"line": error['line'], "character": 0}, "end": {"line": error['line'], "character": range_end} }, "message": error['message'], "source": error['source'], "severity": 1 })
+                    e_range = FileRange(error['line'], 0, error['line'], 1000)
+                    l_diag.range = e_range
+                diagnostics.append(l_diag)
         for warning in result.get('warnings', []):
             line = None
             signature = None
-            range_start = 0
-            range_end = 1000
+            l_diag = Diagnosis()
+            l_diag.message = warning['message']
+            l_diag.source = warning['source']
+            l_diag.severity= Diagnosis.WARNING_LEVEL
             if 'line' in warning:
                 line = warning['line']
             elif 'content' in warning:
@@ -214,12 +214,18 @@ class SuricataFile:
             if line is None:
                 continue
             if signature is not None:
-                diagnostics.append({ "range": signature.get_diag_range(mode="sid").to_range(), "message": warning['message'], "source": warning['source'], "severity": 2 })
+                l_diag.range = signature.get_diag_range(mode="sid")
             else:
-                diagnostics.append({ "range": { "start": {"line": line, "character": range_start}, "end": {"line": line, "character": range_end} }, "message": warning['message'], "source": warning['source'], "severity": 2 })
+                w_range = FileRange(warning['line'], 0, warning['line'], 1000)
+                l_diag.range = w_range
+            diagnostics.append(l_diag)
         for info in result.get('info', []):
             line = None
             signature = None
+            l_diag = Diagnosis()
+            l_diag.message = info['message']
+            l_diag.source = info['source']
+            l_diag.severity= Diagnosis.INFO_LEVEL
             if 'line' in info:
                 line = info['line']
             elif 'content' in info:
@@ -234,12 +240,18 @@ class SuricataFile:
                     sig_range = signature.get_diag_range(mode='pattern', pattern=signature.mpm['pattern'])
                 else:
                     sig_range = signature.get_diag_range(mode='sid')
-            diagnostics.append({ "range": sig_range.to_range(), "message": info['message'], "source": info['source'], "severity": 4 })
+            l_diag.range = sig_range
+            diagnostics.append(l_diag)
         for sig in self.sigset.signatures:
             if sig.mpm is None:
                 if sig.sid and sig.has_error == False:
                     message = "No Fast pattern used, consider adding one to improve performance if possible."
-                    diagnostics.append({ "range": sig.get_diag_range(mode="sid").to_range(), "message": message, "source": "Suricata MPM Analysis", "severity": 4 })
+                    l_diag = Diagnosis()
+                    l_diag.message = message
+                    l_diag.source = "Suricata MPM Analysis"
+                    l_diag.severity = Diagnosis.INFO_LEVEL
+                    l_diag.range = sig.get_diag_range(mode="sid")
+                    diagnostics.append(l_diag)
                 continue
             # mpm is content:"$pattern"
             pattern = self.mpm.get(sig.mpm['buffer'], {}).get(sig.mpm['pattern'])
@@ -248,7 +260,12 @@ class SuricataFile:
             if pattern['count'] > 1:
                 message = "Fast pattern '%s' on '%s' buffer is used in %d different signatures, consider using a unique fast pattern to improve performance." % (sig.mpm['pattern'], sig.mpm['buffer'], pattern['count'])
                 sig_range = sig.get_diag_range(mode="pattern", pattern=sig.mpm['pattern'])
-                diagnostics.append({ "range": sig_range.to_range(), "message": message, "source": "Suricata MPM Analysis", "severity": 4 })
+                l_diag = Diagnosis()
+                l_diag.message = message
+                l_diag.source = "SLS MPM Analysis"
+                l_diag.severity = Diagnosis.INFO_LEVEL
+                l_diag.range = sig.get_diag_range(mode="pattern", pattern=sig.mpm['pattern'])
+                diagnostics.append(l_diag)
             sls_diag = sig.sls_syntax_check()
             if len(sls_diag):
                 diagnostics.extend(sls_diag)
