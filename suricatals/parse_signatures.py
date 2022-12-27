@@ -245,7 +245,7 @@ class SuricataFile:
         for sig in self.sigset.signatures:
             if sig.mpm is None:
                 if sig.sid and sig.has_error == False:
-                    message = "No Fast pattern used, consider adding one to improve performance if possible."
+                    message = "No Fast Pattern used, if possible add one content match to improve performance."
                     l_diag = Diagnosis()
                     l_diag.message = message
                     l_diag.source = "Suricata MPM Analysis"
