@@ -422,11 +422,11 @@ engine-analysis:
                 result['warnings'].append({'message': warning, 'source': self.SURICATA_ENGINE_ANALYSIS, 'content': signature['content']})
             for info in signature.get('info', []):
                 msg = {'message': info, 'source': self.SURICATA_ENGINE_ANALYSIS, 'content': signature['content']}
-                if "Fast Pattern \"" in info:
-                    if signature['content'].count('content:') <= 1:
-                        continue
+                #if "Fast Pattern \"" in info:
+                #    if signature['content'].count('content:') <= 1:
+                #        continue
                 result['info'].append(msg)
-        mpm_analysis = self.parse_rules_json(tmpdir)
+        mpm_analysis = self.mpm_parse_rules_json(tmpdir)
         result['mpm'] = mpm_analysis
         shutil.rmtree(tmpdir)
         return result
@@ -490,25 +490,6 @@ engine-analysis:
                         if not 'warnings' in signature_msg:
                             signature_msg['warnings'] = []
                         signature_msg['warnings'].append('Rule inspect server and client side, consider adding a flow keyword')
-                if 'mpm' in signature_info:
-                    if not 'info' in signature_msg:
-                        signature_msg['info'] = []
-                    signature_msg['info'].append('Fast Pattern "%s" on %s' % (signature_info['mpm']['pattern'], signature_info['mpm']['buffer']))
-                elif 'engines' in signature_info:
-                    # Suricata 6.0.x don't have the mpm sub object
-                    fp_buffer = None
-                    fp_pattern = None
-                    for engine in signature_info['engines']:
-                        if engine['is_mpm']:
-                            fp_buffer = engine['name']
-                            for match in engine.get('matches', []):
-                                if match.get('name') == 'content':
-                                    if match.get('content', {}).get('is_mpm', False):
-                                        fp_pattern = match['content']['pattern']
-                    if fp_buffer and fp_pattern:
-                        if not 'info' in signature_msg:
-                            signature_msg['info'] = []
-                        signature_msg['info'].append('Fast Pattern "%s" on %s' % (fp_pattern, fp_buffer))
                 if 'warnings' in signature_info:
                     if not 'warnings' in signature_msg:
                         signature_msg['warnings'] = []
@@ -553,7 +534,7 @@ engine-analysis:
                 analysis.append(signature_msg)
         return analysis
 
-    def parse_rules_json(self, log_dir):
+    def mpm_parse_rules_json(self, log_dir):
         mpm_data = []
         mpm_analysis = {'buffer': {}, 'sids': {}}
         try:
@@ -568,6 +549,40 @@ engine-analysis:
                         rule_analysis['mpm']['id'] = rule_analysis['id']
                         rule_analysis['mpm']['gid'] = rule_analysis['gid']
                         mpm_data.append(rule_analysis['mpm'])
+                    else:
+                        if 'engines' in rule_analysis:
+                            fp_buffer = None
+                            fp_pattern = None
+                            for engine in rule_analysis.get('engines', []):
+                                if engine['is_mpm']:
+                                    fp_buffer = engine['name']
+                                    for match in engine.get('matches', []):
+                                        if match.get('name') == 'content':
+                                            if match.get('content', {}).get('is_mpm', False):
+                                                fp_pattern = match['content']['pattern']
+                                                break
+                                    if fp_pattern:
+                                        break
+                            if fp_buffer and fp_pattern:
+                                mpm_data.append({'id': rule_analysis['id'], 'gid': rule_analysis['gid'],
+                                                 'buffer': fp_buffer, 'pattern': fp_pattern})
+                            continue
+                        if 'lists' in rule_analysis:
+                            fp_buffer = None
+                            fp_pattern = None
+                            for key in rule_analysis['lists']:
+                                fp_buffer = key
+                                for match in rule_analysis['lists'][key].get('matches', []):
+                                    if match.get('name') == 'content':
+                                        if match.get('content', {}).get('is_mpm', False):
+                                            fp_pattern = match['content']['pattern']
+                                            break
+                                if fp_pattern:
+                                    break
+                            if fp_buffer and fp_pattern:
+                                mpm_data.append({'id': rule_analysis['id'], 'gid': rule_analysis['gid'],
+                                                 'buffer': fp_buffer, 'pattern': fp_pattern})
+                            continue
         except FileNotFoundError as e:
             return mpm_analysis
         # target to have

@@ -260,15 +260,17 @@ class SuricataFile:
             pattern = self.mpm.get(sig.mpm['buffer'], {}).get(sig.mpm['pattern'])
             if pattern is None:
                 continue
+            l_diag = Diagnosis()
             if pattern['count'] > 1:
-                message = "Fast pattern '%s' on '%s' buffer is used in %d different signatures, consider using a unique fast pattern to improve performance." % (sig.mpm['pattern'], sig.mpm['buffer'], pattern['count'])
-                sig_range = sig.get_diag_range(mode="pattern", pattern=sig.mpm['pattern'])
-                l_diag = Diagnosis()
-                l_diag.message = message
+                l_diag.message = "Fast pattern '%s' on '%s' buffer is used in %d different signatures, consider using a unique fast pattern to improve performance." % (sig.mpm['pattern'], sig.mpm['buffer'], pattern['count'])
                 l_diag.source = "SLS MPM Analysis"
-                l_diag.severity = Diagnosis.INFO_LEVEL
-                l_diag.range = sig.get_diag_range(mode="pattern", pattern=sig.mpm['pattern'])
-                diagnostics.append(l_diag)
+            else:
+                l_diag.message = "Fast pattern '%s' on '%s' buffer" % (sig.mpm['pattern'], sig.mpm['buffer'])
+                l_diag.source = "Suricata MPM Analysis"
+            sig_range = sig.get_diag_range(mode="pattern", pattern=sig.mpm['pattern'])
+            l_diag.severity = Diagnosis.INFO_LEVEL
+            l_diag.range = sig.get_diag_range(mode="pattern", pattern=sig.mpm['pattern'])
+            diagnostics.append(l_diag)
             sls_diag = sig.sls_syntax_check()
             if len(sls_diag):
                 diagnostics.extend(sls_diag)
