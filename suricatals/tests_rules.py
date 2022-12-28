@@ -245,10 +245,10 @@ config classification: command-and-control,Malware Command and Control Activity 
             'errors': [],
             'warnings': [],
         }
-        variable_list = []
         files_list = []
         ignore_next = False
         error_stream = io.StringIO(error)
+        error_type = 'errors'
         for line in error_stream:
             try:
                 s_err = json.loads(line)
@@ -257,71 +257,61 @@ config classification: command-and-control,Malware Command and Control Activity 
                 return ret
             s_err['engine']['source'] = self.SURICATA_SYNTAX_CHECK
             errno = s_err['engine']['error_code']
-            if not single or errno not in self.RULEFILE_ERRNO:
-                if errno == self.VARIABLE_ERROR:
-                    variable = s_err['engine']['message'].split("\"")[1]
-                    if not "$" + variable in variable_list:
-                        variable_list.append("$" + variable)
-                        s_err['engine']['message'] = "Custom address variable \"$%s\" is used and need to be defined in probes configuration" % (variable)
-                        ret['warnings'].append(s_err['engine'])
+            if errno == self.VARIABLE_ERROR:
+                variable = s_err['engine']['message'].split("\"")[1]
+                s_err['engine']['message'] = "Custom address variable \"$%s\" is used and need to be defined in probes configuration" % (variable)
+                s_err['engine']['suricata_error'] = True
+                error_type = 'warnings'
+                ret[error_type].append(s_err['engine'])
+                continue
+            elif errno == self.OPENING_DATASET_FILE:
+                m = re.match('fopen \'([^:]*)\' failed: No such file or directory', s_err['engine']['message'])
+                if m is not None:
+                    datasource = m.group(1)
+                    s_err['engine']['message'] = 'Dataset source "%s" is a dependancy and needs to be added to rulesets' % datasource
+                    s_err['engine']['suricata_error'] = True
+                    error_type = 'warnings'
+                    ret[error_type].append(s_err['engine'])
+                    ignore_next = True
                     continue
-                if errno == self.OPENING_DATASET_FILE:
-                    m = re.match('fopen \'([^:]*)\' failed: No such file or directory', s_err['engine']['message'])
-                    if m is not None:
-                        datasource = m.group(1)
-                        s_err['engine']['message'] = 'Dataset source "%s" is a dependancy and needs to be added to rulesets' % datasource
-                        ret['warnings'].append(s_err['engine'])
-                        ignore_next = True
-                        continue
-                if errno == self.OPENING_RULE_FILE:
-                    m = re.match('opening hash file ([^:]*): No such file or directory', s_err['engine']['message'])
-                    if m is not None:
-                        filename = m.group(1)
-                        filename = filename.rsplit('/', 1)[1]
-                        files_list.append(filename)
-                        s_err['engine']['message'] = 'External file "%s" is a dependancy and needs to be added to rulesets' % filename
-                        ret['warnings'].append(s_err['engine'])
-                        continue
-                if errno not in self.USELESS_ERRNO:
-                    # clean error message
-                    if errno == 39:
-                        if 'failed to set up dataset' in s_err['engine']['message']:
-                            if ignore_next:
-                                continue
+            elif errno == self.OPENING_RULE_FILE:
+                m = re.match('opening hash file ([^:]*): No such file or directory', s_err['engine']['message'])
+                if m is not None:
+                    filename = m.group(1)
+                    filename = filename.rsplit('/', 1)[1]
+                    files_list.append(filename)
+                    s_err['engine']['message'] = 'External file "%s" is a dependancy and needs to be added to rulesets' % filename
+                    s_err['engine']['suricata_error'] = True
+                    error_type = 'warnings'
+                    ret[error_type].append(s_err['engine'])
+                    continue
+            elif errno not in self.USELESS_ERRNO:
+                # clean error message
+                if errno == 39:
+                    if 'failed to set up dataset' in s_err['engine']['message']:
                         if ignore_next:
-                            ignore_next = False
                             continue
-                        # exclude error on variable
-                        found = False
-                        for variable in variable_list:
-                            if variable in s_err['engine']['message']:
-                                found = True
-                                break
-                        else:
-                            # exclude error on external file
-                            for filename in files_list:
-                                if re.search(': *%s *;' % filename, s_err['engine']['message']):
-                                    found = True
-                                    break
-                        if found:
+                    if ignore_next:
+                        ignore_next = False
+                        continue
+                    if 'error parsing signature' in s_err['engine']['message']:
+                        message = s_err['engine']['message']
+                        s_err['engine']['message'] = s_err['engine']['message'].split(' from file')[0]
+                        getsid = re.compile(r"sid *:(\d+)")
+                        match = getsid.search(line)
+                        if match:
+                            s_err['engine']['sid'] = int(match.groups()[0])
+                        getline = re.compile(r"at line (\d+)$")
+                        match = getline.search(message)
+                        if match:
+                            line_nb = int(match.groups()[0])
+                            if len(ret[error_type]):
+                                ret[error_type][-1]['line'] = line_nb - 1
+                            error_type = 'errors'
                             continue
-                        if 'error parsing signature' in s_err['engine']['message']:
-                            message = s_err['engine']['message']
-                            s_err['engine']['message'] = s_err['engine']['message'].split(' from file')[0]
-                            getsid = re.compile(r"sid *:(\d+)")
-                            match = getsid.search(line)
-                            if match:
-                                s_err['engine']['sid'] = int(match.groups()[0])
-                            getline = re.compile(r"at line (\d+)$")
-                            match = getline.search(message)
-                            if match:
-                                line_nb = int(match.groups()[0])
-                                if len(ret['errors']):
-                                    ret['errors'][-1]['line'] = line_nb - 1
-                                continue
-                    if errno == 42:
-                        s_err['engine']['message'] = s_err['engine']['message'].split(' from')[0]
-                    ret['errors'].append(s_err['engine'])
+                if errno == 42:
+                    s_err['engine']['message'] = s_err['engine']['message'].split(' from')[0]
+                ret['errors'].append(s_err['engine'])
         return ret
 
     def parse_suricata_error(self, error, single=False):
@@ -437,6 +427,8 @@ engine-analysis:
         if len(prov_result.get('errors', [])):
             res = self.parse_suricata_error(prov_result['errors'], single=single)
             prov_result['errors'] = res['errors']
+            if 'warnings' in res:
+                prov_result['warnings'] = res['warnings']
         return prov_result
 
     def parse_engine_analysis(self, log_dir):
