@@ -80,7 +80,7 @@ class Signature:
                 end_diag = Diagnosis()
                 end_diag.range = sig_range
                 end_diag.message = "Missing closing parenthesis: incomplete signature"
-                end_diag.severity = Diagnosis.ERROR_LEVEL
+                end_diag.severity = Diagnosis.WARNING_LEVEL
                 end_diag.source = "SLS syntax check"
                 diagnosis.append(end_diag)
         return diagnosis
@@ -203,6 +203,7 @@ class SuricataFile:
             l_diag.severity= Diagnosis.WARNING_LEVEL
             if 'line' in warning:
                 line = warning['line']
+                signature = self.sigset.get_sig_by_line(line)
             elif 'content' in warning:
                 signature = self.sigset.get_sig_by_content(warning['content'])
                 if signature is not None:
@@ -215,6 +216,8 @@ class SuricataFile:
                 continue
             if signature is not None:
                 l_diag.range = signature.get_diag_range(mode="sid")
+                if warning.get('suricata_error', False):
+                    signature.has_error = True
             else:
                 w_range = FileRange(line, 0, line, 1000)
                 l_diag.range = w_range
