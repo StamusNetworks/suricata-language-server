@@ -162,8 +162,9 @@ config classification: command-and-control,Malware Command and Control Activity 
     SURICATA_SYNTAX_CHECK = "Suricata Syntax Check"
     SURICATA_ENGINE_ANALYSIS = "Suricata Engine Analysis"
 
-    def __init__(self, suricata_binary='suricata') -> None:
+    def __init__(self, suricata_binary='suricata', suricata_config=None) -> None:
         self.suricata_binary = suricata_binary
+        self.suricata_config = suricata_config
         self.suricata_version = self.get_suricata_version()
 
     def get_suricata_version(self):
@@ -261,7 +262,8 @@ config classification: command-and-control,Malware Command and Control Activity 
                 variable = s_err['engine']['message'].split("\"")[1]
                 s_err['engine']['message'] = "Custom address variable \"$%s\" is used and need to be defined in probes configuration" % (variable)
                 s_err['engine']['suricata_error'] = True
-                error_type = 'warnings'
+                if self.suricata_config is None:
+                    error_type = 'warnings'
                 ret[error_type].append(s_err['engine'])
                 continue
             elif errno == self.OPENING_DATASET_FILE:
@@ -337,7 +339,11 @@ config classification: command-and-control,Malware Command and Control Activity 
         cf.close()
 
         if not config_buffer:
-            config_buffer = self.CONFIG_FILE
+            if self.suricata_config is None:
+                config_buffer = self.CONFIG_FILE
+            else:
+                with open(self.suricata_config, 'r') as conf_file:
+                    config_buffer = conf_file.read()
         config_file = os.path.join(tmpdir, "suricata.yaml")
         cf = open(config_file, 'w', encoding='utf-8')
         # write the config file in temp dir
@@ -349,7 +355,14 @@ config classification: command-and-control,Malware Command and Control Activity 
         cf.write("""
 engine-analysis:
   rules-fast-pattern: yes
-  rules: yes""")
+  rules: yes
+logging:
+  default-log-level: warning
+  outputs:
+  - console:
+      enabled: yes
+      type: json
+                 """)
 
         cf.close()
         related_files = related_files or {}

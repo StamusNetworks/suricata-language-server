@@ -48,8 +48,9 @@ class LangServer:
         self.notify_init = settings.get("notify_init", False)
         self.sync_type = settings.get("sync_type", 1)
         self.suricata_binary = settings.get("suricata_binary", 'suricata')
+        self.suricata_config = settings.get("suricata_config", None)
         self.max_lines = settings.get("max_lines", 1000)
-        self.rules_tester = TestRules(suricata_binary=self.suricata_binary)
+        self.rules_tester = TestRules(suricata_binary=self.suricata_binary, suricata_config=self.suricata_config)
         self.keywords_list = self.rules_tester.build_keywords_list()
 
     def post_message(self, message, msg_type=1):

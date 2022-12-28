@@ -25,6 +25,10 @@ def main():
         help="Path to Suricata binary"
     )
     parser.add_argument(
+        '--suricata-config', default=None,
+        help="Path to Suricata config"
+    )
+    parser.add_argument(
         '--debug-log', action="store_true",
         help="Generate debug log in project root folder"
     )
@@ -39,6 +43,7 @@ def main():
     #
     settings = {
         "suricata_binary": args.suricata_binary,
+        "suricata_config": args.suricata_config,
         "max_lines": args.max_lines,
     }
     #
