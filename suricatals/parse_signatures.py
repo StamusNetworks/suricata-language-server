@@ -7,6 +7,7 @@ from .lsp_helpers import *
 class Signature:
     GETSID = re.compile(r"sid *:(\d+)")
     SIG_END = re.compile(r"\) *$")
+    SIG_CONTENT = re.compile(r"content *:")
     def __init__(self, line, content, multiline = False):
         self.line = line
         self.line_end = line
@@ -70,6 +71,12 @@ class Signature:
             if found == False:
                 fr = self._get_diag_range_by_sid()
         return fr
+
+    def get_content_keyword_count(self):
+        count = 0
+        for line in self.raw_content:
+            count += len(self.SIG_CONTENT.findall(line))
+        return count
 
     def sls_syntax_check(self):
         diagnosis = []
@@ -268,6 +275,8 @@ class SuricataFile:
                 l_diag.message = "Fast pattern '%s' on '%s' buffer is used in %d different signatures, consider using a unique fast pattern to improve performance." % (sig.mpm['pattern'], sig.mpm['buffer'], pattern['count'])
                 l_diag.source = "SLS MPM Analysis"
             else:
+                if sig.get_content_keyword_count() == 1:
+                    continue
                 l_diag.message = "Fast pattern '%s' on '%s' buffer" % (sig.mpm['pattern'], sig.mpm['buffer'])
                 l_diag.source = "Suricata MPM Analysis"
             sig_range = sig.get_diag_range(mode="pattern", pattern=sig.mpm['pattern'])
