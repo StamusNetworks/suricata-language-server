@@ -1,3 +1,24 @@
+"""
+Copyright(C) 2022-2023 Stamus Networks
+Written by Eric Leblond <el@stamus-networks.com>
+
+This file is part of Suricata Language Server.
+
+Suricata Language Server is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Suricata Language Server is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Suricata Language Server.  If not, see <http://www.gnu.org/licenses/>.
+"""
+
+
 class FileRange:
     def __init__(self, line_start, col_start, line_end, col_end):
         self.line_start = line_start
