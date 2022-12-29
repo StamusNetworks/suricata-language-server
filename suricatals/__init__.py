@@ -57,6 +57,10 @@ def main():
         '--max-lines', default=1000, type=int,
         help="Don't start suricata analysis over this file size"
     )
+    parser.add_argument(
+        '--batch-file', default=None,
+        help="Batch mode to parse only the file in argument"
+    )
     args = parser.parse_args()
     if args.version:
         print("{0}".format(__version__))
@@ -68,10 +72,15 @@ def main():
         "max_lines": args.max_lines,
     }
     #
-    stdin, stdout = _binary_stdio()
-    s = LangServer(conn=JSONRPC2Connection(ReadWriter(stdin, stdout)),
+
+    if args.batch_file is None:
+        stdin, stdout = _binary_stdio()
+        s = LangServer(conn=JSONRPC2Connection(ReadWriter(stdin, stdout)),
                    debug_log=args.debug_log, settings=settings)
-    s.run()
+        s.run()
+    else:
+        s = LangServer(conn = None, settings=settings)
+        s.analyse_file(args.batch_file)
 
 
 def _binary_stdio():
