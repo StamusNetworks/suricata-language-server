@@ -24,11 +24,13 @@ import re
 
 from .lsp_helpers import Diagnosis, FileRange
 
+
 class Signature:
     GETSID = re.compile(r"sid *:(\d+)")
     SIG_END = re.compile(r"\) *$")
     SIG_CONTENT = re.compile(r"content *:")
-    def __init__(self, line, content, multiline = False):
+
+    def __init__(self, line, content, multiline=False):
         self.line = line
         self.line_end = line
         self.multiline = multiline
@@ -88,7 +90,7 @@ class Signature:
                     found = True
                     break
                 i += 1
-            if found == False:
+            if found is False:
                 fr = self._get_diag_range_by_sid()
         return fr
 
@@ -123,15 +125,16 @@ class Signature:
     def __str__(self):
         return "%d:%s" % (self.sid, self.content)
 
+
 class SignatureSet:
     def __init__(self):
-        self.content_map= {}
-        self.line_map= {}
-        self.sid_map= {}
+        self.content_map = {}
+        self.line_map = {}
+        self.sid_map = {}
         self.signatures = []
 
-    def add_signature(self, line, content, multiline = False):
-        signature = Signature(line, content, multiline = multiline)
+    def add_signature(self, line, content, multiline=False):
+        signature = Signature(line, content, multiline=multiline)
         self.signatures.append(signature)
         self.content_map[content] = signature
         self.line_map[line] = signature
@@ -160,7 +163,7 @@ class SignatureSet:
 
 class SuricataFile:
     IS_COMMENT = re.compile(r"[ \t]*#")
-    GET_MULTILINES = re.compile(r"\\ *$" )
+    GET_MULTILINES = re.compile(r"\\ *$")
 
     def __init__(self, path, rules_tester):
         self.path = path
@@ -211,13 +214,13 @@ class SuricataFile:
                 l_diag = Diagnosis()
                 l_diag.message = error['message']
                 l_diag.source = error['source']
-                l_diag.severity= Diagnosis.ERROR_LEVEL
+                l_diag.severity = Diagnosis.ERROR_LEVEL
                 signature = self.sigset.get_sig_by_line(error['line'])
                 if signature:
                     signature.has_error = True
                     sig_range = signature.get_diag_range(mode="all")
-                    l_diag.range= sig_range
-                else: 
+                    l_diag.range = sig_range
+                else:
                     e_range = FileRange(error['line'], 0, error['line'], 1000)
                     l_diag.range = e_range
                 diagnostics.append(l_diag)
@@ -227,7 +230,7 @@ class SuricataFile:
             l_diag = Diagnosis()
             l_diag.message = warning['message']
             l_diag.source = warning['source']
-            l_diag.severity= Diagnosis.WARNING_LEVEL
+            l_diag.severity = Diagnosis.WARNING_LEVEL
             if 'line' in warning:
                 line = warning['line']
                 signature = self.sigset.get_sig_by_line(line)
@@ -255,7 +258,7 @@ class SuricataFile:
             l_diag = Diagnosis()
             l_diag.message = info['message']
             l_diag.source = info['source']
-            l_diag.severity= Diagnosis.INFO_LEVEL
+            l_diag.severity = Diagnosis.INFO_LEVEL
             if 'line' in info:
                 line = info['line']
             elif 'content' in info:
@@ -277,7 +280,7 @@ class SuricataFile:
             diagnostics.append(l_diag)
         for sig in self.sigset.signatures:
             if sig.mpm is None:
-                if sig.sid and sig.has_error == False:
+                if sig.sid and sig.has_error is False:
                     message = "No Fast Pattern used, if possible add one content match to improve performance."
                     l_diag = Diagnosis()
                     l_diag.message = message
@@ -302,7 +305,9 @@ class SuricataFile:
                     pattern_count += f_pattern['count']
             l_diag = Diagnosis()
             if pattern_count > 1:
-                l_diag.message = "Fast pattern '%s' on '%s' buffer is used in %d different signatures, consider using a unique fast pattern to improve performance." % (sig.mpm['pattern'], sig.mpm['buffer'], pattern_count)
+                l_diag.message = "Fast pattern '%s' on '%s' buffer is used in %d different signatures," \
+                                 "consider using a unique fast pattern to improve performance." \
+                                   % (sig.mpm['pattern'], sig.mpm['buffer'], pattern_count)
                 l_diag.source = "SLS MPM Analysis"
             else:
                 if sig.get_content_keyword_count() == 1:
