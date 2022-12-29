@@ -30,6 +30,7 @@ import logging
 
 log = logging.getLogger(__name__)
 
+
 class TestRules():
     VARIABLE_ERROR = 101
     OPENING_RULE_FILE = 41  # Error when opening a file referenced in the source
@@ -260,7 +261,8 @@ config classification: command-and-control,Malware Command and Control Activity 
             errno = s_err['engine']['error_code']
             if errno == self.VARIABLE_ERROR:
                 variable = s_err['engine']['message'].split("\"")[1]
-                s_err['engine']['message'] = "Custom address variable \"$%s\" is used and need to be defined in probes configuration" % (variable)
+                s_err['engine']['message'] = "Custom address variable \"$%s\" is used " \
+                    "and need to be defined in probes configuration" % (variable)
                 s_err['engine']['suricata_error'] = True
                 if self.suricata_config is None:
                     error_type = 'warnings'
@@ -270,7 +272,8 @@ config classification: command-and-control,Malware Command and Control Activity 
                 m = re.match('fopen \'([^:]*)\' failed: No such file or directory', s_err['engine']['message'])
                 if m is not None:
                     datasource = m.group(1)
-                    s_err['engine']['message'] = 'Dataset source "%s" is a dependancy and needs to be added to rulesets' % datasource
+                    s_err['engine']['message'] = 'Dataset source "%s" is a dependency " \
+                        "and needs to be added to rulesets' % datasource
                     s_err['engine']['suricata_error'] = True
                     error_type = 'warnings'
                     ret[error_type].append(s_err['engine'])
@@ -282,7 +285,8 @@ config classification: command-and-control,Malware Command and Control Activity 
                     filename = m.group(1)
                     filename = filename.rsplit('/', 1)[1]
                     files_list.append(filename)
-                    s_err['engine']['message'] = 'External file "%s" is a dependancy and needs to be added to rulesets' % filename
+                    s_err['engine']['message'] = 'External file "%s" is a dependency ' \
+                        'and needs to be added to rulesets' % filename
                     s_err['engine']['suricata_error'] = True
                     error_type = 'warnings'
                     ret[error_type].append(s_err['engine'])
@@ -323,7 +327,8 @@ config classification: command-and-control,Malware Command and Control Activity 
         else:
             return self.parse_suricata_error_after_7(error)
 
-    def generate_config(self, tmpdir, config_buffer=None, related_files=None, reference_config=None, classification_config=None):
+    def generate_config(self, tmpdir, config_buffer=None, related_files=None,
+                        reference_config=None, classification_config=None):
         if not reference_config:
             reference_config = self.REFERENCE_CONFIG
         reference_file = os.path.join(tmpdir, "reference.config")
@@ -374,7 +379,8 @@ logging:
 
         return config_file
 
-    def rule_buffer(self, rule_buffer, config_buffer=None, related_files=None, reference_config=None, classification_config=None):
+    def rule_buffer(self, rule_buffer, config_buffer=None, related_files=None,
+                    reference_config=None, classification_config=None):
         # create temp directory
         tmpdir = tempfile.mkdtemp()
         # write the rule file in temp dir
@@ -383,13 +389,15 @@ logging:
         rf.write(rule_buffer)
         rf.close()
 
-        config_file = self.generate_config(tmpdir, config_buffer=config_buffer, related_files=related_files, reference_config=reference_config, classification_config=classification_config)
+        config_file = self.generate_config(tmpdir, config_buffer=config_buffer,
+                                           related_files=related_files, reference_config=reference_config,
+                                           classification_config=classification_config)
 
         suri_cmd = [self.suricata_binary, '-T', '-l', tmpdir, '-S', rule_file, '-c', config_file]
         # start suricata in test mode
         suriprocess = subprocess.Popen(suri_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         (outdata, errdata) = suriprocess.communicate()
-        result = {'status': True, 'errors': "", 'warnings': [], 'info': [] }
+        result = {'status': True, 'errors': "", 'warnings': [], 'info': []}
         # if not a success
         if suriprocess.returncode != 0:
             result['status'] = False
@@ -401,13 +409,15 @@ logging:
                 struct_msg = json.loads(message)
             except JSONDecodeError:
                 continue
-            if not 'engine' in struct_msg:
+            if 'engine' not in struct_msg:
                 continue
             # Check for duplicate signatures
-            error_code = struct_msg['engine'].get('error_code', 0) 
+            error_code = struct_msg['engine'].get('error_code', 0)
             if error_code == 176:
                 warning, sig_content = struct_msg['engine']['message'].split('"', 1)
-                result['warnings'].append({'message': warning.rstrip(), 'source': self.SURICATA_SYNTAX_CHECK, 'content': sig_content.rstrip('"')})
+                result['warnings'].append({'message': warning.rstrip(),
+                                           'source': self.SURICATA_SYNTAX_CHECK,
+                                           'content': sig_content.rstrip('"')})
             # Message for invalid signature
             elif error_code == 276:
                 rule, warning = struct_msg['engine']['message'].split(': ', 1)
@@ -422,12 +432,11 @@ logging:
         engine_analysis = self.parse_engine_analysis(tmpdir)
         for signature in engine_analysis:
             for warning in signature.get('warnings', []):
-                result['warnings'].append({'message': warning, 'source': self.SURICATA_ENGINE_ANALYSIS, 'content': signature['content']})
+                result['warnings'].append({'message': warning,
+                                           'source': self.SURICATA_ENGINE_ANALYSIS,
+                                           'content': signature['content']})
             for info in signature.get('info', []):
                 msg = {'message': info, 'source': self.SURICATA_ENGINE_ANALYSIS, 'content': signature['content']}
-                #if "Fast Pattern \"" in info:
-                #    if signature['content'].count('content:') <= 1:
-                #        continue
                 result['info'].append(msg)
         mpm_analysis = self.mpm_parse_rules_json(tmpdir)
         result['mpm'] = mpm_analysis
@@ -464,16 +473,16 @@ logging:
                     in_sid_data = False
                     analysis.append(signature)
                     signature = {}
-                elif in_sid_data and not 'content' in signature:
+                elif in_sid_data and 'content' not in signature:
                     signature['content'] = line.strip()
                     continue
                 elif in_sid_data and 'Warning: ' in line:
                     warning = line.split('arning: ')[1]
-                    if not 'warnings' in signature:
+                    if 'warnings' not in signature:
                         signature['warnings'] = []
                     signature['warnings'].append(warning.strip())
                 elif in_sid_data and 'Fast Pattern' in line:
-                    if not 'info' in signature:
+                    if 'info' not in signature:
                         signature['info'] = []
                     signature['info'].append(line.strip())
         return analysis
@@ -492,15 +501,15 @@ logging:
                     signature_msg['sid'] = signature_info['id']
                 if 'flags' in signature_info:
                     if 'toserver' in signature_info['flags'] and 'toclient' in signature_info['flags']:
-                        if not 'warnings' in signature_msg:
+                        if 'warnings' not in signature_msg:
                             signature_msg['warnings'] = []
                         signature_msg['warnings'].append('Rule inspect server and client side, consider adding a flow keyword')
                 if 'warnings' in signature_info:
-                    if not 'warnings' in signature_msg:
+                    if 'warnings' not in signature_msg:
                         signature_msg['warnings'] = []
                     signature_msg['warnings'].extend(signature_info.get('warnings', []))
                 if 'notes' in signature_info:
-                    if not 'info' in signature_msg:
+                    if 'info' not in signature_msg:
                         signature_msg['info'] = []
                     signature_msg['info'].extend(signature_info.get('notes', []))
                 if 'engines' in signature_info:
@@ -515,7 +524,7 @@ logging:
                                 app_proto = engine.get('app_proto')
                             else:
                                 if app_proto != engine.get('app_proto'):
-                                    if not app_proto in ['http', 'http2'] or not engine.get('app_proto') in ['http', 'http2']:
+                                    if app_proto not in ['http', 'http2'] or engine.get('app_proto') not in ['http', 'http2']:
                                         multiple_app_proto = True
                         else:
                             got_raw_match = True
@@ -525,15 +534,16 @@ logging:
                             elif match['name'] == 'pcre':
                                 got_pcre = True
                     if got_pcre and not got_content:
-                        if not 'warnings' in signature_msg:
+                        if 'warnings' not in signature_msg:
                             signature_msg['warnings'] = []
                         signature_msg['warnings'].append('Rule with pcre without content match (possible performance issue)')
                     if app_proto is not None and got_raw_match:
-                        if not 'warnings' in signature_msg:
+                        if 'warnings' not in signature_msg:
                             signature_msg['warnings'] = []
-                        signature_msg['warnings'].append('Application layer "%s" combined with raw match, consider using a match on application buffer' %  (app_proto))
+                        signature_msg['warnings'].append('Application layer "%s" combined with raw match, '
+                                                         'consider using a match on application buffer' % (app_proto))
                     if multiple_app_proto:
-                        if not 'warnings' in signature_msg:
+                        if 'warnings' not in signature_msg:
                             signature_msg['warnings'] = []
                         signature_msg['warnings'].append('Multiple application layers in same signature')
                 analysis.append(signature_msg)
@@ -598,10 +608,12 @@ logging:
                     mpm_analysis['buffer'][sig['buffer']][sig['pattern']]['count'] += 1
                     mpm_analysis['buffer'][sig['buffer']][sig['pattern']]['sigs'].append({'id': sig['id'], 'gid': sig['gid']})
                 else:
-                    mpm_analysis['buffer'][sig['buffer']][sig['pattern']] = {'count': 1, 'sigs': [{'id': sig['id'], 'gid': sig['gid']}]}
+                    mpm_analysis['buffer'][sig['buffer']][sig['pattern']] = {'count': 1,
+                                                                             'sigs': [{'id': sig['id'], 'gid': sig['gid']}]}
             else:
-                mpm_analysis['buffer'][sig['buffer']] = { sig['pattern']: {'count': 1, 'sigs': [{'id': sig['id'], 'gid': sig['gid']}]}}
-            mpm_analysis['sids'][sig['id']]={'buffer': sig['buffer'], 'pattern': sig['pattern']}
+                mpm_analysis['buffer'][sig['buffer']] = {sig['pattern']: {'count': 1,
+                                                                          'sigs': [{'id': sig['id'], 'gid': sig['gid']}]}}
+            mpm_analysis['sids'][sig['id']] = {'buffer': sig['buffer'], 'pattern': sig['pattern']}
         return mpm_analysis
 
     def build_keywords_list(self):
@@ -639,4 +651,3 @@ logging:
             except IndexError:
                 pass
         return keywords_list
-    

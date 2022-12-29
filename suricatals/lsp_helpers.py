@@ -30,26 +30,27 @@ class FileRange:
         return "FileRange()"
 
     def to_range(self):
-        return {"start": {"line": self.line_start, "character": self.col_start}, "end": {"line": self.line_end, "character": self.col_end}}
+        return {"start": {"line": self.line_start, "character": self.col_start},
+                "end": {"line": self.line_end, "character": self.col_end}}
 
 
 class Diagnosis(object):
-    INFO_LEVEL=4
-    WARNING_LEVEL=2
-    ERROR_LEVEL=1
+    INFO_LEVEL = 4
+    WARNING_LEVEL = 2
+    ERROR_LEVEL = 1
 
     def __init__(self):
         self._range = None
         self._message = None
         self._severity = 1
-        self._source="Suricata Language Server"
+        self._source = "Suricata Language Server"
 
     def to_message(self):
         if self._range is None:
             return None
         if self._message is None:
             return None
-        return {"range": self._range.to_range(), "message": self.message, "source": self.source, "severity": self.severity} 
+        return {"range": self._range.to_range(), "message": self.message, "source": self.source, "severity": self.severity}
 
     @property
     def range(self):
