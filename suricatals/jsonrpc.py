@@ -44,7 +44,7 @@ def path_from_uri(uri):
     if os.name == "nt":
         if uri.startswith("file:///"):
             _, path = uri.split("file:///", 1)
-        else: # we should have an UNC path
+        else:  # we should have an UNC path
             _, path = uri.split("file:", 1)
             return path
     else:
@@ -297,7 +297,7 @@ def read_rpc_messages(content):
         return json.loads(body)
     #
     result_list = []
-    while(True):
+    while (True):
         try:
             result = receive_next()
         except EOFError:

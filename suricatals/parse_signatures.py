@@ -22,7 +22,7 @@ import hashlib
 
 import re
 
-from .lsp_helpers import *
+from .lsp_helpers import Diagnosis, FileRange
 
 class Signature:
     GETSID = re.compile(r"sid *:(\d+)")

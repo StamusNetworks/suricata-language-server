@@ -184,7 +184,7 @@ config classification: command-and-control,Malware Command and Control Activity 
             return False
         return True
 
-    def parse_suricata_error_after_7(self, error, single=False):
+    def parse_suricata_error_after_7(self, error):
         ret = {
             'errors': [],
             'warnings': [],
@@ -212,7 +212,6 @@ config classification: command-and-control,Malware Command and Control Activity 
                     wait_line = True
                 continue
             elif s_err['engine']['module'] == 'rules-vars':
-                # TODO handle error as warning
                 ret['errors'].append(s_err['engine'])
                 continue
             elif s_err['engine']['module'] == 'detect':
@@ -241,6 +240,7 @@ config classification: command-and-control,Malware Command and Control Activity 
                 continue
         return ret
 
+    # pylint: disable=W0613
     def parse_suricata_error_before_7(self, error, single=False):
         ret = {
             'errors': [],
@@ -319,9 +319,9 @@ config classification: command-and-control,Malware Command and Control Activity 
     def parse_suricata_error(self, error, single=False):
         (major, _, _) = self.suricata_version.split('.')
         if int(major) < 7:
-           return self.parse_suricata_error_before_7(error, single)
+            return self.parse_suricata_error_before_7(error, single)
         else:
-           return self.parse_suricata_error_after_7(error, single)
+            return self.parse_suricata_error_after_7(error)
 
     def generate_config(self, tmpdir, config_buffer=None, related_files=None, reference_config=None, classification_config=None):
         if not reference_config:
@@ -342,7 +342,7 @@ config classification: command-and-control,Malware Command and Control Activity 
             if self.suricata_config is None:
                 config_buffer = self.CONFIG_FILE
             else:
-                with open(self.suricata_config, 'r') as conf_file:
+                with open(self.suricata_config, 'r', encoding='utf-8') as conf_file:
                     config_buffer = conf_file.read()
         config_file = os.path.join(tmpdir, "suricata.yaml")
         cf = open(config_file, 'w', encoding='utf-8')
@@ -543,7 +543,7 @@ logging:
         mpm_data = []
         mpm_analysis = {'buffer': {}, 'sids': {}}
         try:
-            with open(os.path.join(log_dir, 'rules.json'), 'r') as rules_json:
+            with open(os.path.join(log_dir, 'rules.json'), 'r', encoding='utf-8') as rules_json:
                 for line in rules_json:
                     # some suricata version have an invalid JSON formatted message
                     try:
@@ -588,7 +588,7 @@ logging:
                                 mpm_data.append({'id': rule_analysis['id'], 'gid': rule_analysis['gid'],
                                                  'buffer': fp_buffer, 'pattern': fp_pattern})
                             continue
-        except FileNotFoundError as e:
+        except FileNotFoundError:
             return mpm_analysis
         # target to have
         # { 'http.host': { 'grosminet': { 'count': 34, sigs: [{'id': 2, 'gid':1}]} } }

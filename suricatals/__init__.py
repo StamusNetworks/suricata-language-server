@@ -22,7 +22,6 @@ along with Suricata Language Server.  If not, see <http://www.gnu.org/licenses/>
 
 from __future__ import print_function
 import sys
-import os
 import argparse
 from .langserver import LangServer
 from .jsonrpc import JSONRPC2Connection, ReadWriter
