@@ -196,7 +196,7 @@ class SuricataFile:
     def sort_diagnosis(self, key):
         return -key.severity
 
-    def check_file(self):
+    def check_file(self, workspace={}):
         diagnostics = []
         result = {}
         with open(self.path, 'r', encoding='utf-8', errors='replace') as fhandle:
@@ -290,9 +290,19 @@ class SuricataFile:
             pattern = self.mpm.get(sig.mpm['buffer'], {}).get(sig.mpm['pattern'])
             if pattern is None:
                 continue
+            pattern_count = pattern['count']
+            for sig_file in workspace:
+                if sig_file != self.path:
+                    file_obj = workspace.get(sig_file)
+                    if file_obj is None or file_obj.mpm is None:
+                        continue
+                    f_pattern = file_obj.mpm.get(sig.mpm['buffer'], {}).get(sig.mpm['pattern'])
+                    if f_pattern is None:
+                        continue
+                    pattern_count += f_pattern['count']
             l_diag = Diagnosis()
-            if pattern['count'] > 1:
-                l_diag.message = "Fast pattern '%s' on '%s' buffer is used in %d different signatures, consider using a unique fast pattern to improve performance." % (sig.mpm['pattern'], sig.mpm['buffer'], pattern['count'])
+            if pattern_count > 1:
+                l_diag.message = "Fast pattern '%s' on '%s' buffer is used in %d different signatures, consider using a unique fast pattern to improve performance." % (sig.mpm['pattern'], sig.mpm['buffer'], pattern_count)
                 l_diag.source = "SLS MPM Analysis"
             else:
                 if sig.get_content_keyword_count() == 1:
