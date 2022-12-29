@@ -176,6 +176,7 @@ config classification: command-and-control,Malware Command and Control Activity 
             mm = re.match(r'This is Suricata version (\d+\.\d+\.\d+)', line)
             if mm is not None:
                 return mm.group(1)
+        return "6.0.0"
 
     def json_compat_version(self):
         (major, minor, fix) = self.suricata_version.split('.')
