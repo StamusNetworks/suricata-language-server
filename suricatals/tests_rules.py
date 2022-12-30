@@ -337,16 +337,14 @@ config classification: command-and-control,Malware Command and Control Activity 
         if not reference_config:
             reference_config = self.REFERENCE_CONFIG
         reference_file = os.path.join(tmpdir, "reference.config")
-        rf = open(reference_file, 'w', encoding='utf-8')
-        rf.write(reference_config)
-        rf.close()
+        with open(reference_file, 'w', encoding='utf-8') as rf:
+            rf.write(reference_config)
 
         if not classification_config:
             classification_config = self.CLASSIFICATION_CONFIG
         classification_file = os.path.join(tmpdir, "classification.config")
-        cf = open(classification_file, 'w', encoding='utf-8')
-        cf.write(classification_config)
-        cf.close()
+        with open(classification_file, 'w', encoding='utf-8') as cf:
+            cf.write(classification_config)
 
         if not config_buffer:
             if self.suricata_config is None:
@@ -355,14 +353,14 @@ config classification: command-and-control,Malware Command and Control Activity 
                 with open(self.suricata_config, 'r', encoding='utf-8') as conf_file:
                     config_buffer = conf_file.read()
         config_file = os.path.join(tmpdir, "suricata.yaml")
-        cf = open(config_file, 'w', encoding='utf-8')
-        # write the config file in temp dir
-        cf.write(config_buffer)
-        cf.write("mpm-algo: ac-bs\n")
-        cf.write("default-rule-path: " + tmpdir + "\n")
-        cf.write("reference-config-file: " + tmpdir + "/reference.config\n")
-        cf.write("classification-file: " + tmpdir + "/classification.config\n")
-        cf.write("""
+        with open(config_file, 'w', encoding='utf-8') as cf:
+            # write the config file in temp dir
+            cf.write(config_buffer)
+            cf.write("mpm-algo: ac-bs\n")
+            cf.write("default-rule-path: " + tmpdir + "\n")
+            cf.write("reference-config-file: " + tmpdir + "/reference.config\n")
+            cf.write("classification-file: " + tmpdir + "/classification.config\n")
+            cf.write("""
 engine-analysis:
   rules-fast-pattern: yes
   rules: yes
@@ -374,13 +372,11 @@ logging:
       type: json
                  """)
 
-        cf.close()
         related_files = related_files or {}
         for rfile in related_files:
             related_file = os.path.join(tmpdir, rfile)
-            rf = open(related_file, 'w', encoding='utf-8')
-            rf.write(related_files[rfile])
-            rf.close()
+            with open(related_file, 'w', encoding='utf-8') as rf:
+                rf.write(related_files[rfile])
 
         return config_file
 
@@ -390,9 +386,8 @@ logging:
         tmpdir = tempfile.mkdtemp()
         # write the rule file in temp dir
         rule_file = os.path.join(tmpdir, "file.rules")
-        rf = open(rule_file, 'w', encoding='utf-8')
-        rf.write(rule_buffer)
-        rf.close()
+        with open(rule_file, 'w', encoding='utf-8') as rf:
+            rf.write(rule_buffer)
 
         config_file = self.generate_config(tmpdir, config_buffer=config_buffer,
                                            related_files=related_files, reference_config=reference_config,
@@ -483,7 +478,7 @@ logging:
                     signature['content'] = line.strip()
                     continue
                 elif in_sid_data and 'Warning: ' in line:
-                    warning = line.split('arning: ')[1]
+                    warning = line.split('Warning: ')[1]
                     if 'warnings' not in signature:
                         signature['warnings'] = []
                     signature['warnings'].append(warning.strip())
