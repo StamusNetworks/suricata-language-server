@@ -22,17 +22,11 @@ along with Suricata Language Server.  If not, see <http://www.gnu.org/licenses/>
 
 import json
 import logging
-try:
-    import Queue
-except ImportError:
-    import queue as Queue
+import queue
 import threading
 from collections import deque
 import os
-try:
-    from urllib.parse import unquote
-except ImportError:
-    from urlparse import unquote
+from urllib.parse import unquote
 
 log = logging.getLogger(__name__)
 
@@ -200,7 +194,7 @@ class JSONRPC2Connection:
 
         # We communicate the request ids using a thread safe queue.
         # It also allows us to bound the number of concurrent requests.
-        q = Queue.Queue(100)
+        q = queue.Queue(100)
 
         def send():
             for method, params in requests:
