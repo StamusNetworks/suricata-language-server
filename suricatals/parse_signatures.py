@@ -72,7 +72,6 @@ class Signature:
             last_char = len(self.raw_content[-1].rstrip())
             fr = FileRange(self.line, 0, self.line_end, last_char)
         elif mode == "sid":
-            i = 0
             fr = self._get_diag_range_by_sid()
         elif mode == "pattern":
             # TODO 'normalize' string like "rer|20|b"

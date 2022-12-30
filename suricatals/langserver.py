@@ -102,8 +102,7 @@ class LangServer:
                 self.post_messages = []
 
     def handle(self, request):
-        # pylint: disable=unused-argument
-        def noop(request):
+        def noop(_):
             return None
         # Request handler
         log.debug("REQUEST %s %s", request.get("id"), request.get("method"))
@@ -276,8 +275,6 @@ class LangServer:
             except Exception as e:
                 if os.path.isfile(file_obj.path):
                     return None, e
-                else:
-                    return None, None
             else:
                 return diags, None
         return None, None
@@ -313,7 +310,6 @@ class LangServer:
             _, err_str = self.update_workspace_file(path)
             if err_str is not None:
                 self.post_message('Change request failed for file "{0}": {1}'.format(path, err_str))
-                return
 
     def serve_onOpen(self, request):
         self.serve_onSave(request, did_open=True)
@@ -400,8 +396,7 @@ class LangServer:
                 continue
             self.workspace[path] = result_obj[0]
 
-    # pylint: disable=unused-argument
-    def serve_exit(self, request):
+    def serve_exit(self, _):
         # Exit server
         self.workspace = {}
         self.running = False
