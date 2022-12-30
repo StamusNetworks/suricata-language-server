@@ -58,7 +58,7 @@ See `suricata-language-server -h` for complete and up-to-date help.
 
 * --suricata-binary: path to the suricata binary used for signatures testing (optional)
 * --suricata-config: path to the suricata config used for signatures testing (optional)
-* --max-lines: don't run suricata tests if file is bigger then this limit (auto-completion only)
+* --max-lines: don't run suricata tests if file is bigger than this limit (auto-completion only)
 
 
 Editors Configuration
@@ -144,7 +144,7 @@ Kate
 You can use Suricata Language Server in Kate by activating the `LSP Client Plugin <https://docs.kde.org/stable5/en/kate/kate/kate-application-plugin-lspclient.html>`_.
 
 .. image:: https://raw.githubusercontent.com/StamusNetworks/suricata-language-server/main/images/kate-sample.png
- 
+
 Once activated, you can go to ``Settings > Configure Kate > LSP Client`` then open the ``User Server Settings`` tab and add the configuration
 for the Language Server Protocol ::
 
