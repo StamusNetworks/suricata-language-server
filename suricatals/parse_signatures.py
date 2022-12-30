@@ -305,19 +305,20 @@ class SuricataFile:
                     pattern_count += f_pattern['count']
             l_diag = Diagnosis()
             if pattern_count > 1:
-                l_diag.message = "Fast pattern '%s' on '%s' buffer is used in %d different signatures," \
+                l_diag.message = "Fast Pattern '%s' on '%s' buffer is used in %d different signatures, " \
                                  "consider using a unique fast pattern to improve performance." \
                                    % (sig.mpm['pattern'], sig.mpm['buffer'], pattern_count)
                 l_diag.source = "SLS MPM Analysis"
             else:
                 if sig.get_content_keyword_count() == 1:
                     continue
-                l_diag.message = "Fast pattern '%s' on '%s' buffer" % (sig.mpm['pattern'], sig.mpm['buffer'])
+                l_diag.message = "Fast Pattern '%s' on '%s' buffer" % (sig.mpm['pattern'], sig.mpm['buffer'])
                 l_diag.source = "Suricata MPM Analysis"
             sig_range = sig.get_diag_range(mode="pattern", pattern=sig.mpm['pattern'])
             l_diag.severity = Diagnosis.INFO_LEVEL
             l_diag.range = sig.get_diag_range(mode="pattern", pattern=sig.mpm['pattern'])
             diagnostics.append(l_diag)
+        for sig in self.sigset.signatures:
             sls_diag = sig.sls_syntax_check()
             if len(sls_diag):
                 diagnostics.extend(sls_diag)
@@ -348,7 +349,8 @@ class SuricataFile:
                 i += 1
                 continue
             else:
-                self.sigset.add_signature(i, content_line, multiline=False)
+                if len(content_line) > 0 and not content_line.isspace():
+                    self.sigset.add_signature(i, content_line, multiline=False)
             i += 1
 
     def apply_change(self, content_update):

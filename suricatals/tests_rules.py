@@ -228,9 +228,13 @@ config classification: command-and-control,Malware Command and Control Activity 
                     match = getline.search(message)
                     if match:
                         line_nb = int(match.groups()[0])
-                        if len(ret['errors']):
-                            ret['errors'][-1]['line'] = line_nb - 1
-                        wait_line = False
+                        if wait_line:
+                            if len(ret['errors']):
+                                ret['errors'][-1]['line'] = line_nb - 1
+                            wait_line = False
+                        else:
+                            s_err['engine']['line'] = line_nb - 1
+                            ret['errors'].append(s_err['engine'])
                         continue
                     wait_line = False
                 else:
@@ -413,6 +417,7 @@ logging:
             if 'engine' not in struct_msg:
                 continue
             # Check for duplicate signatures
+            # FIXME implement that for Suricata 7
             error_code = struct_msg['engine'].get('error_code', 0)
             if error_code == 176:
                 warning, sig_content = struct_msg['engine']['message'].split('"', 1)
