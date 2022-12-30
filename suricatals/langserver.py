@@ -32,19 +32,19 @@ log = logging.getLogger(__name__)
 SURICATA_RULES_EXT_REGEX = re.compile(r'^\.rules?$', re.I)
 
 ACTIONS_ITEMS = [
-        {'label': 'alert', 'kind': 14, 'detail': 'Alert action', 'documentation': 'Trigger alert'},
-        {'label': 'config', 'kind': 14, 'detail': 'Alert action',
-         'documentation': 'Configuration signature. Used mostly for conditional logging.'},
-        {'label': 'drop', 'kind': 14, 'detail': 'Alert action', 'documentation': 'Trigger alert and drop flow'},
-        {'label': 'pass', 'kind': 14, 'detail': 'Alert action', 'documentation': 'Stop inspecting the data'},
-        {'label': 'reject', 'kind': 14, 'detail': 'Alert action', 'documentation': 'Trigger alert and reset session'},
-        {'label': 'rejectsrc', 'kind': 14, 'detail': 'Alert action',
-            'documentation': 'Trigger alert and reset session for source IP'},
-        {'label': 'rejectdst', 'kind': 14, 'detail': 'Alert action',
-            'documentation': 'Trigger alert and reset session for destination IP'},
-        {'label': 'rejectboth', 'kind': 14, 'detail': 'Alert action',
-            'documentation': 'Trigger alert and reset session for both IPs'},
-        ]
+    {'label': 'alert', 'kind': 14, 'detail': 'Alert action', 'documentation': 'Trigger alert'},
+    {'label': 'config', 'kind': 14, 'detail': 'Alert action',
+     'documentation': 'Configuration signature. Used mostly for conditional logging.'},
+    {'label': 'drop', 'kind': 14, 'detail': 'Alert action', 'documentation': 'Trigger alert and drop flow'},
+    {'label': 'pass', 'kind': 14, 'detail': 'Alert action', 'documentation': 'Stop inspecting the data'},
+    {'label': 'reject', 'kind': 14, 'detail': 'Alert action', 'documentation': 'Trigger alert and reset session'},
+    {'label': 'rejectsrc', 'kind': 14, 'detail': 'Alert action',
+        'documentation': 'Trigger alert and reset session for source IP'},
+    {'label': 'rejectdst', 'kind': 14, 'detail': 'Alert action',
+        'documentation': 'Trigger alert and reset session for destination IP'},
+    {'label': 'rejectboth', 'kind': 14, 'detail': 'Alert action',
+        'documentation': 'Trigger alert and reset session for both IPs'},
+]
 
 
 def init_file(filepath, rules_tester):
@@ -139,7 +139,7 @@ class LangServer:
             # pylint: disable=W0703
             except Exception:
                 log.warning(
-                        "error handling notification %s", request, exc_info=True)
+                    "error handling notification %s", request, exc_info=True)
             return
         #
         try:
@@ -416,6 +416,7 @@ class LangServer:
         file_obj = SuricataFile(filepath, self.rules_tester)
         file_obj.load_from_disk()
         return file_obj.check_file()
+
 
 
 class JSONRPC2Error(Exception):

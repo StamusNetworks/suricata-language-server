@@ -307,7 +307,7 @@ class SuricataFile:
             if pattern_count > 1:
                 l_diag.message = "Fast Pattern '%s' on '%s' buffer is used in %d different signatures, " \
                                  "consider using a unique fast pattern to improve performance." \
-                                   % (sig.mpm['pattern'], sig.mpm['buffer'], pattern_count)
+                                 % (sig.mpm['pattern'], sig.mpm['buffer'], pattern_count)
                 l_diag.source = "SLS MPM Analysis"
             else:
                 if sig.get_content_keyword_count() == 1:
