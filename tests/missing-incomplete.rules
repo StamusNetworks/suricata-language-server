@@ -1,0 +1,23 @@
+alert tcp any any -> any any (msg:"rer"; content:"rer"; content:"rer B"; content:"rer C"; flow:established,to_client; sid:1; rev:1;)
+alert http any any -> any any (msg:"next try"; sid:2; content:"devine"; content: "qui"; rev:2; iprep:dst,CnC,>,30;)
+alert http any any -> any any (msg:"next try"; sid:21; \
+    content:"loir"; \
+    content:"devine"; \
+    content: "qui"; \
+    flow:established,to_client;
+    rev:7;)
+#alert ip any any -> any any (msg:"rer"; sid:5; rev:3; flow:established,to_server;http.header; content:"j"; http.user_agent; content:"toTO";)
+#alert ip any any -> any any (msg:"rer"; sid:5; rev:3; flow:established,to_server;http.header; content:"j"; http.user_agent; content:"toTO"; dataset:isset,dbz,type string,cramaload /tmp/dd.lst;)
+alert ip any any -> any any (msg:"rer"; sid:500; rev:3; flow:established,to_server;http.header; content:"j"; http.user_agent; content:"toTO";)
+alert rdp any any -> any any (msg:"rdp test"; content:"ddd"; sid:2; rev: 4;)
+alert rdp any any -> any any (msg:"rdp test"; sid:2222; content:"rock"; pcre:"/toto.*rock/"; flow:established,to_client; rev: 4;)
+alert http any any -> any any (msg:"test http";  flow:established,to_server; http.host;\
+    content:"toto"; sid:10;)
+
+
+alert http any any -> $DMC_SERVERS any (msg:"test"; http.method; content:"toto"; sid:11; rev:1;)
+
+
+alert tcp any any -> any any(msg:"grenoui"; sid:100;)
+
+alert tcp any any -> any any (content:"rer C"; flow:established,to_client; sid:1000;

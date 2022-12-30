@@ -25,6 +25,7 @@ import sys
 import argparse
 from .langserver import LangServer
 from .jsonrpc import JSONRPC2Connection, ReadWriter
+import json
 __version__ = '0.9.0'
 
 
@@ -76,11 +77,13 @@ def main():
     if args.batch_file is None:
         stdin, stdout = _binary_stdio()
         s = LangServer(conn=JSONRPC2Connection(ReadWriter(stdin, stdout)),
-                   debug_log=args.debug_log, settings=settings)
+                       debug_log=args.debug_log, settings=settings)
         s.run()
     else:
-        s = LangServer(conn = None, settings=settings)
-        s.analyse_file(args.batch_file)
+        s = LangServer(conn=None, settings=settings)
+        diags = s.analyse_file(args.batch_file)
+        for diag in diags:
+            print(json.dumps(diag.to_message()))
 
 
 def _binary_stdio():

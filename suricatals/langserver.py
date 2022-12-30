@@ -22,7 +22,6 @@ import logging
 import os
 import traceback
 import re
-import json
 
 from suricatals.jsonrpc import path_from_uri
 from suricatals.parse_signatures import SuricataFile
@@ -416,8 +415,8 @@ class LangServer:
     def analyse_file(self, filepath):
         file_obj = SuricataFile(filepath, self.rules_tester)
         file_obj.load_from_disk()
-        for diag in file_obj.check_file():
-            print(json.dumps(diag.to_message()))
+        return file_obj.check_file()
+
 
 class JSONRPC2Error(Exception):
     def __init__(self, code, message, data=None):

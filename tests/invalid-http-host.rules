@@ -1,0 +1,1 @@
+alert http any any -> any any (msg:"rer"; sid:3; rev:3; flow:established,to_server;http.header; content:"j"; http.host; content:"toTO";)
