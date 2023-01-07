@@ -267,6 +267,7 @@ config classification: command-and-control,Malware Command and Control Activity 
         ignore_next = False
         error_stream = io.StringIO(error)
         error_type = 'errors'
+        prev_err = None
         for line in error_stream:
             try:
                 s_err = json.loads(line)
@@ -274,6 +275,10 @@ config classification: command-and-control,Malware Command and Control Activity 
                 continue
             s_err['engine']['source'] = self.SURICATA_SYNTAX_CHECK
             errno = s_err['engine']['error_code']
+            if s_err.get('log_level', '') != 'Error':
+                if errno not in [176, 242]:
+                    prev_err = s_err['engine']
+                    continue
             if errno == self.VARIABLE_ERROR:
                 variable = s_err['engine']['message'].split("\"")[1]
                 s_err['engine']['message'] = "Custom address variable \"$%s\" is used " \
@@ -336,9 +341,14 @@ config classification: command-and-control,Malware Command and Control Activity 
                         match = getline.search(message)
                         if match:
                             line_nb = int(match.groups()[0])
-                            if len(ret[error_type]):
-                                ret[error_type][-1]['line'] = line_nb - 1
-                            error_type = 'errors'
+                            if prev_err is not None:
+                                prev_err['line'] = line_nb - 1
+                                ret['errors'].append(prev_err)
+                                prev_err = None
+                            else:
+                                if len(ret[error_type]):
+                                    ret[error_type][-1]['line'] = line_nb - 1
+                                error_type = 'errors'
                             continue
                 if errno == 42:
                     s_err['engine']['message'] = s_err['engine']['message'].split(' from')[0]
