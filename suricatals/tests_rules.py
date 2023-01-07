@@ -193,29 +193,36 @@ config classification: command-and-control,Malware Command and Control Activity 
         }
         error_stream = io.StringIO(error)
         wait_line = False
+        prev_err = None
         for line in error_stream:
             try:
                 s_err = json.loads(line)
             except JSONDecodeError:
-                ret['errors'].append({'message': error, 'format': 'raw', 'source': self.SURICATA_SYNTAX_CHECK})
-                return ret
+                continue
+            if s_err['event_type'] != 'engine':
+                continue
             s_err['engine']['source'] = self.SURICATA_SYNTAX_CHECK
 
             if not s_err['engine']['module'].startswith('detect') and s_err['engine']['module'] not in ['rule-vars']:
                 continue
             if s_err['engine']['module'] == 'detect-parse':
-                ret['errors'].append(s_err['engine'])
-                continue
+                if s_err['log_level'] == 'Error':
+                    ret['errors'].append(s_err['engine'])
+                    wait_line = True
+                else:
+                    ret['warnings'].append(s_err['engine'])
+                    getsid = re.compile(r"sid *:(\d+)")
+                    match = getsid.search(line)
+                    if match:
+                        s_err['engine']['sid'] = int(match.groups()[0])
             elif s_err['engine']['module'] == 'detect-dataset':
                 if not wait_line:
                     if s_err['engine']['message'].startswith("bad type"):
                         s_err['engine']['message'] = "dataset: " + s_err['engine']['message']
                     ret['errors'].append(s_err['engine'])
                     wait_line = True
-                continue
             elif s_err['engine']['module'] == 'rules-vars':
                 ret['errors'].append(s_err['engine'])
-                continue
             elif s_err['engine']['module'] == 'detect':
                 if 'error parsing signature' in s_err['engine']['message']:
                     message = s_err['engine']['message']
@@ -229,21 +236,25 @@ config classification: command-and-control,Malware Command and Control Activity 
                     if match:
                         line_nb = int(match.groups()[0])
                         if wait_line:
-                            if len(ret['errors']):
-                                ret['errors'][-1]['line'] = line_nb - 1
-                            wait_line = False
+                            if prev_err is not None:
+                                prev_err['engine']['line'] = line_nb - 1
+                                ret['errors'].append(prev_err['engine'])
                         else:
-                            s_err['engine']['line'] = line_nb - 1
-                            ret['errors'].append(s_err['engine'])
-                        continue
+                            if prev_err is not None and prev_err['log_level'] == 'Warning':
+                                prev_err['engine']['line'] = line_nb - 1
+                                ret['errors'].append(prev_err['engine'])
+                            else:
+                                s_err['engine']['line'] = line_nb - 1
+                                ret['errors'].append(s_err['engine'])
                     wait_line = False
                 else:
                     ret['errors'].append(s_err['engine'])
             else:
                 if not wait_line:
-                    ret['errors'].append(s_err['engine'])
-                    wait_line = True
-                continue
+                    if s_err['log_level'] == 'Error':
+                        ret['errors'].append(s_err['engine'])
+                        wait_line = True
+            prev_err = s_err
         return ret
 
     # pylint: disable=W0613
@@ -260,8 +271,7 @@ config classification: command-and-control,Malware Command and Control Activity 
             try:
                 s_err = json.loads(line)
             except JSONDecodeError:
-                ret['errors'].append({'message': error, 'format': 'raw', 'source': self.SURICATA_SYNTAX_CHECK})
-                return ret
+                continue
             s_err['engine']['source'] = self.SURICATA_SYNTAX_CHECK
             errno = s_err['engine']['error_code']
             if errno == self.VARIABLE_ERROR:
@@ -296,6 +306,16 @@ config classification: command-and-control,Malware Command and Control Activity 
                     error_type = 'warnings'
                     ret[error_type].append(s_err['engine'])
                     continue
+            elif errno == 176:
+                warning, sig_content = s_err['engine']['message'].split('"', 1)
+                ret['warnings'].append({'message': warning.rstrip(),
+                                           'source': self.SURICATA_SYNTAX_CHECK,
+                                           'content': sig_content.rstrip('"')})
+            # Message for invalid signature
+            elif errno == 276:
+                rule, warning = s_err['engine']['message'].split(': ', 1)
+                rule = int(rule.split(' ')[1])
+                ret['warnings'].append({'message': warning.rstrip(), 'source': self.SURICATA_SYNTAX_CHECK, 'sid': rule})
             elif errno not in self.USELESS_ERRNO:
                 # clean error message
                 if errno == 39:
@@ -395,36 +415,13 @@ logging:
 
         suri_cmd = [self.suricata_binary, '-T', '-l', tmpdir, '-S', rule_file, '-c', config_file]
         # start suricata in test mode
-        suriprocess = subprocess.Popen(suri_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        (outdata, errdata) = suriprocess.communicate()
+        suriprocess = subprocess.Popen(suri_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        (errdata, _) = suriprocess.communicate()
         result = {'status': True, 'errors': "", 'warnings': [], 'info': []}
         # if not a success
         if suriprocess.returncode != 0:
             result['status'] = False
-            result['errors'] = errdata.decode('utf-8')
-        # analyse potential warnings
-        message_stream = io.StringIO(outdata.decode('utf-8'))
-        for message in message_stream:
-            try:
-                struct_msg = json.loads(message)
-            except JSONDecodeError:
-                continue
-            if 'engine' not in struct_msg:
-                continue
-            # Check for duplicate signatures
-            # FIXME implement that for Suricata 7
-            error_code = struct_msg['engine'].get('error_code', 0)
-            if error_code == 176:
-                warning, sig_content = struct_msg['engine']['message'].split('"', 1)
-                result['warnings'].append({'message': warning.rstrip(),
-                                           'source': self.SURICATA_SYNTAX_CHECK,
-                                           'content': sig_content.rstrip('"')})
-            # Message for invalid signature
-            elif error_code == 276:
-                rule, warning = struct_msg['engine']['message'].split(': ', 1)
-                rule = int(rule.split(' ')[1])
-                result['warnings'].append({'message': warning.rstrip(), 'source': self.SURICATA_SYNTAX_CHECK, 'sid': rule})
-
+        result['errors'] = errdata.decode('utf-8')
         # runs rules analysis to have warnings
         suri_cmd = [self.suricata_binary, '--engine-analysis', '-l', tmpdir, '-S', rule_file, '-c', config_file]
         # start suricata in test mode
@@ -449,9 +446,10 @@ logging:
         prov_result = self.rule_buffer(rule_buffer, config_buffer=config_buffer, related_files=related_files)
         if len(prov_result.get('errors', [])):
             res = self.parse_suricata_error(prov_result['errors'], single=single)
-            prov_result['errors'] = res['errors']
+            if 'errors' in res:
+                prov_result['errors'] = res['errors']
             if 'warnings' in res:
-                prov_result['warnings'] = res['warnings']
+                prov_result['warnings'].extend(res['warnings'])
         return prov_result
 
     def parse_engine_analysis(self, log_dir):
