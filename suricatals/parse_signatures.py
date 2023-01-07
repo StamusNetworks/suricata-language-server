@@ -27,6 +27,7 @@ from .lsp_helpers import Diagnosis, FileRange
 
 class Signature:
     GETSID = re.compile(r"sid *:(\d+)")
+    GETREV = re.compile(r"rev *:(\d+)")
     SIG_END = re.compile(r"\) *$")
     SIG_CONTENT = re.compile(r"content *:")
 
@@ -42,6 +43,8 @@ class Signature:
         self.multiline = multiline
         self.sid = 0
         self._search_sid(content)
+        self.rev = 0
+        self._search_rev(content)
         self.mpm = None
         self.has_error = False
 
@@ -51,6 +54,8 @@ class Signature:
         self.line_end = line
         if self.sid == 0:
             self._search_sid(content)
+        if self.rev == 0:
+            self._search_rev(content)
 
     def _get_diag_range_by_sid(self):
         fr = None
@@ -118,6 +123,11 @@ class Signature:
         if match:
             self.sid = int(match.groups()[0])
 
+    def _search_rev(self, content):
+        match = self.GETREV.search(content)
+        if match:
+            self.rev = int(match.groups()[0])
+
     def __repr__(self):
         return "Signature()"
 
@@ -138,7 +148,14 @@ class SignatureSet:
         self.content_map[content] = signature
         self.line_map[line] = signature
         if signature.sid:
-            self.sid_map[signature.sid] = signature
+            if signature.sid in self.sid_map:
+                if self.sid_map[signature.sid].rev > signature.rev:
+                    signature.has_error = True
+                elif self.sid_map[signature.sid].rev < signature.rev:
+                    self.sid_map[signature.sid].has_error = True
+                self.sid_map[signature.sid] = signature
+            else:
+                self.sid_map[signature.sid] = signature
         return signature
 
     def add_content_to_signature(self, sig_line, line, content):

@@ -55,6 +55,13 @@ class TestSyntax(unittest.TestCase):
         for diag in diags:
             self.assertEqual(diag.severity, 4)
 
+    def test_sig_shadow(self):
+        s = LangServer(conn=None, settings=None)
+        diags = s.analyse_file("tests/sig-shadow.rules")
+        self.assertEqual(len(diags), 1)
+        for diag in diags:
+            self.assertEqual(diag.severity, 2)
+
 
 if __name__ == '__main__':
     unittest.main()
