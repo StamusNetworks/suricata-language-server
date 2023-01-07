@@ -48,6 +48,13 @@ class TestSyntax(unittest.TestCase):
         for diag in diags:
             self.assertEqual(diag.severity, 1)
 
+    def test_pattern_error(self):
+        s = LangServer(conn=None, settings=None)
+        diags = s.analyse_file("tests/pattern-syntax.rules")
+        self.assertEqual(len(diags), 3)
+        for diag in diags:
+            self.assertEqual(diag.severity, 4)
+
 
 if __name__ == '__main__':
     unittest.main()
