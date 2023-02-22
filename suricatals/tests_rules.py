@@ -40,6 +40,8 @@ class TestRules():
     CONFIG_FILE = """
 %YAML 1.1
 ---
+stats:
+  enabled: no
 logging:
   default-log-level: warning
   outputs:
