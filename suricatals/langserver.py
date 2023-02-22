@@ -31,21 +31,6 @@ log = logging.getLogger(__name__)
 
 SURICATA_RULES_EXT_REGEX = re.compile(r'^\.rules?$', re.I)
 
-ACTIONS_ITEMS = [
-    {'label': 'alert', 'kind': 14, 'detail': 'Alert action', 'documentation': 'Trigger alert'},
-    {'label': 'config', 'kind': 14, 'detail': 'Alert action',
-     'documentation': 'Configuration signature. Used mostly for conditional logging.'},
-    {'label': 'drop', 'kind': 14, 'detail': 'Alert action', 'documentation': 'Trigger alert and drop flow'},
-    {'label': 'pass', 'kind': 14, 'detail': 'Alert action', 'documentation': 'Stop inspecting the data'},
-    {'label': 'reject', 'kind': 14, 'detail': 'Alert action', 'documentation': 'Trigger alert and reset session'},
-    {'label': 'rejectsrc', 'kind': 14, 'detail': 'Alert action',
-        'documentation': 'Trigger alert and reset session for source IP'},
-    {'label': 'rejectdst', 'kind': 14, 'detail': 'Alert action',
-        'documentation': 'Trigger alert and reset session for destination IP'},
-    {'label': 'rejectboth', 'kind': 14, 'detail': 'Alert action',
-        'documentation': 'Trigger alert and reset session for both IPs'},
-]
-
 
 def init_file(filepath, rules_tester):
     file_obj = SuricataFile(filepath, rules_tester)
@@ -54,6 +39,21 @@ def init_file(filepath, rules_tester):
 
 
 class LangServer:
+    ACTIONS_ITEMS = [
+        {'label': 'alert', 'kind': 14, 'detail': 'Alert action', 'documentation': 'Trigger alert'},
+        {'label': 'config', 'kind': 14, 'detail': 'Alert action',
+         'documentation': 'Configuration signature. Used mostly for conditional logging.'},
+        {'label': 'drop', 'kind': 14, 'detail': 'Alert action', 'documentation': 'Trigger alert and drop flow'},
+        {'label': 'pass', 'kind': 14, 'detail': 'Alert action', 'documentation': 'Stop inspecting the data'},
+        {'label': 'reject', 'kind': 14, 'detail': 'Alert action', 'documentation': 'Trigger alert and reset session'},
+        {'label': 'rejectsrc', 'kind': 14, 'detail': 'Alert action',
+            'documentation': 'Trigger alert and reset session for source IP'},
+        {'label': 'rejectdst', 'kind': 14, 'detail': 'Alert action',
+            'documentation': 'Trigger alert and reset session for destination IP'},
+        {'label': 'rejectboth', 'kind': 14, 'detail': 'Alert action',
+            'documentation': 'Trigger alert and reset session for both IPs'},
+    ]
+
     def __init__(self, conn, debug_log=False, settings=None):
         self.conn = conn
         self.running = True
@@ -77,6 +77,7 @@ class LangServer:
         self.max_lines = settings.get("max_lines", 1000)
         self.rules_tester = TestRules(suricata_binary=self.suricata_binary, suricata_config=self.suricata_config)
         self.keywords_list = self.rules_tester.build_keywords_list()
+        self.app_layer_list = self.rules_tester.build_app_layer_list()
 
     def post_message(self, message, msg_type=1):
         self.conn.send_notification("window/showMessage", {
@@ -206,6 +207,21 @@ class LangServer:
         #     "streaming": False,
         # }
 
+    def _initial_params_autocomplete(self, request, file_obj):
+        params = request["params"]
+        edit_index = params['position']['line']
+        sig_content = file_obj.contents_split[edit_index]
+        sig_index = params['position']['character']
+        word_split = re.split(' +', sig_content[0:sig_index])
+        if len(word_split) == 1:
+            return self.ACTIONS_ITEMS
+        if len(word_split) == 2:
+            return self.app_layer_list
+        if edit_index == 0:
+            return None
+        elif not re.search(r'\\ *$', file_obj.contents_split[edit_index - 1]):
+            return None
+
     def serve_autocomplete(self, request):
         params = request["params"]
         uri = params["textDocument"]["uri"]
@@ -219,13 +235,7 @@ class LangServer:
         log.debug(sig_content)
         # not yet in content matching so just return nothing
         if '(' not in sig_content[0:sig_index]:
-            if ' ' not in sig_content[0:sig_index]:
-                return ACTIONS_ITEMS
-            if edit_index == 0:
-                return None
-            elif not re.search(r'\\ *$', file_obj.contents_split[edit_index - 1]):
-                return None
-
+            return self._initial_params_autocomplete(request, file_obj)
         cursor = sig_index - 1
         while cursor > 0:
             log.debug("At index: %d of %d (%s)", cursor, len(sig_content), sig_content[cursor:sig_index])

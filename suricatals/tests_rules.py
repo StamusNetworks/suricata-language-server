@@ -662,3 +662,21 @@ logging:
             except IndexError:
                 pass
         return keywords_list
+
+    def build_app_layer_list(self):
+        tmpdir = tempfile.mkdtemp()
+        config_file = self.generate_config(tmpdir)
+        suri_cmd = [self.suricata_binary, '--list-app-layer-proto', '-l', tmpdir, '-c', config_file]
+        # start suricata in test mode
+        suriprocess = subprocess.Popen(suri_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        (outdata, _) = suriprocess.communicate()
+        shutil.rmtree(tmpdir)
+        applayers = outdata.decode('utf-8').splitlines()
+        while not applayers[0].startswith("===="):
+            applayers.pop(0)
+        applayers.pop(0)
+        applayers_list = [{'label': 'tcp', 'detail': 'tcp', 'kind': 14}, {'label': 'udp', 'detail': 'udp', 'kind': 14}]
+        for app_layer in applayers:
+            app_layer_item = {'label': app_layer, 'detail': app_layer, 'kind': 14}
+            applayers_list.append(app_layer_item)
+        return applayers_list
