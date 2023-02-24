@@ -59,7 +59,8 @@ See `suricata-language-server -h` for complete and up-to-date help.
 * --suricata-binary: path to the suricata binary used for signatures testing (optional)
 * --suricata-config: path to the suricata config used for signatures testing (optional)
 * --max-lines: don't run suricata tests if file is bigger than this limit (auto-completion only)
-
+* --max-tracked-files: don't start suricata analysis if workspace file count is superior to this limit
+* --batch-file: batch mode to parse only the file in argument and return result on stdout
 
 Editors Configuration
 =====================

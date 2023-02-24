@@ -58,6 +58,10 @@ def main():
         help="Don't start suricata analysis over this file size"
     )
     parser.add_argument(
+        '--max-tracked-files', default=100, type=int,
+        help="Don't start suricata analysis if workspace file count is superior to this limit"
+    )
+    parser.add_argument(
         '--batch-file', default=None,
         help="Batch mode to parse only the file in argument"
     )
@@ -70,6 +74,7 @@ def main():
         "suricata_binary": args.suricata_binary,
         "suricata_config": args.suricata_config,
         "max_lines": args.max_lines,
+        "max_tracked_files": args.max_tracked_files,
     }
     #
 

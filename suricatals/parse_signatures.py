@@ -190,6 +190,12 @@ class SuricataFile:
         self.hash = None
         self.mpm = {}
         self.diagnosis = None
+        self.count_lines()
+
+    def count_lines(self):
+        with open(self.path, 'r', encoding='utf-8', errors='replace') as fhandle:
+            content = fhandle.read()
+            self.nLines = len(content.splitlines())
 
     def copy(self):
         """Copy content to new file object (does not copy objects)"""

@@ -32,9 +32,10 @@ log = logging.getLogger(__name__)
 SURICATA_RULES_EXT_REGEX = re.compile(r'^\.rules?$', re.I)
 
 
-def init_file(filepath, rules_tester):
+def init_file(filepath, rules_tester, line_limit):
     file_obj = SuricataFile(filepath, rules_tester)
-    file_obj.check_file()
+    if file_obj.nLines < line_limit:
+        file_obj.check_file()
     return file_obj, None
 
 
@@ -75,6 +76,7 @@ class LangServer:
         self.suricata_binary = settings.get("suricata_binary", 'suricata')
         self.suricata_config = settings.get("suricata_config", None)
         self.max_lines = settings.get("max_lines", 1000)
+        self.max_tracked_files = settings.get("max_tracked_files", 100)
         self.rules_tester = TestRules(suricata_binary=self.suricata_binary, suricata_config=self.suricata_config)
         self.keywords_list = self.rules_tester.build_keywords_list()
         self.app_layer_list = self.rules_tester.build_app_layer_list()
@@ -392,11 +394,14 @@ class LangServer:
                     if inc_file:
                         file_list.append(filepath)
         # Process files
+        # don't send to analysis if too many files
+        if len(file_list) > self.max_tracked_files:
+            return
         from multiprocessing import Pool
         pool = Pool(processes=self.nthreads)
         results = {}
         for filepath in file_list:
-            results[filepath] = pool.apply_async(init_file, args=(filepath, self.rules_tester))
+            results[filepath] = pool.apply_async(init_file, args=(filepath, self.rules_tester, self.max_lines))
         pool.close()
         pool.join()
         for path, result in results.items():
