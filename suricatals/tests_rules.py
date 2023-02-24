@@ -402,6 +402,8 @@ logging:
   - console:
       enabled: yes
       type: json
+stats:
+  enabled: no
                  """)
 
         related_files = related_files or {}
