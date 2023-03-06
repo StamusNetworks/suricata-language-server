@@ -37,6 +37,14 @@ You can use pip to install the Suricata language server ::
 
 Run this command with sudo if you want to install it globally.
 
+On system where `PEP 704 <https://peps.python.org/pep-0704/>`_  is implemented,
+the installation via PIP is done by default in a virtualenv which is not convenient
+for our use case where the editor is running the server. A workaround is to force
+the installation outside a virtualenv
+by doing ::
+
+ pip install --break-system-packages suricata-language-server
+
 If you are a Microsoft Windows user and need to install Suricata, you can use the MSI available on `Suricata download page <https://suricata.io/download/>`_.
 For Python, the installer from Python website available on their `Download page <https://www.python.org/downloads/windows/>`_ is working well.
 
