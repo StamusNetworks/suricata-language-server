@@ -119,7 +119,7 @@ Sublime Text 3
 
 You can use the `LSP <https://lsp.sublimetext.io/>`_ Package to provide support for LSP to Sublime Text 3.
 
-To activate Suricata Language Server on .rules file, you need to create a new syntax for Suricata file by using the content of `Suricata Sublime syntax from justjamesnow <https://github.com/justjamesnow/SublimeSuricata/blob/master/suricata.sublime-syntax>`_
+To activate Suricata Language Server on .rules file, you need to create a new syntax for Suricata file by using the content of `Suricata Sublime syntax from OzurieXV <https://github.com/ozuriexv/SublimeSuricata>`_
 
 To do so you can click on ``Tools > Developer > New Syntax`` then paste the content of the file and modify the text `text.suricata` to `source.suricata`. This will provide syntax highlighting as well as a `source.suricata` Sublime selector that can be used to trigger the Suricata Language Server activation.
 
