@@ -220,9 +220,11 @@ class SuricataFile:
     def sort_diagnosis(self, key):
         return -key.severity
 
-    def check_file(self, workspace={}):
+    def check_file(self, workspace=None):
         diagnostics = []
         result = {}
+        if not workspace:
+            workspace = {}
         with open(self.path, 'r', encoding='utf-8', errors='replace') as fhandle:
             result = self.rules_tester.check_rule_buffer(fhandle.read())
             self.mpm = result.get('mpm', {}).get('buffer')
