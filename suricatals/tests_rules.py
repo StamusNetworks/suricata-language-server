@@ -195,7 +195,7 @@ config classification: command-and-control,Malware Command and Control Activity 
         }
         error_stream = io.StringIO(error)
         wait_line = False
-        prev_err = None
+        prev_err = {}
         for line in error_stream:
             try:
                 s_err = json.loads(line)
@@ -238,11 +238,11 @@ config classification: command-and-control,Malware Command and Control Activity 
                     if match:
                         line_nb = int(match.groups()[0])
                         if wait_line:
-                            if prev_err is not None:
+                            if prev_err!= {}:
                                 prev_err['engine']['line'] = line_nb - 1
                                 ret['errors'].append(prev_err['engine'])
                         else:
-                            if prev_err is not None and prev_err['log_level'] == 'Warning':
+                            if prev_err != {} and prev_err['log_level'] == 'Warning':
                                 prev_err['engine']['line'] = line_nb - 1
                                 ret['errors'].append(prev_err['engine'])
                             else:
@@ -440,7 +440,7 @@ stats:
         suri_cmd = [self.suricata_binary, '--engine-analysis', '-l', tmpdir, '-S', rule_file, '-c', config_file]
         # start suricata in test mode
         suriprocess = subprocess.Popen(suri_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        (outdata, errdata) = suriprocess.communicate()
+        (_, errdata) = suriprocess.communicate()
         engine_analysis = self.parse_engine_analysis(tmpdir)
         for signature in engine_analysis:
             for warning in signature.get('warnings', []):
