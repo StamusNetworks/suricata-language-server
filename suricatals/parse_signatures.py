@@ -79,7 +79,6 @@ class Signature:
         elif mode == "sid":
             fr = self._get_diag_range_by_sid()
         elif mode == "pattern":
-            # TODO 'normalize' string like "rer|20|b"
             pattern_match = re.compile(f'content: *("{re.escape(pattern)}")')
             i = 0
             found = False
