@@ -174,4 +174,4 @@ Getting help
 You can get help by:
 
 * Opening an `issue on GitHub <https://github.com/StamusNetworks/suricata-language-server/issues>`_
-* Asking on `#suricata-language-server <https://discordapp.com/channels/911231224448712714/927591953967751199>`_ on Discord.
+* Asking on `#suricata-language-server <https://discord.com/channels/911231224448712714/927591953967751199>`_ on Discord.
