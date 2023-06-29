@@ -35,7 +35,6 @@ class TestRules():
     VARIABLE_ERROR = 101
     OPENING_RULE_FILE = 41  # Error when opening a file referenced in the source
     OPENING_DATASET_FILE = 322  # Error when opening a dataset referenced in the source
-    RULEFILE_ERRNO = [39, 42]
     USELESS_ERRNO = [40, 43, 44]
     CONFIG_FILE = """
 %YAML 1.1
@@ -440,7 +439,7 @@ stats:
         suri_cmd = [self.suricata_binary, '--engine-analysis', '-l', tmpdir, '-S', rule_file, '-c', config_file]
         # start suricata in test mode
         suriprocess = subprocess.Popen(suri_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        (_, errdata) = suriprocess.communicate()
+        suriprocess.communicate()
         engine_analysis = self.parse_engine_analysis(tmpdir)
         for signature in engine_analysis:
             for warning in signature.get('warnings', []):
