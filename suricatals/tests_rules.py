@@ -446,6 +446,7 @@ stats:
             for warning in signature.get('warnings', []):
                 result['warnings'].append({'message': warning,
                                            'source': self.SURICATA_ENGINE_ANALYSIS,
+                                           'sid': signature.get('sid', 'UNKNOWN'),
                                            'content': signature['content']})
             for info in signature.get('info', []):
                 msg = {'message': info, 'source': self.SURICATA_ENGINE_ANALYSIS, 'content': signature['content']}
