@@ -428,7 +428,6 @@ class LangServer:
         return file_obj.check_file()
 
 
-
 class JSONRPC2Error(Exception):
     def __init__(self, code, message, data=None):
         super().__init__(message)
