@@ -457,7 +457,7 @@ stats:
     def check_rule_buffer(self, rule_buffer, config_buffer=None, related_files=None, single=False):
         related_files = related_files or {}
         prov_result = self.rule_buffer(rule_buffer, config_buffer=config_buffer, related_files=related_files)
-        if len(prov_result.get('errors', [])):
+        if len(prov_result.get('errors', '')):
             res = self.parse_suricata_error(prov_result['errors'], single=single)
             if 'errors' in res:
                 prov_result['errors'] = res['errors']
