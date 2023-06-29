@@ -443,12 +443,21 @@ stats:
         engine_analysis = self.parse_engine_analysis(tmpdir)
         for signature in engine_analysis:
             for warning in signature.get('warnings', []):
-                result['warnings'].append({'message': warning,
-                                           'source': self.SURICATA_ENGINE_ANALYSIS,
-                                           'content': signature['content']})
+                result['warnings'].append({
+                    'message': warning,
+                    'source': self.SURICATA_ENGINE_ANALYSIS,
+                    'sid': signature.get('sid', 'UNKNOWN'),
+                    'content': signature['content']
+                })
+
             for info in signature.get('info', []):
-                msg = {'message': info, 'source': self.SURICATA_ENGINE_ANALYSIS, 'content': signature['content']}
-                result['info'].append(msg)
+                result['info'].append({
+                    'message': info,
+                    'source': self.SURICATA_ENGINE_ANALYSIS,
+                    'content': signature['content'],
+                    'sid': signature.get('sid', 'UNKNOWN')
+                })
+
         mpm_analysis = self.mpm_parse_rules_json(tmpdir)
         result['mpm'] = mpm_analysis
         shutil.rmtree(tmpdir)

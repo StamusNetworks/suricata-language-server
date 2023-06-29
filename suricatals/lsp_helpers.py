@@ -44,13 +44,48 @@ class Diagnosis(object):
         self._message = None
         self._severity = 1
         self._source = "Suricata Language Server"
+        self._sid = 0
+        self._content = ''
+        self._errno = 0
 
     def to_message(self):
         if self._range is None:
             return None
         if self._message is None:
             return None
-        return {"range": self._range.to_range(), "message": self.message, "source": self.source, "severity": self.severity}
+        return {
+            "range": self._range.to_range(),
+            "message": self.message,
+            "source": self.source,
+            "severity": self.severity,
+            'content': self.content,
+            'sid': self.sid,
+            'exit_code': self.errno
+        }
+
+    @property
+    def errno(self):
+        return self._errno
+
+    @errno.setter
+    def errno(self, _errno):
+        self._errno = _errno
+
+    @property
+    def content(self):
+        return self._content
+
+    @content.setter
+    def content(self, content):
+        self._content = content
+
+    @property
+    def sid(self):
+        return self._sid
+
+    @sid.setter
+    def sid(self, sid):
+        self._sid = sid
 
     @property
     def range(self):

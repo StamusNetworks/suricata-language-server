@@ -114,6 +114,8 @@ class Signature:
                 end_diag.message = "Missing closing parenthesis: incomplete signature"
                 end_diag.severity = Diagnosis.WARNING_LEVEL
                 end_diag.source = "SLS syntax check"
+                end_diag.sid = self.sid,
+                end_diag.content = self.content
                 diagnosis.append(end_diag)
         return diagnosis
 
@@ -237,15 +239,21 @@ class SuricataFile:
                 l_diag = Diagnosis()
                 l_diag.message = error['message']
                 l_diag.source = error['source']
+                l_diag.errno = error['error_code']
                 l_diag.severity = Diagnosis.ERROR_LEVEL
                 signature = self.sigset.get_sig_by_line(error['line'])
                 if signature:
                     signature.has_error = True
                     sig_range = signature.get_diag_range(mode="all")
                     l_diag.range = sig_range
+                    l_diag.content = signature.content
+                    l_diag.sid = signature.sid
                 else:
                     e_range = FileRange(error['line'], 0, error['line'], 1000)
                     l_diag.range = e_range
+                    l_diag.content = error.get('content', '')
+                    l_diag.sid = error.get('sid', 'UNKNOWN')
+
                 diagnostics.append(l_diag)
         for warning in result.get('warnings', []):
             line = None
@@ -253,6 +261,7 @@ class SuricataFile:
             l_diag = Diagnosis()
             l_diag.message = warning['message']
             l_diag.source = warning['source']
+            l_diag.errno = warning.get('error_code', 0)
             l_diag.severity = Diagnosis.WARNING_LEVEL
             if 'line' in warning:
                 line = warning['line']
@@ -271,9 +280,15 @@ class SuricataFile:
                 l_diag.range = signature.get_diag_range(mode="sid")
                 if warning.get('suricata_error', False):
                     signature.has_error = True
+
+                l_diag.content = signature.content
+                l_diag.sid = signature.sid
             else:
                 w_range = FileRange(line, 0, line, 1000)
                 l_diag.range = w_range
+                l_diag.content = warning.get('content', '')
+                l_diag.sid = warning.get('sid', 'UNKNOWN')
+
             diagnostics.append(l_diag)
         for info in result.get('info', []):
             line = None
@@ -281,6 +296,7 @@ class SuricataFile:
             l_diag = Diagnosis()
             l_diag.message = info['message']
             l_diag.source = info['source']
+            l_diag.errno = info['error_code']
             l_diag.severity = Diagnosis.INFO_LEVEL
             if 'line' in info:
                 line = info['line']
@@ -299,6 +315,13 @@ class SuricataFile:
                         sig_range = signature.get_diag_range(mode='sid')
                 else:
                     sig_range = signature.get_diag_range(mode='sid')
+
+                l_diag.content = signature.content
+                l_diag.sid = signature.sid
+            else:
+                l_diag.content = info.get('content', '')
+                l_diag.sid = info.get('sid', 'UNKNOWN')
+
             l_diag.range = sig_range
             diagnostics.append(l_diag)
         for sig in self.sigset.signatures:
@@ -310,6 +333,8 @@ class SuricataFile:
                     l_diag.source = "Suricata MPM Analysis"
                     l_diag.severity = Diagnosis.INFO_LEVEL
                     l_diag.range = sig.get_diag_range(mode="sid")
+                    l_diag.sid = sig.sid
+                    l_diag.content = sig.content
                     diagnostics.append(l_diag)
                 continue
             # mpm is content:"$pattern"
@@ -340,6 +365,8 @@ class SuricataFile:
             sig_range = sig.get_diag_range(mode="pattern", pattern=sig.mpm['pattern'])
             l_diag.severity = Diagnosis.INFO_LEVEL
             l_diag.range = sig.get_diag_range(mode="pattern", pattern=sig.mpm['pattern'])
+            l_diag.sid = sig.sid
+            l_diag.content = sig.content
             diagnostics.append(l_diag)
         for sig in self.sigset.signatures:
             sls_diag = sig.sls_syntax_check()
