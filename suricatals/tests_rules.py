@@ -277,7 +277,7 @@ config classification: command-and-control,Malware Command and Control Activity 
             s_err['engine']['source'] = self.SURICATA_SYNTAX_CHECK
             errno = s_err['engine']['error_code']
             if s_err.get('log_level', '') != 'Error':
-                if errno not in [176, 242]:
+                if errno not in [176, 242, 308]:
                     prev_err = s_err['engine']
                     continue
             if errno == self.VARIABLE_ERROR:
