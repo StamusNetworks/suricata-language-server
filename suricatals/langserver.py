@@ -422,10 +422,10 @@ class LangServer:
             code=-32601,
             message="method {} not found".format(request["method"]))
 
-    def analyse_file(self, filepath):
+    def analyse_file(self, filepath, **kwargs):
         file_obj = SuricataFile(filepath, self.rules_tester)
         file_obj.load_from_disk()
-        return file_obj.check_file()
+        return file_obj.check_file(**kwargs)
 
 
 class JSONRPC2Error(Exception):

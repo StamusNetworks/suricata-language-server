@@ -222,13 +222,13 @@ class SuricataFile:
     def sort_diagnosis(self, key):
         return -key.severity
 
-    def check_file(self, workspace=None):
+    def check_file(self, workspace=None, **kwargs):
         diagnostics = []
         result = {}
         if not workspace:
             workspace = {}
         with open(self.path, 'r', encoding='utf-8', errors='replace') as fhandle:
-            result = self.rules_tester.check_rule_buffer(fhandle.read())
+            result = self.rules_tester.check_rule_buffer(fhandle.read(), **kwargs)
             self.mpm = result.get('mpm', {}).get('buffer')
             for sid in result.get('mpm', {}).get('sids', []):
                 signature = self.sigset.get_sig_by_sid(sid)

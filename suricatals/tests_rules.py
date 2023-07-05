@@ -414,13 +414,19 @@ stats:
         return config_file
 
     def rule_buffer(self, rule_buffer, config_buffer=None, related_files=None,
-                    reference_config=None, classification_config=None):
+                    reference_config=None, classification_config=None, extra_buffers=None):
         # create temp directory
         tmpdir = tempfile.mkdtemp()
         # write the rule file in temp dir
         rule_file = os.path.join(tmpdir, "file.rules")
         with open(rule_file, 'w', encoding='utf-8') as rf:
             rf.write(rule_buffer)
+
+        if extra_buffers:
+            for filename, content in extra_buffers.items():
+                full_path = os.path.join(tmpdir, filename)
+                with open(full_path, 'w') as f:
+                    f.write(content)
 
         config_file = self.generate_config(tmpdir, config_buffer=config_buffer,
                                            related_files=related_files, reference_config=reference_config,
@@ -463,9 +469,15 @@ stats:
         shutil.rmtree(tmpdir)
         return result
 
-    def check_rule_buffer(self, rule_buffer, config_buffer=None, related_files=None, single=False):
+    def check_rule_buffer(self, rule_buffer, config_buffer=None, related_files=None, single=False, extra_buffers=None):
         related_files = related_files or {}
-        prov_result = self.rule_buffer(rule_buffer, config_buffer=config_buffer, related_files=related_files)
+        prov_result = self.rule_buffer(
+            rule_buffer,
+            config_buffer=config_buffer,
+            related_files=related_files,
+            extra_buffers=extra_buffers
+        )
+
         if len(prov_result.get('errors', '')):
             res = self.parse_suricata_error(prov_result['errors'], single=single)
             if 'errors' in res:
