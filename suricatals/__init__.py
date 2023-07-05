@@ -85,7 +85,7 @@ def main():
         s.run()
     else:
         s = LangServer(conn=None, settings=settings)
-        diags = s.analyse_file(args.batch_file)
+        _, diags = s.analyse_file(args.batch_file)
         for diag in diags:
             print(json.dumps(diag.to_message()))
 

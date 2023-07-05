@@ -373,7 +373,7 @@ class SuricataFile:
             if len(sls_diag):
                 diagnostics.extend(sls_diag)
         self.diagnosis = diagnostics
-        return sorted(diagnostics, key=self.sort_diagnosis)
+        return result['status'], sorted(diagnostics, key=self.sort_diagnosis)
 
     def parse_file(self):
         """Build file Info by parsing file"""
