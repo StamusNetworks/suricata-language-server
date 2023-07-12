@@ -282,7 +282,7 @@ class LangServer:
         file_obj = self.workspace.get(filepath)
         if file_obj is not None and file_obj.nLines < self.max_lines:
             try:
-                diags = [diag.to_message() for diag in file_obj.check_file(workspace=self.workspace)]
+                diags = [diag.to_message() for _, diag in file_obj.check_file(workspace=self.workspace)]
             # pylint: disable=W0703
             except Exception as e:
                 if os.path.isfile(file_obj.path):
@@ -422,11 +422,10 @@ class LangServer:
             code=-32601,
             message="method {} not found".format(request["method"]))
 
-    def analyse_file(self, filepath):
+    def analyse_file(self, filepath, **kwargs):
         file_obj = SuricataFile(filepath, self.rules_tester)
         file_obj.load_from_disk()
-        return file_obj.check_file()
-
+        return file_obj.check_file(**kwargs)
 
 
 class JSONRPC2Error(Exception):

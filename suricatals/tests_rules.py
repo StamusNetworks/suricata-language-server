@@ -35,7 +35,6 @@ class TestRules():
     VARIABLE_ERROR = 101
     OPENING_RULE_FILE = 41  # Error when opening a file referenced in the source
     OPENING_DATASET_FILE = 322  # Error when opening a dataset referenced in the source
-    RULEFILE_ERRNO = [39, 42]
     USELESS_ERRNO = [40, 43, 44]
     CONFIG_FILE = """
 %YAML 1.1
@@ -278,7 +277,7 @@ config classification: command-and-control,Malware Command and Control Activity 
             s_err['engine']['source'] = self.SURICATA_SYNTAX_CHECK
             errno = s_err['engine']['error_code']
             if s_err.get('log_level', '') != 'Error':
-                if errno not in [176, 242]:
+                if errno not in [176, 242, 308]:
                     prev_err = s_err['engine']
                     continue
             if errno == self.VARIABLE_ERROR:
@@ -415,13 +414,19 @@ stats:
         return config_file
 
     def rule_buffer(self, rule_buffer, config_buffer=None, related_files=None,
-                    reference_config=None, classification_config=None):
+                    reference_config=None, classification_config=None, extra_buffers=None):
         # create temp directory
         tmpdir = tempfile.mkdtemp()
         # write the rule file in temp dir
         rule_file = os.path.join(tmpdir, "file.rules")
         with open(rule_file, 'w', encoding='utf-8') as rf:
             rf.write(rule_buffer)
+
+        if extra_buffers:
+            for filename, content in extra_buffers.items():
+                full_path = os.path.join(tmpdir, filename)
+                with open(full_path, 'w') as f:
+                    f.write(content)
 
         config_file = self.generate_config(tmpdir, config_buffer=config_buffer,
                                            related_files=related_files, reference_config=reference_config,
@@ -440,25 +445,40 @@ stats:
         suri_cmd = [self.suricata_binary, '--engine-analysis', '-l', tmpdir, '-S', rule_file, '-c', config_file]
         # start suricata in test mode
         suriprocess = subprocess.Popen(suri_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        (_, errdata) = suriprocess.communicate()
+        suriprocess.communicate()
         engine_analysis = self.parse_engine_analysis(tmpdir)
         for signature in engine_analysis:
             for warning in signature.get('warnings', []):
-                result['warnings'].append({'message': warning,
-                                           'source': self.SURICATA_ENGINE_ANALYSIS,
-                                           'content': signature['content']})
+                result['warnings'].append({
+                    'message': warning,
+                    'source': self.SURICATA_ENGINE_ANALYSIS,
+                    'sid': signature.get('sid', 'UNKNOWN'),
+                    'content': signature['content']
+                })
+
             for info in signature.get('info', []):
-                msg = {'message': info, 'source': self.SURICATA_ENGINE_ANALYSIS, 'content': signature['content']}
-                result['info'].append(msg)
+                result['info'].append({
+                    'message': info,
+                    'source': self.SURICATA_ENGINE_ANALYSIS,
+                    'content': signature['content'],
+                    'sid': signature.get('sid', 'UNKNOWN')
+                })
+
         mpm_analysis = self.mpm_parse_rules_json(tmpdir)
         result['mpm'] = mpm_analysis
         shutil.rmtree(tmpdir)
         return result
 
-    def check_rule_buffer(self, rule_buffer, config_buffer=None, related_files=None, single=False):
+    def check_rule_buffer(self, rule_buffer, config_buffer=None, related_files=None, single=False, extra_buffers=None):
         related_files = related_files or {}
-        prov_result = self.rule_buffer(rule_buffer, config_buffer=config_buffer, related_files=related_files)
-        if len(prov_result.get('errors', [])):
+        prov_result = self.rule_buffer(
+            rule_buffer,
+            config_buffer=config_buffer,
+            related_files=related_files,
+            extra_buffers=extra_buffers
+        )
+
+        if len(prov_result.get('errors', '')):
             res = self.parse_suricata_error(prov_result['errors'], single=single)
             if 'errors' in res:
                 prov_result['errors'] = res['errors']
