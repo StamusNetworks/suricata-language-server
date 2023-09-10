@@ -282,7 +282,8 @@ class LangServer:
         file_obj = self.workspace.get(filepath)
         if file_obj is not None and file_obj.nLines < self.max_lines:
             try:
-                diags = [diag.to_message() for _, diag in file_obj.check_file(workspace=self.workspace)]
+                _, diags_list = file_obj.check_file(workspace=self.workspace)
+                diags = [diag.to_message() for diag in diags_list]
             # pylint: disable=W0703
             except Exception as e:
                 if os.path.isfile(file_obj.path):
