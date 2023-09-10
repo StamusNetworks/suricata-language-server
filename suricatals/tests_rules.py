@@ -487,18 +487,25 @@ stats:
         return prov_result
 
     def parse_engine_analysis(self, log_dir):
-        json_path = os.path.join(log_dir, 'rules.json')
-        if os.path.isfile(json_path) and self.json_compat_version():
-            return self.parse_engine_analysis_v2(json_path)
+        if self.json_compat_version():
+            json_path = os.path.join(log_dir, 'rules.json')
+            if os.path.isfile(json_path):
+                return self.parse_engine_analysis_v2(json_path)
+            else:
+                # we end up in this case when no rules is valid in buffer
+                return []
         return self.parse_engine_analysis_v1(log_dir)
 
     def parse_engine_analysis_v1(self, log_dir):
         analysis = []
-        with open(os.path.join(log_dir, 'rules_analysis.txt'), 'r', encoding='utf-8') as analysis_file:
+        analysis_path = os.path.join(log_dir, 'rules_analysis.txt')
+        if not os.path.isfile(analysis_path):
+            return analysis
+        with open(analysis_path, 'r', encoding='utf-8') as analysis_file:
             in_sid_data = False
             signature = {}
             for line in analysis_file:
-                if line.startswith("=="):
+                if line.startswith("== "):
                     in_sid_data = True
                     signature = {'sid': line.split(' ')[2]}
                     continue
