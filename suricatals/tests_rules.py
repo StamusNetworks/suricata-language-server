@@ -403,7 +403,10 @@ logging:
       type: json
 stats:
   enabled: no
-                 """)
+outputs:
+  - eve-log:
+    enabled: no
+""")
 
         related_files = related_files or {}
         for rfile in related_files:
