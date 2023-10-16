@@ -46,7 +46,6 @@ class Diagnosis(object):
         self._source = "Suricata Language Server"
         self._sid = 0
         self._content = ''
-        self._errno = 0
 
     def to_message(self):
         if self._range is None:
@@ -60,16 +59,7 @@ class Diagnosis(object):
             "severity": self.severity,
             'content': self.content,
             'sid': self.sid,
-            'exit_code': self.errno
         }
-
-    @property
-    def errno(self):
-        return self._errno
-
-    @errno.setter
-    def errno(self, _errno):
-        self._errno = _errno
 
     @property
     def content(self):

@@ -239,7 +239,6 @@ class SuricataFile:
                 l_diag = Diagnosis()
                 l_diag.message = error['message']
                 l_diag.source = error['source']
-                l_diag.errno = error.get('error_code', 0)
                 l_diag.severity = Diagnosis.ERROR_LEVEL
                 signature = self.sigset.get_sig_by_line(error['line'])
                 if signature:
@@ -261,7 +260,6 @@ class SuricataFile:
             l_diag = Diagnosis()
             l_diag.message = warning['message']
             l_diag.source = warning['source']
-            l_diag.errno = warning.get('error_code', 0)
             l_diag.severity = Diagnosis.WARNING_LEVEL
             if 'line' in warning:
                 line = warning['line']
