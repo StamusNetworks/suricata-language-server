@@ -259,7 +259,7 @@ config classification: command-and-control,Malware Command and Control Activity 
         return ret
 
     # pylint: disable=W0613
-    def parse_suricata_error_before_7(self, error, single=False):
+    def parse_suricata_error_before_7(self, error):
         ret = {
             'errors': [],
             'warnings': [],
@@ -356,10 +356,10 @@ config classification: command-and-control,Malware Command and Control Activity 
                 ret['errors'].append(s_err['engine'])
         return ret
 
-    def parse_suricata_error(self, error, single=False):
+    def parse_suricata_error(self, error):
         (major, _, _) = self.suricata_version.split('.')
         if int(major) < 7:
-            return self.parse_suricata_error_before_7(error, single)
+            return self.parse_suricata_error_before_7(error)
         else:
             return self.parse_suricata_error_after_7(error)
 
@@ -472,7 +472,7 @@ outputs:
         shutil.rmtree(tmpdir)
         return result
 
-    def check_rule_buffer(self, rule_buffer, config_buffer=None, related_files=None, single=False, extra_buffers=None):
+    def check_rule_buffer(self, rule_buffer, config_buffer=None, related_files=None, extra_buffers=None):
         related_files = related_files or {}
         prov_result = self.rule_buffer(
             rule_buffer,
@@ -482,7 +482,7 @@ outputs:
         )
 
         if len(prov_result.get('errors', '')):
-            res = self.parse_suricata_error(prov_result['errors'], single=single)
+            res = self.parse_suricata_error(prov_result['errors'])
             if 'errors' in res:
                 prov_result['errors'] = res['errors']
             if 'warnings' in res:
