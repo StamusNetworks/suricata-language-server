@@ -206,6 +206,10 @@ config classification: command-and-control,Malware Command and Control Activity 
 
             if not s_err['engine']['module'].startswith('detect') and s_err['engine']['module'] not in ['rule-vars']:
                 continue
+
+            if  re.search('Variable "(.+)" is not defined in configuration file', s_err['engine'].get('message', '')):
+                s_err['engine']['variable_error'] = True
+
             if s_err['engine']['module'] == 'detect-parse':
                 if s_err['log_level'] == 'Error':
                     ret['errors'].append(s_err['engine'])
@@ -281,12 +285,13 @@ config classification: command-and-control,Malware Command and Control Activity 
                     prev_err = s_err['engine']
                     continue
             if errno == self.VARIABLE_ERROR:
-                variable = s_err['engine']['message'].split("\"")[1]
-                s_err['engine']['message'] = "Custom address variable \"$%s\" is used " \
-                    "and need to be defined in probes configuration" % (variable)
                 s_err['engine']['suricata_error'] = True
+                s_err['engine']['variable_error'] = True
+
+                # suricata config is set when we should have all variables defined
                 if self.suricata_config is None:
                     error_type = 'warnings'
+                    s_err['engine']['warning'] = s_err['engine'].pop('error', '')
                 ret[error_type].append(s_err['engine'])
                 continue
             elif errno == self.OPENING_DATASET_FILE:
