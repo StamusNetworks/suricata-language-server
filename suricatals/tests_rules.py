@@ -421,7 +421,7 @@ outputs:
 
         return config_file
 
-    def rule_buffer(self, rule_buffer, config_buffer=None, related_files=None,
+    def rule_buffer(self, rule_buffer, engine_analysis=True, config_buffer=None, related_files=None,
                     reference_config=None, classification_config=None, extra_buffers=None):
         # create temp directory
         tmpdir = tempfile.mkdtemp()
@@ -449,38 +449,41 @@ outputs:
         if suriprocess.returncode != 0:
             result['status'] = False
         result['errors'] = errdata.decode('utf-8')
-        # runs rules analysis to have warnings
-        suri_cmd = [self.suricata_binary, '--engine-analysis', '-l', tmpdir, '-S', rule_file, '-c', config_file]
-        # start suricata in test mode
-        suriprocess = subprocess.Popen(suri_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        suriprocess.communicate()
-        engine_analysis = self.parse_engine_analysis(tmpdir)
-        for signature in engine_analysis:
-            for warning in signature.get('warnings', []):
-                result['warnings'].append({
-                    'message': warning,
-                    'source': self.SURICATA_ENGINE_ANALYSIS,
-                    'sid': signature.get('sid', 'UNKNOWN'),
-                    'content': signature['content']
-                })
 
-            for info in signature.get('info', []):
-                result['info'].append({
-                    'message': info,
-                    'source': self.SURICATA_ENGINE_ANALYSIS,
-                    'content': signature['content'],
-                    'sid': signature.get('sid', 'UNKNOWN')
-                })
+        if engine_analysis:
+            # runs rules analysis to have warnings
+            suri_cmd = [self.suricata_binary, '--engine-analysis', '-l', tmpdir, '-S', rule_file, '-c', config_file]
+            # start suricata in test mode
+            suriprocess = subprocess.Popen(suri_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            suriprocess.communicate()
+            engine_analysis = self.parse_engine_analysis(tmpdir)
+            for signature in engine_analysis:
+                for warning in signature.get('warnings', []):
+                    result['warnings'].append({
+                        'message': warning,
+                        'source': self.SURICATA_ENGINE_ANALYSIS,
+                        'sid': signature.get('sid', 'UNKNOWN'),
+                        'content': signature['content']
+                    })
 
-        mpm_analysis = self.mpm_parse_rules_json(tmpdir)
-        result['mpm'] = mpm_analysis
+                for info in signature.get('info', []):
+                    result['info'].append({
+                        'message': info,
+                        'source': self.SURICATA_ENGINE_ANALYSIS,
+                        'content': signature['content'],
+                        'sid': signature.get('sid', 'UNKNOWN')
+                    })
+
+            mpm_analysis = self.mpm_parse_rules_json(tmpdir)
+            result['mpm'] = mpm_analysis
         shutil.rmtree(tmpdir)
         return result
 
-    def check_rule_buffer(self, rule_buffer, config_buffer=None, related_files=None, extra_buffers=None):
+    def check_rule_buffer(self, rule_buffer, engine_analysis=True, config_buffer=None, related_files=None, extra_buffers=None):
         related_files = related_files or {}
         prov_result = self.rule_buffer(
             rule_buffer,
+            engine_analysis=engine_analysis,
             config_buffer=config_buffer,
             related_files=related_files,
             extra_buffers=extra_buffers

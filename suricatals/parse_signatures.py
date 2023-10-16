@@ -222,13 +222,13 @@ class SuricataFile:
     def sort_diagnosis(self, key):
         return -key.severity
 
-    def check_file(self, workspace=None, **kwargs):
+    def check_file(self, workspace=None, engine_analysis=True, **kwargs):
         diagnostics = []
         result = {}
         if not workspace:
             workspace = {}
         with open(self.path, 'r', encoding='utf-8', errors='replace') as fhandle:
-            result = self.rules_tester.check_rule_buffer(fhandle.read(), **kwargs)
+            result = self.rules_tester.check_rule_buffer(fhandle.read(), engine_analysis, **kwargs)
             self.mpm = result.get('mpm', {}).get('buffer')
             for sid in result.get('mpm', {}).get('sids', []):
                 signature = self.sigset.get_sig_by_sid(sid)
@@ -288,84 +288,85 @@ class SuricataFile:
                 l_diag.sid = warning.get('sid', 'UNKNOWN')
 
             diagnostics.append(l_diag)
-        for info in result.get('info', []):
-            line = None
-            signature = None
-            l_diag = Diagnosis()
-            l_diag.message = info['message']
-            l_diag.source = info['source']
-            l_diag.errno = info['error_code']
-            l_diag.severity = Diagnosis.INFO_LEVEL
-            if 'line' in info:
-                line = info['line']
-            elif 'content' in info:
-                signature = self.sigset.get_sig_by_content(info['content'])
-                if signature:
-                    line = signature.line
-            if line is None:
-                continue
-            sig_range = FileRange(line, 0, line, 1)
-            if signature is not None:
-                if "Fast Pattern \"" in info['message']:
-                    if signature.mpm is not None:
-                        sig_range = signature.get_diag_range(mode='pattern', pattern=signature.mpm['pattern'])
+
+        if engine_analysis:
+            for info in result.get('info', []):
+                line = None
+                signature = None
+                l_diag = Diagnosis()
+                l_diag.message = info['message']
+                l_diag.source = info['source']
+                l_diag.severity = Diagnosis.INFO_LEVEL
+                if 'line' in info:
+                    line = info['line']
+                elif 'content' in info:
+                    signature = self.sigset.get_sig_by_content(info['content'])
+                    if signature:
+                        line = signature.line
+                if line is None:
+                    continue
+                sig_range = FileRange(line, 0, line, 1)
+                if signature is not None:
+                    if "Fast Pattern \"" in info['message']:
+                        if signature.mpm is not None:
+                            sig_range = signature.get_diag_range(mode='pattern', pattern=signature.mpm['pattern'])
+                        else:
+                            sig_range = signature.get_diag_range(mode='sid')
                     else:
                         sig_range = signature.get_diag_range(mode='sid')
+
+                    l_diag.content = signature.content
+                    l_diag.sid = signature.sid
                 else:
-                    sig_range = signature.get_diag_range(mode='sid')
+                    l_diag.content = info.get('content', '')
+                    l_diag.sid = info.get('sid', 'UNKNOWN')
 
-                l_diag.content = signature.content
-                l_diag.sid = signature.sid
-            else:
-                l_diag.content = info.get('content', '')
-                l_diag.sid = info.get('sid', 'UNKNOWN')
-
-            l_diag.range = sig_range
-            diagnostics.append(l_diag)
-        for sig in self.sigset.signatures:
-            if sig.mpm is None:
-                if sig.sid and sig.has_error is False:
-                    message = "No Fast Pattern used, if possible add one content match to improve performance."
-                    l_diag = Diagnosis()
-                    l_diag.message = message
-                    l_diag.source = "Suricata MPM Analysis"
-                    l_diag.severity = Diagnosis.INFO_LEVEL
-                    l_diag.range = sig.get_diag_range(mode="sid")
-                    l_diag.sid = sig.sid
-                    l_diag.content = sig.content
-                    diagnostics.append(l_diag)
-                continue
-            # mpm is content:"$pattern"
-            pattern = self.mpm.get(sig.mpm['buffer'], {}).get(sig.mpm['pattern'])
-            if pattern is None:
-                continue
-            pattern_count = pattern['count']
-            for sig_file in workspace:
-                if sig_file != self.path:
-                    file_obj = workspace.get(sig_file)
-                    if file_obj is None or file_obj.mpm is None:
-                        continue
-                    f_pattern = file_obj.mpm.get(sig.mpm['buffer'], {}).get(sig.mpm['pattern'])
-                    if f_pattern is None:
-                        continue
-                    pattern_count += f_pattern['count']
-            l_diag = Diagnosis()
-            if pattern_count > 1:
-                l_diag.message = "Fast Pattern '%s' on '%s' buffer is used in %d different signatures, " \
-                                 "consider using a unique fast pattern to improve performance." \
-                                 % (sig.mpm['pattern'], sig.mpm['buffer'], pattern_count)
-                l_diag.source = "SLS MPM Analysis"
-            else:
-                if sig.get_content_keyword_count() == 1:
+                l_diag.range = sig_range
+                diagnostics.append(l_diag)
+            for sig in self.sigset.signatures:
+                if sig.mpm is None:
+                    if sig.sid and sig.has_error is False:
+                        message = "No Fast Pattern used, if possible add one content match to improve performance."
+                        l_diag = Diagnosis()
+                        l_diag.message = message
+                        l_diag.source = "Suricata MPM Analysis"
+                        l_diag.severity = Diagnosis.INFO_LEVEL
+                        l_diag.range = sig.get_diag_range(mode="sid")
+                        l_diag.sid = sig.sid
+                        l_diag.content = sig.content
+                        diagnostics.append(l_diag)
                     continue
-                l_diag.message = "Fast Pattern '%s' on '%s' buffer" % (sig.mpm['pattern'], sig.mpm['buffer'])
-                l_diag.source = "Suricata MPM Analysis"
-            sig_range = sig.get_diag_range(mode="pattern", pattern=sig.mpm['pattern'])
-            l_diag.severity = Diagnosis.INFO_LEVEL
-            l_diag.range = sig.get_diag_range(mode="pattern", pattern=sig.mpm['pattern'])
-            l_diag.sid = sig.sid
-            l_diag.content = sig.content
-            diagnostics.append(l_diag)
+                # mpm is content:"$pattern"
+                pattern = self.mpm.get(sig.mpm['buffer'], {}).get(sig.mpm['pattern'])
+                if pattern is None:
+                    continue
+                pattern_count = pattern['count']
+                for sig_file in workspace:
+                    if sig_file != self.path:
+                        file_obj = workspace.get(sig_file)
+                        if file_obj is None or file_obj.mpm is None:
+                            continue
+                        f_pattern = file_obj.mpm.get(sig.mpm['buffer'], {}).get(sig.mpm['pattern'])
+                        if f_pattern is None:
+                            continue
+                        pattern_count += f_pattern['count']
+                l_diag = Diagnosis()
+                if pattern_count > 1:
+                    l_diag.message = "Fast Pattern '%s' on '%s' buffer is used in %d different signatures, " \
+                                     "consider using a unique fast pattern to improve performance." \
+                                     % (sig.mpm['pattern'], sig.mpm['buffer'], pattern_count)
+                    l_diag.source = "SLS MPM Analysis"
+                else:
+                    if sig.get_content_keyword_count() == 1:
+                        continue
+                    l_diag.message = "Fast Pattern '%s' on '%s' buffer" % (sig.mpm['pattern'], sig.mpm['buffer'])
+                    l_diag.source = "Suricata MPM Analysis"
+                sig_range = sig.get_diag_range(mode="pattern", pattern=sig.mpm['pattern'])
+                l_diag.severity = Diagnosis.INFO_LEVEL
+                l_diag.range = sig.get_diag_range(mode="pattern", pattern=sig.mpm['pattern'])
+                l_diag.sid = sig.sid
+                l_diag.content = sig.content
+                diagnostics.append(l_diag)
         for sig in self.sigset.signatures:
             sls_diag = sig.sls_syntax_check()
             if len(sls_diag):

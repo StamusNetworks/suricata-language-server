@@ -65,6 +65,10 @@ def main():
         '--batch-file', default=None,
         help="Batch mode to parse only the file in argument"
     )
+    parser.add_argument(
+        '--no-engine-analysis', action='store_true', default=False,
+        help='Disable suricata engine analysis (used with --batch-file only)'
+    )
     args = parser.parse_args()
     if args.version:
         print("{0}".format(__version__))
@@ -77,6 +81,8 @@ def main():
         "max_tracked_files": args.max_tracked_files,
     }
     #
+    if not args.batch_file and args.no_engine_analysis:
+        print('--no-engine-analysis must be used with --batch-file')
 
     if args.batch_file is None:
         stdin, stdout = _binary_stdio()
@@ -85,7 +91,7 @@ def main():
         s.run()
     else:
         s = LangServer(conn=None, settings=settings)
-        _, diags = s.analyse_file(args.batch_file)
+        _, diags = s.analyse_file(args.batch_file, not args.no_engine_analysis)
         for diag in diags:
             print(json.dumps(diag.to_message()))
 
