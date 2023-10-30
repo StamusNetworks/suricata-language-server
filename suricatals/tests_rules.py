@@ -243,7 +243,8 @@ config classification: command-and-control,Malware Command and Control Activity 
                         if wait_line:
                             if prev_err!= {}:
                                 prev_err['engine']['line'] = line_nb - 1
-                                ret['errors'].append(prev_err['engine'])
+                                if prev_err['engine'] not in ret['errors']:
+                                    ret['errors'].append(prev_err['engine'])
                         else:
                             if prev_err != {} and prev_err['log_level'] == 'Warning':
                                 prev_err['engine']['line'] = line_nb - 1
