@@ -1,5 +1,5 @@
 import unittest
-from langserver import LangServer
+from suricatals.langserver import LangServer
 
 class TestSyntax(unittest.TestCase):
 

@@ -434,7 +434,7 @@ outputs:
         if extra_buffers:
             for filename, content in extra_buffers.items():
                 full_path = os.path.join(tmpdir, filename)
-                with open(full_path, 'w') as f:
+                with open(full_path, 'w', encoding="utf-8") as f:
                     f.write(content)
 
         config_file = self.generate_config(tmpdir, config_buffer=config_buffer,

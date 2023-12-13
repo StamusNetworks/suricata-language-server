@@ -22,8 +22,8 @@ along with Suricata Language Server.  If not, see <http://www.gnu.org/licenses/>
 
 import sys
 import argparse
-from .langserver import LangServer
-from .jsonrpc import JSONRPC2Connection, ReadWriter
+from suricatals.langserver import LangServer
+from suricatals.jsonrpc import JSONRPC2Connection, ReadWriter
 import json
 __version__ = '0.9.2'
 
