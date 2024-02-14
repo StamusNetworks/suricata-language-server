@@ -428,6 +428,9 @@ class LangServer:
         file_obj.load_from_disk()
         return file_obj.check_file(engine_analysis=engine_analysis, **kwargs)
 
+    def rules_infos(self, rule_buffer, **kwargs):
+        return self.rules_tester.rules_infos(rule_buffer, **kwargs)
+
 
 class JSONRPC2Error(Exception):
     def __init__(self, code, message, data=None):
