@@ -182,7 +182,7 @@ class SuricataFile:
     IS_COMMENT = re.compile(r"[ \t]*#")
     GET_MULTILINES = re.compile(r"\\ *$")
 
-    def __init__(self, path, rules_tester):
+    def __init__(self, path, rules_tester, empty=False):
         self.path = path
         self.rules_tester = rules_tester
         self.contents_split = []
@@ -191,7 +191,8 @@ class SuricataFile:
         self.hash = None
         self.mpm = {}
         self.diagnosis = None
-        self.count_lines()
+        if not empty:
+            self.count_lines()
 
     def count_lines(self):
         with open(self.path, 'r', encoding='utf-8', errors='replace') as fhandle:

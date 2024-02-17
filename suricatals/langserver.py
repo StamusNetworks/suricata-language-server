@@ -351,14 +351,16 @@ class LangServer:
             file_obj = self.workspace.get(filepath)
             if read_file:
                 if file_obj is None:
-                    file_obj = SuricataFile(filepath, self.rules_tester)
                     # Create empty file if not yet saved to disk
                     if not os.path.isfile(filepath):
+                        file_obj = SuricataFile(filepath, self.rules_tester, empty=True)
                         if allow_empty:
                             self.workspace[filepath] = file_obj
                             return False, None
                         else:
                             return False, 'File does not exist'  # Error during load
+                    else:
+                        file_obj = SuricataFile(filepath, self.rules_tester)
                 hash_old = file_obj.hash
                 err_string = None
                 if os.path.isfile(filepath):
