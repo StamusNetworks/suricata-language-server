@@ -51,6 +51,9 @@ app-layer:
   protocols:
     tls:
       ja3-fingerprints: yes
+security:
+  lua:
+    allow-rules: yes
 engine-analysis:
   rules-fast-pattern: yes
   rules: yes
