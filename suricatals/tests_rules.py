@@ -58,6 +58,8 @@ vars:
   address-groups:
     HOME_NET: "[192.168.0.0/16,10.0.0.0/8,172.16.0.0/12]"
     EXTERNAL_NET: "!$HOME_NET"
+    SCANNERS: "127.0.0.1"
+    DC_SERVERS: "127.0.0.1"
     HTTP_SERVERS: "$HOME_NET"
     SMTP_SERVERS: "$HOME_NET"
     SQL_SERVERS: "$HOME_NET"
@@ -453,10 +455,11 @@ outputs:
 
         res = {}
         json_path = os.path.join(tmpdir, 'rules.json')
-        with open(json_path, 'r', encoding='utf-8') as f:
-            for line in f.readlines():
-                content = json.loads(line)
-                res[content['id']] = content
+        if os.path.exists(json_path):
+            with open(json_path, 'r', encoding='utf-8') as f:
+                for line in f.readlines():
+                    content = json.loads(line)
+                    res[content['id']] = content
 
         return res
 
