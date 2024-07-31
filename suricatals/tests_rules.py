@@ -622,8 +622,9 @@ outputs:
                                 app_proto = engine.get('app_proto')
                             else:
                                 if app_proto != engine.get('app_proto'):
-                                    if app_proto not in ['http', 'http2'] or engine.get('app_proto') not in ['http', 'http2']:
+                                    if app_proto not in ['http', 'http2', 'dns', 'doh2'] or engine.get('app_proto') not in ['http', 'http2', 'dns', 'doh2']:
                                         multiple_app_proto = True
+
                         else:
                             got_raw_match = True
                         for match in engine.get('matches', []):
