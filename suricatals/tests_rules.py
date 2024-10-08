@@ -464,6 +464,7 @@ outputs:
                     content = json.loads(line)
                     res[content['id']] = content
 
+        shutil.rmtree(tmpdir)
         return res
 
     def rule_buffer(self, rule_buffer, engine_analysis=True, config_buffer=None, related_files=None,
