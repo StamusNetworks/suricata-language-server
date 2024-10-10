@@ -375,7 +375,7 @@ config classification: command-and-control,Malware Command and Control Activity 
             return self.parse_suricata_error_after_7(error)
 
     def generate_config(self, tmpdir, config_buffer=None, related_files=None,
-                        reference_config=None, classification_config=None):
+                        reference_config=None, classification_config=None, extra_conf=None):
         if not reference_config:
             reference_config = self.REFERENCE_CONFIG
         reference_file = os.path.join(tmpdir, "reference.config")
@@ -402,6 +402,8 @@ config classification: command-and-control,Malware Command and Control Activity 
             cf.write("default-rule-path: " + tmpdir + "\n")
             cf.write("reference-config-file: " + tmpdir + "/reference.config\n")
             cf.write("classification-file: " + tmpdir + "/classification.config\n")
+            if extra_conf:
+                cf.write(extra_conf.format(tmpdir=tmpdir))
             cf.write("""
 engine-analysis:
   rules-fast-pattern: yes
@@ -444,7 +446,8 @@ outputs:
             config_buffer=kwargs.get('config_buffer'),
             related_files=kwargs.get('related_files'),
             reference_config=kwargs.get('reference_config'),
-            classification_config=kwargs.get('classification_config')
+            classification_config=kwargs.get('classification_config'),
+            extra_conf=kwargs.get('extra_conf')
         )
 
     def rules_infos(self, rule_buffer, **kwargs):
@@ -468,7 +471,7 @@ outputs:
         return res
 
     def rule_buffer(self, rule_buffer, engine_analysis=True, config_buffer=None, related_files=None,
-                    reference_config=None, classification_config=None, extra_buffers=None):
+                    reference_config=None, classification_config=None, extra_buffers=None, **kwargs):
         tmpdir = tempfile.mkdtemp()
         config_file = self._prepare_conf(
             rule_buffer,
@@ -477,7 +480,8 @@ outputs:
             related_files=related_files,
             reference_config=reference_config,
             classification_config=classification_config,
-            extra_buffers=extra_buffers
+            extra_buffers=extra_buffers,
+            **kwargs
         )
 
         rule_file = os.path.join(tmpdir, "file.rules")
@@ -521,14 +525,15 @@ outputs:
         shutil.rmtree(tmpdir)
         return result
 
-    def check_rule_buffer(self, rule_buffer, engine_analysis=True, config_buffer=None, related_files=None, extra_buffers=None):
+    def check_rule_buffer(self, rule_buffer, engine_analysis=True, config_buffer=None, related_files=None, extra_buffers=None, **kwargs):
         related_files = related_files or {}
         prov_result = self.rule_buffer(
             rule_buffer,
             engine_analysis=engine_analysis,
             config_buffer=config_buffer,
             related_files=related_files,
-            extra_buffers=extra_buffers
+            extra_buffers=extra_buffers,
+            **kwargs
         )
 
         if len(prov_result.get('errors', '')):
