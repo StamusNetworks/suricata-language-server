@@ -25,7 +25,7 @@ import argparse
 from suricatals.langserver import LangServer
 from suricatals.jsonrpc import JSONRPC2Connection, ReadWriter
 import json
-__version__ = '0.9.4'
+__version__ = '0.9.5'
 
 
 def error_exit(error_str):
