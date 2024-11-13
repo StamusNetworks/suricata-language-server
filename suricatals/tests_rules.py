@@ -595,6 +595,11 @@ outputs:
                 except JSONDecodeError:
                     pass
                 signature_msg = {'content': signature_info['raw']}
+                if 'type' in signature_info:
+                    if 'info' not in signature_msg:
+                        signature_msg['info'] = []
+                    type_msg = f'Rule type is "{signature_info["type"]}"'
+                    signature_msg['info'].append(type_msg)
                 if 'id' in signature_info:
                     signature_msg['sid'] = signature_info['id']
                 if 'flags' in signature_info:
