@@ -82,7 +82,7 @@ class TCPReadWriter(ReadWriter):
 
 
 class JSONRPC2Connection:
-    def __init__(self, conn=None):
+    def __init__(self, conn):
         self.conn = conn
         self._msg_buffer = deque()
         self._next_id = 1
