@@ -23,7 +23,7 @@ import os
 import traceback
 import re
 
-from suricatals.jsonrpc import path_from_uri
+from suricatals.jsonrpc import path_from_uri, JSONRPC2Error
 from suricatals.parse_signatures import SuricataFile
 from suricatals.tests_rules import TestRules
 
@@ -432,11 +432,3 @@ class LangServer:
 
     def rules_infos(self, rule_buffer, **kwargs):
         return self.rules_tester.rules_infos(rule_buffer, **kwargs)
-
-
-class JSONRPC2Error(Exception):
-    def __init__(self, code, message, data=None):
-        super().__init__(message)
-        self.code = code
-        self.message = message
-        self.data = data

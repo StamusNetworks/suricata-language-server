@@ -46,6 +46,14 @@ def path_from_uri(uri):
     return os.path.normpath(unquote(path))
 
 
+class JSONRPC2Error(Exception):
+    def __init__(self, code, message, data=None):
+        super().__init__(message)
+        self.code = code
+        self.message = message
+        self.data = data
+
+
 class JSONRPC2ProtocolError(Exception):
     pass
 
