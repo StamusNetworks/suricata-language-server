@@ -49,8 +49,237 @@ logging:
       type: json
 app-layer:
   protocols:
+    telnet:
+      enabled: yes
+    rfb:
+      enabled: yes
+      detection-ports:
+        dp: 5900, 5901, 5902, 5903, 5904, 5905, 5906, 5907, 5908, 5909
+    mqtt:
+      enabled: yes
+      # max-msg-length: 1 MiB
+      # subscribe-topic-match-limit: 100
+      # unsubscribe-topic-match-limit: 100
+      # Maximum number of live MQTT transactions per flow
+      # max-tx: 4096
+    krb5:
+      enabled: yes
+    bittorrent-dht:
+      enabled: yes
+    snmp:
+      enabled: yes
+    ike:
+      enabled: yes
     tls:
+      enabled: yes
+      detection-ports:
+        dp: 443
+
+      # Generate JA3/JA4 fingerprints from client hello. If not specified it
+      # will be disabled by default, but enabled if rules require it.
       ja3-fingerprints: yes
+      ja4-fingerprints: yes
+
+      # What to do when the encrypted communications start:
+      # - default: keep tracking TLS session, check for protocol anomalies,
+      #            inspect tls_* keywords. Disables inspection of unmodified
+      #            'content' signatures.
+      # - bypass:  stop processing this flow as much as possible. No further
+      #            TLS parsing and inspection. Offload flow bypass to kernel
+      #            or hardware if possible.
+      # - full:    keep tracking and inspection as normal. Unmodified content
+      #            keyword signatures are inspected as well.
+      #
+      # For best performance, select 'bypass'.
+      #
+      #encryption-handling: default
+
+    pgsql:
+      enabled: yes
+      # Stream reassembly size for PostgreSQL. By default, track it completely.
+      stream-depth: 0
+      # Maximum number of live PostgreSQL transactions per flow
+      # max-tx: 1024
+    dcerpc:
+      enabled: yes
+      # Maximum number of live DCERPC transactions per flow
+      # max-tx: 1024
+    ftp:
+      enabled: yes
+      # memcap: 64 MiB
+    websocket:
+      enabled: yes
+      # Maximum used payload size, the rest is skipped
+      # max-payload-size: 64 KiB
+    rdp:
+      enabled: yes
+    ssh:
+      enabled: yes
+      #hassh: yes
+    doh2:
+      enabled: yes
+    http2:
+      enabled: yes
+      # Maximum number of live HTTP2 streams in a flow
+      #max-streams: 4096
+      # Maximum headers table size
+      #max-table-size: 65536
+      # Maximum reassembly size for header + continuation frames
+      #max-reassembly-size: 102400
+    smtp:
+      enabled: yes
+      raw-extraction: no
+      # Maximum number of live SMTP transactions per flow
+      # max-tx: 256
+      # Configure SMTP-MIME Decoder
+      mime:
+        # Decode MIME messages from SMTP transactions
+        # (may be resource intensive)
+        # This field supersedes all others because it turns the entire
+        # process on or off
+        decode-mime: yes
+
+        # Decode MIME entity bodies (ie. Base64, quoted-printable, etc.)
+        decode-base64: yes
+        decode-quoted-printable: yes
+
+        # Maximum bytes per header data value stored in the data structure
+        # (default is 2000)
+        header-value-depth: 2000
+
+        # Extract URLs and save in state data structure
+        extract-urls: yes
+        # Scheme of URLs to extract
+        # (default is [http])
+        #extract-urls-schemes: [http, https, ftp, mailto]
+        # Log the scheme of URLs that are extracted
+        # (default is no)
+        #log-url-scheme: yes
+        # Set to yes to compute the md5 of the mail body. You will then
+        # be able to journalize it.
+        body-md5: no
+      # Configure inspected-tracker for file_data keyword
+      inspected-tracker:
+        content-limit: 100000
+        content-inspect-min-size: 32768
+        content-inspect-window: 4096
+    imap:
+      enabled: detection-only
+    pop3:
+      enabled: detection-only
+    smb:
+      enabled: yes
+      detection-ports:
+        dp: 139, 445
+      # Maximum number of live SMB transactions per flow
+      # max-tx: 1024
+
+      # Stream reassembly size for SMB streams. By default track it completely.
+      #stream-depth: 0
+
+    nfs:
+      enabled: yes
+      # max-tx: 1024
+    tftp:
+      enabled: yes
+    dns:
+      tcp:
+        enabled: yes
+        detection-ports:
+          dp: 53
+      udp:
+        enabled: yes
+        detection-ports:
+          dp: 53
+    http:
+      enabled: yes
+
+      # Byte Range Containers default settings
+      # byterange:
+      #   memcap: 100 MiB
+      #   timeout: 60
+
+      # memcap:                   Maximum memory capacity for HTTP
+      #                           Default is unlimited, values can be 64 MiB, e.g.
+
+      # default-config:           Used when no server-config matches
+      #   personality:            List of personalities used by default
+      #   request-body-limit:     Limit reassembly of request body for inspection
+      #                           by http_client_body & pcre /P option.
+      #   response-body-limit:    Limit reassembly of response body for inspection
+      #                           by file_data, http_server_body & pcre /Q option.
+      #
+      #   For advanced options, see the user guide
+
+
+      # server-config:            List of server configurations to use if address matches
+      #   address:                List of IP addresses or networks for this block
+      #   personality:            List of personalities used by this block
+      #
+      #                           Then, all the fields from default-config can be overloaded
+      #
+      # Currently Available Personalities:
+      #   Minimal, Generic, IDS (default), IIS_4_0, IIS_5_0, IIS_5_1, IIS_6_0,
+      #   IIS_7_0, IIS_7_5, Apache_2
+
+    # Note: Modbus probe parser is minimalist due to the limited usage in the field.
+    # Only Modbus message length (greater than Modbus header length)
+    # and protocol ID (equal to 0) are checked in probing parser
+    # It is important to enable detection port and define Modbus port
+    # to avoid false positives
+    modbus:
+      # How many unanswered Modbus requests are considered a flood.
+      # If the limit is reached, the app-layer-event:modbus.flooded; will match.
+      #request-flood: 500
+
+      enabled: yes
+      detection-ports:
+        dp: 502
+      # According to MODBUS Messaging on TCP/IP Implementation Guide V1.0b, it
+      # is recommended to keep the TCP connection opened with a remote device
+      # and not to open and close it for each MODBUS/TCP transaction. In that
+      # case, it is important to set the depth of the stream reassembling as
+      # unlimited (stream.reassembly.depth: 0)
+
+      # Stream reassembly size for modbus. By default track it completely.
+      stream-depth: 0
+
+    # DNP3
+    dnp3:
+      enabled: yes
+      detection-ports:
+        dp: 20000
+
+    # SCADA EtherNet/IP and CIP protocol support
+    enip:
+      enabled: yes
+      detection-ports:
+        dp: 44818
+        sp: 44818
+
+    ntp:
+      enabled: yes
+
+    quic:
+      enabled: yes
+
+    dhcp:
+      enabled: yes
+
+    sip:
+      #enabled: yes
+
+    ldap:
+      tcp:
+        enabled: yes
+        detection-ports:
+          dp: 389, 3268
+      udp:
+        enabled: yes
+        detection-ports:
+          dp: 389, 3268
+      # Maximum number of live LDAP transactions per flow
+      # max-tx: 1024
 security:
   lua:
     allow-rules: yes
