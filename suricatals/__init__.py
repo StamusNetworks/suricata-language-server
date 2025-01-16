@@ -1,6 +1,6 @@
 """
 Copyright(C) 2018-2021 Chris Hansen <hansec@uw.edu>
-Copyright(C) 2021-2023 Stamus Networks
+Copyright(C) 2021-2025 Stamus Networks
 Written by Chris Hansen <hansec@uw.edu>
 Written by Eric Leblond <eld@stamus-networks.com>
 
@@ -25,7 +25,7 @@ import argparse
 from suricatals.langserver import LangServer
 from suricatals.jsonrpc import JSONRPC2Connection, ReadWriter
 import json
-__version__ = '0.9.6'
+__version__ = '0.9.7'
 
 
 def error_exit(error_str):
