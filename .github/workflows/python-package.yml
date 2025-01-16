@@ -37,6 +37,7 @@ jobs:
         python -m build
 
     - name: Archive production artifacts
+      if: ${{ matrix.python-version == '3.13' }} # Only archive artifacts for the latest Python version
       uses: actions/upload-artifact@v4
       with:
         name: suricata-language-server
