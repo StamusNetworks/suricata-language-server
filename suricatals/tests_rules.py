@@ -936,17 +936,21 @@ outputs:
         # target to have
         # { 'http.host': { 'grosminet': { 'count': 34, sigs: [{'id': 2, 'gid':1}]} } }
         for sig in mpm_data:
-            if sig['buffer'] in mpm_analysis['buffer']:
-                if sig['pattern'] in mpm_analysis['buffer'][sig['buffer']]:
-                    mpm_analysis['buffer'][sig['buffer']][sig['pattern']]['count'] += 1
-                    mpm_analysis['buffer'][sig['buffer']][sig['pattern']]['sigs'].append({'id': sig['id'], 'gid': sig['gid']})
-                else:
-                    mpm_analysis['buffer'][sig['buffer']][sig['pattern']] = {'count': 1,
-                                                                             'sigs': [{'id': sig['id'], 'gid': sig['gid']}]}
+            if 'content' in sig:
+                sig_pattern = sig['content']['pattern']
             else:
-                mpm_analysis['buffer'][sig['buffer']] = {sig['pattern']: {'count': 1,
+                sig_pattern = sig['pattern']
+            if sig['buffer'] in mpm_analysis['buffer']:
+                if sig_pattern in mpm_analysis['buffer'][sig['buffer']]:
+                    mpm_analysis['buffer'][sig['buffer']][sig_pattern]['count'] += 1
+                    mpm_analysis['buffer'][sig['buffer']][sig_pattern]['sigs'].append({'id': sig['id'], 'gid': sig['gid']})
+                else:
+                    mpm_analysis['buffer'][sig['buffer']][sig_pattern] = {'count': 1,
+                                                                                 'sigs': [{'id': sig['id'], 'gid': sig['gid']}]}
+            else:
+                mpm_analysis['buffer'][sig['buffer']] = {sig_pattern: {'count': 1,
                                                                           'sigs': [{'id': sig['id'], 'gid': sig['gid']}]}}
-            mpm_analysis['sids'][sig['id']] = {'buffer': sig['buffer'], 'pattern': sig['pattern']}
+            mpm_analysis['sids'][sig['id']] = {'buffer': sig['buffer'], 'pattern': sig_pattern}
         return mpm_analysis
 
     def get_keywords_from_json(self):
