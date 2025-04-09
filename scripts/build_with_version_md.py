@@ -69,8 +69,6 @@ def process_csv_files(folder_path):
                     if item not in item_rows or semver > item_rows[item][0]:
                         item_rows[item] = (semver, row)
 
-    latest_version = max(all_versions)
-
     results = []
     for item, versions in item_versions.items():
         initial_version = min(versions)
