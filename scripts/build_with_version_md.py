@@ -122,23 +122,28 @@ def main():
     parser = argparse.ArgumentParser(description="Merge CSVs with version tracking.")
     parser.add_argument("--input-dir", required=True, help="Directory containing input CSV files")
     parser.add_argument("--output-prefix", required=True, help="Prefix for output files (no extension)")
+    parser.add_argument("--output-format", choices=["csv", "json", "md"], default="json", help="Output format")
 
     args = parser.parse_args()
     input_folder = args.input_dir
     prefix = args.output_prefix
 
-    output_csv = f"{prefix}.csv"
-    output_json = f"{prefix}.json"
-    output_md = f"{prefix}.md"
 
     header, results = process_csv_files(input_folder)
-    write_csv_output(header, results, output_csv)
-    write_json_output(header, results, output_json)
-    write_markdown_output(header, results, output_md)
 
-    print(f"✅ CSV written to: {output_csv}")
-    print(f"✅ JSON written to: {output_json}")
-    print(f"✅ Markdown written to: {output_md}")
+    if args.output_format == "csv":
+        output_csv = f"{prefix}.csv"
+        write_csv_output(header, results, output_csv)
+        print(f"✅ CSV written to: {output_csv}")
+    elif args.output_format == "json":
+        output_json = f"{prefix}.json"
+        write_json_output(header, results, output_json)
+        print(f"✅ JSON written to: {output_json}")
+    elif args.output_format == "md":
+        output_md = f"{prefix}.md"
+        write_markdown_output(header, results, output_md)
+        print(f"✅ Markdown written to: {output_md}")
+
 
 if __name__ == "__main__":
     main()
