@@ -949,6 +949,17 @@ outputs:
             mpm_analysis['sids'][sig['id']] = {'buffer': sig['buffer'], 'pattern': sig['pattern']}
         return mpm_analysis
 
+    def get_keywords_from_json(self):
+        keywords = {}
+        try:
+            with open(os.path.join(os.path.dirname(__file__), 'data', 'suricata-keywords.json'), 'r', encoding='utf-8') as kf:
+                known_keywords = json.load(kf)
+                for keyword in known_keywords:
+                    keywords[keyword['name']] = keyword
+        except FileNotFoundError:
+            pass
+        return keywords
+
     def build_keywords_list(self):
         tmpdir = tempfile.mkdtemp()
         config_file = self.generate_config(tmpdir)
@@ -957,6 +968,7 @@ outputs:
         suriprocess = subprocess.Popen(suri_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         (outdata, _) = suriprocess.communicate()
         shutil.rmtree(tmpdir)
+        official_keywords = self.get_keywords_from_json()
         keywords = outdata.decode('utf-8').splitlines()
         keywords.pop(0)
         keywords_list = []
@@ -970,6 +982,10 @@ outputs:
                     detail = 'No option'
                 else:
                     detail = keyword_array[3]
+                if keyword_array[0] in official_keywords:
+                    detail = f'{detail} (min_version: {official_keywords[keyword_array[0]]["initial_version"]}, max_version: {official_keywords[keyword_array[0]]["last_version"]})'
+                else:
+                    detail = f'{detail} (custom keyword)'
                 documentation = keyword_array[1]
                 if len(keyword_array) > 5:
                     if 'https' in keyword_array[4]:
