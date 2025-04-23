@@ -36,7 +36,7 @@ class Signature:
         self.line_end = line
         self.multiline = multiline
         if self.multiline:
-            self.content = content.strip('\\')
+            self.content = content.strip("\\")
         else:
             self.content = content
         self.raw_content = [content]
@@ -49,7 +49,7 @@ class Signature:
         self.has_error = False
 
     def append_content(self, content, line):
-        self.content += content.rstrip('\\')
+        self.content += content.rstrip("\\")
         self.raw_content.append(content)
         self.line_end = line
         if self.sid == 0:
@@ -64,8 +64,8 @@ class Signature:
             if "sid:" in line:
                 line_start = self.line + i
                 line_end = line_start
-                range_start = line.index('sid:')
-                range_end = range_start + len('sid:')
+                range_start = line.index("sid:")
+                range_end = range_start + len("sid:")
                 fr = FileRange(line_start, range_start, line_end, range_end)
                 break
             i += 1
@@ -114,7 +114,7 @@ class Signature:
                 end_diag.message = "Missing closing parenthesis: incomplete signature"
                 end_diag.severity = Diagnosis.WARNING_LEVEL
                 end_diag.source = "SLS syntax check"
-                end_diag.sid = self.sid,
+                end_diag.sid = (self.sid,)
                 end_diag.content = self.content
                 diagnosis.append(end_diag)
         return diagnosis
@@ -195,7 +195,7 @@ class SuricataFile:
             self.count_lines()
 
     def count_lines(self):
-        with open(self.path, 'r', encoding='utf-8', errors='replace') as fhandle:
+        with open(self.path, "r", encoding="utf-8", errors="replace") as fhandle:
             content = fhandle.read()
             self.nLines = len(content.splitlines())
 
@@ -207,16 +207,16 @@ class SuricataFile:
     def load_from_disk(self):
         """Read file from disk"""
         try:
-            contents = ''
-            with open(self.path, 'r', encoding='utf-8', errors='replace') as fhandle:
+            contents = ""
+            with open(self.path, "r", encoding="utf-8", errors="replace") as fhandle:
                 contents = fhandle.read()
-            self.hash = hashlib.md5(contents.encode('utf-8')).hexdigest()
+            self.hash = hashlib.md5(contents.encode("utf-8")).hexdigest()
             self.contents_split = contents.splitlines()
             self.nLines = len(self.contents_split)
             self.parse_file()
         # pylint: disable=W0703
         except Exception:
-            return 'Could not read/decode file'
+            return "Could not read/decode file"
         else:
             return None
 
@@ -228,20 +228,22 @@ class SuricataFile:
         result = {}
         if not workspace:
             workspace = {}
-        with open(self.path, 'r', encoding='utf-8', errors='replace') as fhandle:
-            result = self.rules_tester.check_rule_buffer(fhandle.read(), engine_analysis, **kwargs)
-            self.mpm = result.get('mpm', {}).get('buffer')
-            for sid in result.get('mpm', {}).get('sids', []):
+        with open(self.path, "r", encoding="utf-8", errors="replace") as fhandle:
+            result = self.rules_tester.check_rule_buffer(
+                fhandle.read(), engine_analysis, **kwargs
+            )
+            self.mpm = result.get("mpm", {}).get("buffer")
+            for sid in result.get("mpm", {}).get("sids", []):
                 signature = self.sigset.get_sig_by_sid(sid)
                 if signature is not None:
-                    signature.mpm = result.get('mpm', {}).get('sids', {}).get(sid)
-        for error in result.get('errors', []):
-            if 'line' in error:
+                    signature.mpm = result.get("mpm", {}).get("sids", {}).get(sid)
+        for error in result.get("errors", []):
+            if "line" in error:
                 l_diag = Diagnosis()
-                l_diag.message = error['message']
-                l_diag.source = error['source']
+                l_diag.message = error["message"]
+                l_diag.source = error["source"]
                 l_diag.severity = Diagnosis.ERROR_LEVEL
-                signature = self.sigset.get_sig_by_line(error['line'])
+                signature = self.sigset.get_sig_by_line(error["line"])
                 if signature:
                     signature.has_error = True
                     sig_range = signature.get_diag_range(mode="all")
@@ -249,35 +251,35 @@ class SuricataFile:
                     l_diag.content = signature.content
                     l_diag.sid = signature.sid
                 else:
-                    e_range = FileRange(error['line'], 0, error['line'], 1000)
+                    e_range = FileRange(error["line"], 0, error["line"], 1000)
                     l_diag.range = e_range
-                    l_diag.content = error.get('content', '')
-                    l_diag.sid = error.get('sid', 'UNKNOWN')
+                    l_diag.content = error.get("content", "")
+                    l_diag.sid = error.get("sid", "UNKNOWN")
 
                 diagnostics.append(l_diag)
-        for warning in result.get('warnings', []):
+        for warning in result.get("warnings", []):
             line = None
             signature = None
             l_diag = Diagnosis()
-            l_diag.message = warning['message']
-            l_diag.source = warning['source']
+            l_diag.message = warning["message"]
+            l_diag.source = warning["source"]
             l_diag.severity = Diagnosis.WARNING_LEVEL
-            if 'line' in warning:
-                line = warning['line']
+            if "line" in warning:
+                line = warning["line"]
                 signature = self.sigset.get_sig_by_line(line)
-            elif 'content' in warning:
-                signature = self.sigset.get_sig_by_content(warning['content'])
+            elif "content" in warning:
+                signature = self.sigset.get_sig_by_content(warning["content"])
                 if signature is not None:
                     line = signature.line
-            elif 'sid' in warning:
-                signature = self.sigset.get_sig_by_sid(warning['sid'])
+            elif "sid" in warning:
+                signature = self.sigset.get_sig_by_sid(warning["sid"])
                 if signature is not None:
                     line = signature.line
             if line is None:
                 continue
             if signature is not None:
                 l_diag.range = signature.get_diag_range(mode="sid")
-                if warning.get('suricata_error', False):
+                if warning.get("suricata_error", False):
                     signature.has_error = True
 
                 l_diag.content = signature.content
@@ -285,42 +287,44 @@ class SuricataFile:
             else:
                 w_range = FileRange(line, 0, line, 1000)
                 l_diag.range = w_range
-                l_diag.content = warning.get('content', '')
-                l_diag.sid = warning.get('sid', 'UNKNOWN')
+                l_diag.content = warning.get("content", "")
+                l_diag.sid = warning.get("sid", "UNKNOWN")
 
             diagnostics.append(l_diag)
 
         if engine_analysis:
-            for info in result.get('info', []):
+            for info in result.get("info", []):
                 line = None
                 signature = None
                 l_diag = Diagnosis()
-                l_diag.message = info['message']
-                l_diag.source = info['source']
+                l_diag.message = info["message"]
+                l_diag.source = info["source"]
                 l_diag.severity = Diagnosis.INFO_LEVEL
-                if 'line' in info:
-                    line = info['line']
-                elif 'content' in info:
-                    signature = self.sigset.get_sig_by_content(info['content'])
+                if "line" in info:
+                    line = info["line"]
+                elif "content" in info:
+                    signature = self.sigset.get_sig_by_content(info["content"])
                     if signature:
                         line = signature.line
                 if line is None:
                     continue
                 sig_range = FileRange(line, 0, line, 1)
                 if signature is not None:
-                    if "Fast Pattern \"" in info['message']:
+                    if 'Fast Pattern "' in info["message"]:
                         if signature.mpm is not None:
-                            sig_range = signature.get_diag_range(mode='pattern', pattern=signature.mpm['pattern'])
+                            sig_range = signature.get_diag_range(
+                                mode="pattern", pattern=signature.mpm["pattern"]
+                            )
                         else:
-                            sig_range = signature.get_diag_range(mode='sid')
+                            sig_range = signature.get_diag_range(mode="sid")
                     else:
-                        sig_range = signature.get_diag_range(mode='sid')
+                        sig_range = signature.get_diag_range(mode="sid")
 
                     l_diag.content = signature.content
                     l_diag.sid = signature.sid
                 else:
-                    l_diag.content = info.get('content', '')
-                    l_diag.sid = info.get('sid', 'UNKNOWN')
+                    l_diag.content = info.get("content", "")
+                    l_diag.sid = info.get("sid", "UNKNOWN")
 
                 l_diag.range = sig_range
                 diagnostics.append(l_diag)
@@ -338,33 +342,44 @@ class SuricataFile:
                         diagnostics.append(l_diag)
                     continue
                 # mpm is content:"$pattern"
-                pattern = self.mpm.get(sig.mpm['buffer'], {}).get(sig.mpm['pattern'])
+                pattern = self.mpm.get(sig.mpm["buffer"], {}).get(sig.mpm["pattern"])
                 if pattern is None:
                     continue
-                pattern_count = pattern['count']
+                pattern_count = pattern["count"]
                 for sig_file in workspace:
                     if sig_file != self.path:
                         file_obj = workspace.get(sig_file)
                         if file_obj is None or file_obj.mpm is None:
                             continue
-                        f_pattern = file_obj.mpm.get(sig.mpm['buffer'], {}).get(sig.mpm['pattern'])
+                        f_pattern = file_obj.mpm.get(sig.mpm["buffer"], {}).get(
+                            sig.mpm["pattern"]
+                        )
                         if f_pattern is None:
                             continue
-                        pattern_count += f_pattern['count']
+                        pattern_count += f_pattern["count"]
                 l_diag = Diagnosis()
                 if pattern_count > 1:
-                    l_diag.message = "Fast Pattern '%s' on '%s' buffer is used in %d different signatures, " \
-                                     "consider using a unique fast pattern to improve performance." \
-                                     % (sig.mpm['pattern'], sig.mpm['buffer'], pattern_count)
+                    l_diag.message = (
+                        "Fast Pattern '%s' on '%s' buffer is used in %d different signatures, "
+                        "consider using a unique fast pattern to improve performance."
+                        % (sig.mpm["pattern"], sig.mpm["buffer"], pattern_count)
+                    )
                     l_diag.source = "SLS MPM Analysis"
                 else:
                     if sig.get_content_keyword_count() == 1:
                         continue
-                    l_diag.message = "Fast Pattern '%s' on '%s' buffer" % (sig.mpm['pattern'], sig.mpm['buffer'])
+                    l_diag.message = "Fast Pattern '%s' on '%s' buffer" % (
+                        sig.mpm["pattern"],
+                        sig.mpm["buffer"],
+                    )
                     l_diag.source = "Suricata MPM Analysis"
-                sig_range = sig.get_diag_range(mode="pattern", pattern=sig.mpm['pattern'])
+                sig_range = sig.get_diag_range(
+                    mode="pattern", pattern=sig.mpm["pattern"]
+                )
                 l_diag.severity = Diagnosis.INFO_LEVEL
-                l_diag.range = sig.get_diag_range(mode="pattern", pattern=sig.mpm['pattern'])
+                l_diag.range = sig.get_diag_range(
+                    mode="pattern", pattern=sig.mpm["pattern"]
+                )
                 l_diag.sid = sig.sid
                 l_diag.content = sig.content
                 diagnostics.append(l_diag)
@@ -373,7 +388,7 @@ class SuricataFile:
             if len(sls_diag):
                 diagnostics.extend(sls_diag)
         self.diagnosis = diagnostics
-        return result['status'], sorted(diagnostics, key=self.sort_diagnosis)
+        return result["status"], sorted(diagnostics, key=self.sort_diagnosis)
 
     def parse_file(self):
         """Build file Info by parsing file"""
@@ -404,6 +419,6 @@ class SuricataFile:
             i += 1
 
     def apply_change(self, content_update):
-        self.contents_split = content_update['text'].splitlines()
+        self.contents_split = content_update["text"].splitlines()
         self.nLines = len(self.contents_split)
         self.parse_file()

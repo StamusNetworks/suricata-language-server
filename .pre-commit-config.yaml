@@ -10,3 +10,7 @@ repos:
     rev: v0.2.2-local
     hooks:
     -   id: commitlint
+-   repo: https://github.com/psf/black
+    rev: 25.1.0
+    hooks:
+    -   id: black

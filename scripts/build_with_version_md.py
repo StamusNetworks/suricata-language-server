@@ -25,10 +25,12 @@ from collections import defaultdict
 from packaging import version
 import argparse
 
+
 def extract_semver(filename):
     """Extract semantic version from filename like 'data_v1.2.3.csv'."""
-    match = re.search(r'v(\d+\.\d+\.\d+)', filename)
+    match = re.search(r"v(\d+\.\d+\.\d+)", filename)
     return version.parse(match.group(1)) if match else None
+
 
 def process_csv_files(folder_path):
     item_versions = defaultdict(set)
@@ -47,8 +49,8 @@ def process_csv_files(folder_path):
             all_versions.add(semver)
 
             filepath = os.path.join(folder_path, filename)
-            with open(filepath, newline='', encoding='utf-8') as csvfile:
-                reader = csv.reader(csvfile, delimiter=';')
+            with open(filepath, newline="", encoding="utf-8") as csvfile:
+                reader = csv.reader(csvfile, delimiter=";")
                 header = next(reader, None)
                 if header_saved is None:
                     header_saved = [h.strip() for h in header]
@@ -74,20 +76,26 @@ def process_csv_files(folder_path):
         initial_version = min(versions)
         last_version = max(versions)
         row_data = item_rows[item][1]
-        results.append({
-            "row": row_data,
-            "initial_version": str(initial_version),
-            "last_version": str(last_version)
-        })
+        results.append(
+            {
+                "row": row_data,
+                "initial_version": str(initial_version),
+                "last_version": str(last_version),
+            }
+        )
 
     return header_saved, results
 
+
 def write_csv_output(header, results, output_file):
-    with open(output_file, mode='w', newline='', encoding='utf-8') as f:
-        writer = csv.writer(f, delimiter=';')
+    with open(output_file, mode="w", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f, delimiter=";")
         writer.writerow(header + ["initial_version", "last_version"])
         for entry in sorted(results, key=lambda x: x["row"][0]):
-            writer.writerow(entry["row"] + [entry["initial_version"], entry["last_version"]])
+            writer.writerow(
+                entry["row"] + [entry["initial_version"], entry["last_version"]]
+            )
+
 
 def write_json_output(header, results, output_file):
     json_data = []
@@ -97,11 +105,12 @@ def write_json_output(header, results, output_file):
         item_dict["last_version"] = entry["last_version"]
         json_data.append(item_dict)
 
-    with open(output_file, mode='w', encoding='utf-8') as f:
+    with open(output_file, mode="w", encoding="utf-8") as f:
         json.dump(json_data, f, indent=2, ensure_ascii=False)
 
+
 def write_markdown_output(header, results, output_file):
-    with open(output_file, mode='w', encoding='utf-8') as f:
+    with open(output_file, mode="w", encoding="utf-8") as f:
         # Prepare header row
         md_header = header + ["initial_version", "last_version"]
         f.write("| " + " | ".join(md_header) + " |\n")
@@ -116,16 +125,25 @@ def write_markdown_output(header, results, output_file):
             md_row = row + [entry["initial_version"], entry["last_version"]]
             f.write("| " + " | ".join(md_row) + " |\n")
 
+
 def main():
     parser = argparse.ArgumentParser(description="Merge CSVs with version tracking.")
-    parser.add_argument("--input-dir", required=True, help="Directory containing input CSV files")
-    parser.add_argument("--output-prefix", required=True, help="Prefix for output files (no extension)")
-    parser.add_argument("--output-format", choices=["csv", "json", "md"], default="json", help="Output format")
+    parser.add_argument(
+        "--input-dir", required=True, help="Directory containing input CSV files"
+    )
+    parser.add_argument(
+        "--output-prefix", required=True, help="Prefix for output files (no extension)"
+    )
+    parser.add_argument(
+        "--output-format",
+        choices=["csv", "json", "md"],
+        default="json",
+        help="Output format",
+    )
 
     args = parser.parse_args()
     input_folder = args.input_dir
     prefix = args.output_prefix
-
 
     header, results = process_csv_files(input_folder)
 

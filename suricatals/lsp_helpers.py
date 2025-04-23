@@ -30,8 +30,10 @@ class FileRange:
         return "FileRange()"
 
     def to_range(self):
-        return {"start": {"line": self.line_start, "character": self.col_start},
-                "end": {"line": self.line_end, "character": self.col_end}}
+        return {
+            "start": {"line": self.line_start, "character": self.col_start},
+            "end": {"line": self.line_end, "character": self.col_end},
+        }
 
 
 class Diagnosis(object):
@@ -45,7 +47,7 @@ class Diagnosis(object):
         self._severity = 1
         self._source = "Suricata Language Server"
         self._sid = 0
-        self._content = ''
+        self._content = ""
 
     def to_message(self):
         if self._range is None:
@@ -57,8 +59,8 @@ class Diagnosis(object):
             "message": self.message,
             "source": self.source,
             "severity": self.severity,
-            'content': self.content,
-            'sid': self.sid,
+            "content": self.content,
+            "sid": self.sid,
         }
 
     @property

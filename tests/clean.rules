@@ -8,4 +8,3 @@ alert http any any -> any any (msg:"next try"; sid:21; \
     rev:7;)
 
 alert http any any -> any any (msg:"next try"; sid:22; content:"loir"; content:"dvine"; content: "qui"; flow:established,to_client; rev:7;)
-

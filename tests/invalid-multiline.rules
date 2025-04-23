@@ -4,4 +4,3 @@ alert http any any -> any any (msg:"next try"; sid:21; \
     content: "qui"; \
     flow:established,to_client;
     rev:7;)
-

@@ -1,6 +1,7 @@
 import unittest
 from suricatals.langserver import LangServer
 
+
 class TestSyntax(unittest.TestCase):
 
     def test_cleanrules(self):
@@ -36,10 +37,10 @@ class TestSyntax(unittest.TestCase):
         for diag in diags:
             self.assertEqual(diag.severity, 4)
             if diag.range.line_start in [0, 1]:
-                self.assertTrue('is used in' in diag.message)
+                self.assertTrue("is used in" in diag.message)
             if diag.range.line_start == 2:
                 self.assertTrue(diag.message.startswith("Fast Pattern"))
-                self.assertFalse('is used in' in diag.message)
+                self.assertFalse("is used in" in diag.message)
 
     def test_invalid_http_host(self):
         s = LangServer(conn=None, settings=None)
@@ -63,5 +64,5 @@ class TestSyntax(unittest.TestCase):
             self.assertEqual(diag.severity, 2)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
