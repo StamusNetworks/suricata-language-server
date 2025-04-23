@@ -22,3 +22,9 @@ rules:
       - revert
       - style
       - test
+  scope: # scope must be one of the following
+    level: error
+    optional: true
+    options:
+      - sls
+      - rules
