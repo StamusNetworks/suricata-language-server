@@ -27,6 +27,7 @@ import json
 import io
 import re
 import logging
+import importlib.resources
 
 log = logging.getLogger(__name__)
 
@@ -1107,16 +1108,12 @@ outputs:
     def get_keywords_from_json(self):
         keywords = {}
         try:
-            with open(
-                os.path.join(
-                    os.path.dirname(__file__), "data", "suricata-keywords.json"
-                ),
-                "r",
-                encoding="utf-8",
-            ) as kf:
-                known_keywords = json.load(kf)
-                for keyword in known_keywords:
-                    keywords[keyword["name"]] = keyword
+            file_content = importlib.resources.read_text(
+                "suricatals.data", "suricata-keywords.json"
+            )
+            known_keywords = json.loads(file_content)
+            for keyword in known_keywords:
+                keywords[keyword["name"]] = keyword
         except FileNotFoundError:
             pass
         return keywords
