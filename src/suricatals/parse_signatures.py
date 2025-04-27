@@ -57,15 +57,15 @@ class Signature:
         if self.rev == 0:
             self._search_rev(content)
 
-    def _get_diag_range_by_sid(self):
+    def _get_diag_range_by_keyword(self, keyword="msg:"):
         fr = None
         i = 0
         for line in self.raw_content:
-            if "sid:" in line:
+            if keyword in line:
                 line_start = self.line + i
                 line_end = line_start
-                range_start = line.index("sid:")
-                range_end = range_start + len("sid:")
+                range_start = line.index(keyword)
+                range_end = range_start + len(keyword)
                 fr = FileRange(line_start, range_start, line_end, range_end)
                 break
             i += 1
@@ -77,7 +77,9 @@ class Signature:
             last_char = len(self.raw_content[-1].rstrip())
             fr = FileRange(self.line, 0, self.line_end, last_char)
         elif mode == "sid":
-            fr = self._get_diag_range_by_sid()
+            fr = self._get_diag_range_by_keyword(keyword="sid:")
+        elif mode == "msg":
+            fr = self._get_diag_range_by_keyword(keyword="msg:")
         elif mode == "pattern":
             pattern_match = re.compile(f'content: *("{re.escape(pattern)}")')
             i = 0
@@ -94,7 +96,7 @@ class Signature:
                     break
                 i += 1
             if found is False:
-                fr = self._get_diag_range_by_sid()
+                fr = self._get_diag_range_by_keyword(keyword="msg:")
         return fr
 
     def get_content_keyword_count(self):
@@ -278,7 +280,7 @@ class SuricataFile:
             if line is None:
                 continue
             if signature is not None:
-                l_diag.range = signature.get_diag_range(mode="sid")
+                l_diag.range = signature.get_diag_range(mode="msg")
                 if warning.get("suricata_error", False):
                     signature.has_error = True
 
@@ -316,9 +318,9 @@ class SuricataFile:
                                 mode="pattern", pattern=signature.mpm["pattern"]
                             )
                         else:
-                            sig_range = signature.get_diag_range(mode="sid")
+                            sig_range = signature.get_diag_range(mode="msg")
                     else:
-                        sig_range = signature.get_diag_range(mode="sid")
+                        sig_range = signature.get_diag_range(mode="msg")
 
                     l_diag.content = signature.content
                     l_diag.sid = signature.sid
@@ -336,7 +338,7 @@ class SuricataFile:
                         l_diag.message = message
                         l_diag.source = "Suricata MPM Analysis"
                         l_diag.severity = Diagnosis.INFO_LEVEL
-                        l_diag.range = sig.get_diag_range(mode="sid")
+                        l_diag.range = sig.get_diag_range(mode="msg")
                         l_diag.sid = sig.sid
                         l_diag.content = sig.content
                         diagnostics.append(l_diag)
