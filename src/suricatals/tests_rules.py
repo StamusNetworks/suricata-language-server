@@ -28,6 +28,7 @@ import io
 import re
 import logging
 import importlib.resources
+import shlex
 
 log = logging.getLogger(__name__)
 
@@ -725,6 +726,18 @@ outputs:
             extra_conf=kwargs.get("extra_conf"),
         )
 
+    def rules_buffer_get_suricata_options(self, rule_buffer):
+        regexp = re.compile("^##\s*SLS\s+suricata-options:\s*(.*)$")
+        suricata_options = None
+        for line in rule_buffer.splitlines():
+            match = regexp.match(line)
+            if match:
+                suricata_options = match.group(1)
+                break
+        if not suricata_options:
+            return None
+        return shlex.split(suricata_options)
+
     def rules_infos(self, rule_buffer, **kwargs):
         tmpdir = tempfile.mkdtemp()
         config_file = self._prepare_conf(rule_buffer, tmpdir, **kwargs)
@@ -740,6 +753,11 @@ outputs:
             "-c",
             config_file,
         ]
+
+        suri_options = self.rules_buffer_get_suricata_options(rule_buffer)
+        if suri_options:
+            suri_cmd += suri_options
+
         suriprocess = subprocess.Popen(
             suri_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
@@ -791,6 +809,11 @@ outputs:
             "-c",
             config_file,
         ]
+
+        suri_options = self.rules_buffer_get_suricata_options(rule_buffer)
+        if suri_options:
+            suri_cmd += suri_options
+
         # start suricata in test mode
         suriprocess = subprocess.Popen(
             suri_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
@@ -814,6 +837,11 @@ outputs:
                 "-c",
                 config_file,
             ]
+
+            suri_options = self.rules_buffer_get_suricata_options(rule_buffer)
+            if suri_options:
+                suri_cmd += suri_options
+
             # start suricata in test mode
             suriprocess = subprocess.Popen(
                 suri_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE

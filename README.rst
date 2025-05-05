@@ -70,6 +70,16 @@ See `suricata-language-server -h` for complete and up-to-date help.
 * --max-tracked-files: don't start suricata analysis if workspace file count is superior to this limit
 * --batch-file: batch mode to parse only the file in argument and return result on stdout
 
+Passing options to Suricata
+---------------------------
+
+You can pass options to Suricata by adding a specific comment in a rules file. This is done by
+adding the ``## SLS suricata-options:`` prefix to the comment.
+What is after this prefix is passed to Suricata as command line options. For example, if you want to
+use custom address groups and specific options, you can add the following line to your rules file ::
+
+  ## SLS suricata-options: --set vars.address-groups.SCANNERS="127.0.0.3" --set datasets.rules.allow-absolute-filenames: true
+
 Editors Configuration
 =====================
 
