@@ -760,6 +760,8 @@ outputs:
             rule_file,
             "-c",
             config_file,
+            "--data-dir",
+            tmpdir,
         ]
 
         options = self.rules_buffer_get_suricata_options(rule_buffer)
@@ -825,6 +827,8 @@ outputs:
             rule_file,
             "-c",
             config_file,
+            "--data-dir",
+            tmpdir,
         ]
 
         if suri_options:
@@ -851,6 +855,8 @@ outputs:
                 rule_file,
                 "-c",
                 config_file,
+                "--data-dir",
+                tmpdir,
             ]
 
             if suri_options:
