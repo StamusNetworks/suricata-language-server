@@ -80,6 +80,15 @@ use custom address groups and specific options, you can add the following line t
 
   ## SLS suricata-options: --set vars.address-groups.SCANNERS="127.0.0.3" --set datasets.rules.allow-absolute-filenames: true
 
+Modification of rules buffer
+----------------------------
+
+It is possible to modify the rules buffer by using the ``## SLS repalce:`` prefix. This is done
+by adding a comment line with this prefix and the text to replace. For example, if you want to
+replace the text ``foo`` by ``bar`` in the rules buffer, you can add the following line to your rules file ::
+
+  ## SLS replace: foo bar
+
 Editors Configuration
 =====================
 

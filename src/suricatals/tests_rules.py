@@ -727,16 +727,24 @@ outputs:
         )
 
     def rules_buffer_get_suricata_options(self, rule_buffer):
-        regexp = re.compile("^##\s*SLS\s+suricata-options:\s*(.*)$")
+        regexp = {
+            "options": re.compile("^##\s*SLS\s+suricata-options:\s*(.*)$"),
+            "replace": re.compile("^##\s*SLS\s+replace:\s*(.*)$"),
+        }
         suricata_options = None
+        replace = None
         for line in rule_buffer.splitlines():
-            match = regexp.match(line)
+            match = regexp["options"].match(line)
             if match:
                 suricata_options = match.group(1)
-                break
-        if not suricata_options:
-            return None
-        return shlex.split(suricata_options)
+            match = regexp["replace"].match(line)
+            if match:
+                replace = match.group(1)
+        if suricata_options:
+            suricata_options = shlex.split(suricata_options)
+        if replace:
+            replace = shlex.split(replace)
+        return {"options": suricata_options, "replace": replace}
 
     def rules_infos(self, rule_buffer, **kwargs):
         tmpdir = tempfile.mkdtemp()
@@ -754,10 +762,13 @@ outputs:
             config_file,
         ]
 
-        suri_options = self.rules_buffer_get_suricata_options(rule_buffer)
+        options = self.rules_buffer_get_suricata_options(rule_buffer)
+        suri_options = options.get("options")
         if suri_options:
             suri_cmd += suri_options
-
+        replace = options.get("replace")
+        if replace and len(replace) == 2:
+            rule_buffer = re.sub(replace[0], replace[1], rule_buffer)
         suriprocess = subprocess.Popen(
             suri_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
@@ -785,6 +796,12 @@ outputs:
         extra_buffers=None,
         **kwargs,
     ):
+        options = self.rules_buffer_get_suricata_options(rule_buffer)
+        suri_options = options.get("options")
+        replace = options.get("replace")
+        if replace and len(replace) == 2:
+            rule_buffer = re.sub(replace[0], replace[1], rule_buffer)
+
         tmpdir = tempfile.mkdtemp()
         config_file = self._prepare_conf(
             rule_buffer,
@@ -810,10 +827,8 @@ outputs:
             config_file,
         ]
 
-        suri_options = self.rules_buffer_get_suricata_options(rule_buffer)
         if suri_options:
             suri_cmd += suri_options
-
         # start suricata in test mode
         suriprocess = subprocess.Popen(
             suri_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
@@ -838,7 +853,6 @@ outputs:
                 config_file,
             ]
 
-            suri_options = self.rules_buffer_get_suricata_options(rule_buffer)
             if suri_options:
                 suri_cmd += suri_options
 
