@@ -80,6 +80,20 @@ use custom address groups and specific options, you can add the following line t
 
   ## SLS suricata-options: --set vars.address-groups.SCANNERS="127.0.0.3" --set datasets.rules.allow-absolute-filenames: true
 
+Dataset directory handling
+--------------------------
+
+As the system were the signature are developed is not the same as the one where they are
+deployed, settings such as absolute path to files are not working. The directory of dataset
+file is the main example of this. The Suricata Language Server is allowing to fix analysis
+by using a specific comment in the rules file. This is done by adding the ``## SLS dataset-dir:`` prefix ::
+
+    ## SLS dataset-dir: /path/to/dataset/
+
+With this line, a signature such as the following one will be correctly parsed and evaluated ::
+
+    alert http any any -> any any (msg:"test"; file_data; dataset:isset,fi,type string, load /path/to/dataset/dd.lst; sid:1;)
+
 Modification of rules buffer
 ----------------------------
 

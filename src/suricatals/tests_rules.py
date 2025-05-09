@@ -730,21 +730,20 @@ outputs:
         regexp = {
             "options": re.compile("^##\s*SLS\s+suricata-options:\s*(.*)$"),
             "replace": re.compile("^##\s*SLS\s+replace:\s*(.*)$"),
+            "dataset-dir": re.compile("^##\s*SLS\s+dataset-dir:\s*(.*)$"),
         }
-        suricata_options = None
-        replace = None
+        result = {"options": [], "replace": [], "dataset-dir": None}
         for line in rule_buffer.splitlines():
             match = regexp["options"].match(line)
             if match:
-                suricata_options = match.group(1)
+                result["options"] = shlex.split(match.group(1))
             match = regexp["replace"].match(line)
             if match:
-                replace = match.group(1)
-        if suricata_options:
-            suricata_options = shlex.split(suricata_options)
-        if replace:
-            replace = shlex.split(replace)
-        return {"options": suricata_options, "replace": replace}
+                result["replace"] = shlex.split(match.group(1))
+            match = regexp["dataset-dir"].match(line)
+            if match:
+                result["dataset-dir"] = match.group(1)
+        return result
 
     def rules_infos(self, rule_buffer, **kwargs):
         tmpdir = tempfile.mkdtemp()
@@ -768,9 +767,14 @@ outputs:
         suri_options = options.get("options")
         if suri_options:
             suri_cmd += suri_options
+
+        if options.get("dataset-dir"):
+            undir = re.sub(r"/", "_", options["dataset-dir"])
+            rule_buffer = re.sub(options["dataset-dir"], undir, rule_buffer)
         replace = options.get("replace")
         if replace and len(replace) == 2:
             rule_buffer = re.sub(replace[0], replace[1], rule_buffer)
+
         suriprocess = subprocess.Popen(
             suri_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
@@ -800,6 +804,9 @@ outputs:
     ):
         options = self.rules_buffer_get_suricata_options(rule_buffer)
         suri_options = options.get("options")
+        if options.get("dataset-dir"):
+            undir = re.sub(r"/", "_", options["dataset-dir"])
+            rule_buffer = re.sub(options["dataset-dir"], undir, rule_buffer)
         replace = options.get("replace")
         if replace and len(replace) == 2:
             rule_buffer = re.sub(replace[0], replace[1], rule_buffer)
