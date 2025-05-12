@@ -85,7 +85,7 @@ Dataset directory handling
 
 As the system were the signature are developed is not the same as the one where they are
 deployed, settings such as absolute path to files are not working. The directory of dataset
-file is the main example of this. The Suricata Language Server is allowing to fix analysis
+files is the main example of this. The Suricata Language Server is allowing to fix analysis
 by using a specific comment in the rules file. This is done by adding the ``## SLS dataset-dir:`` prefix ::
 
     ## SLS dataset-dir: /path/to/dataset/
@@ -97,7 +97,7 @@ With this line, a signature such as the following one will be correctly parsed a
 Modification of rules buffer
 ----------------------------
 
-It is possible to modify the rules buffer by using the ``## SLS repalce:`` prefix. This is done
+It is possible to modify the rules buffer by using the ``## SLS replace:`` prefix. This is done
 by adding a comment line with this prefix and the text to replace. For example, if you want to
 replace the text ``foo`` by ``bar`` in the rules buffer, you can add the following line to your rules file ::
 
