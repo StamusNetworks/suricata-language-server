@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "suricata-language-server"
-version = "0.9.8"
+version = "1.0.0"
 authors = [
   { name="Eric Leblond", email="el@stamus-networks.com" },
   { name="Nicolas Frisoni", email="nfrisoni@stamus-networks.com" },
@@ -18,7 +18,7 @@ requires-python = ">=3.7"
 license-files = [ "LICENSE" ]
 classifiers = [
     "Programming Language :: Python :: 3",
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Environment :: No Input/Output (Daemon)",
     "Intended Audience :: Information Technology",
     "Operating System :: OS Independent",
