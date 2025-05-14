@@ -728,9 +728,9 @@ outputs:
 
     def rules_buffer_get_suricata_options(self, rule_buffer):
         regexp = {
-            "options": re.compile("^##\s*SLS\s+suricata-options:\s*(.*)$"),
-            "replace": re.compile("^##\s*SLS\s+replace:\s*(.*)$"),
-            "dataset-dir": re.compile("^##\s*SLS\s+dataset-dir:\s*(.*)$"),
+            "options": re.compile(r"^##\s*SLS\s+suricata-options:\s*(.*)$"),
+            "replace": re.compile(r"^##\s*SLS\s+replace:\s*(.*)$"),
+            "dataset-dir": re.compile(r"^##\s*SLS\s+dataset-dir:\s*(.*)$"),
         }
         result = {"options": [], "replace": [], "dataset-dir": None}
         for line in rule_buffer.splitlines():
