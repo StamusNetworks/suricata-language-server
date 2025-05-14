@@ -1163,9 +1163,12 @@ outputs:
     def get_keywords_from_json(self):
         keywords = {}
         try:
-            file_content = importlib.resources.read_text(
-                "suricatals.data", "suricata-keywords.json"
+            ressource_path = (
+                importlib.resources.files("suricatals")
+                / "data"
+                / "suricata-keywords.json"
             )
+            file_content = ressource_path.read_text(encoding="utf-8")
             known_keywords = json.loads(file_content)
             for keyword in known_keywords:
                 keywords[keyword["name"]] = keyword
