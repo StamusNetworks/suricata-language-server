@@ -1,3 +1,4 @@
+import os
 import unittest
 from suricatals.langserver import LangServer
 
@@ -65,7 +66,7 @@ class TestSyntax(unittest.TestCase):
 
     def test_dataset_load(self):
         s = LangServer(conn=None, settings=None)
-        _, diags = s.analyse_file("tests/dataset.rules")
+        _, diags = s.analyse_file(os.path.join(os.getcwd(), "tests", "datasets.rules"))
         self.assertEqual(len(diags), 1)
         for diag in diags:
             self.assertEqual(diag.severity, 4)
