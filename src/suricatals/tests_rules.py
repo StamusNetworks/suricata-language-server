@@ -745,6 +745,30 @@ outputs:
                 result["dataset-dir"] = match.group(1)
         return result
 
+    def _rules_buffer_prepare_dataset(self, rule_buffer, tmpdir):
+        # check that we have a dataset keyword and create the load/save file in tmpdir after transformation
+        # if we have a file with same basename as the dataset then we copy it to tmp dir with correct name
+        # if no file, we create a dummy file with the same name
+        dataset_match = r"dataset:.*, *(load|save|state) +(\S+);"
+        dm_re = re.compile(dataset_match)
+        for line in rule_buffer.splitlines():
+            match = dm_re.search(line)
+            if match:
+                operation = match.group(1)
+                dataset = match.group(2)
+                # if we save to file, we don't need to create a dummy file
+                if operation == "save":
+                    continue
+                else:
+                    base_file = dataset.split("_")[-1]
+                    if os.path.exists(base_file):
+                        shutil.copy(base_file, os.path.join(tmpdir, dataset))
+                    else:
+                        with open(
+                            os.path.join(tmpdir, dataset), "w", encoding="utf-8"
+                        ) as f:
+                            f.write("")
+
     def rules_infos(self, rule_buffer, **kwargs):
         tmpdir = tempfile.mkdtemp()
         config_file = self._prepare_conf(rule_buffer, tmpdir, **kwargs)
@@ -771,6 +795,9 @@ outputs:
         if options.get("dataset-dir"):
             undir = re.sub(r"/", "_", options["dataset-dir"])
             rule_buffer = re.sub(options["dataset-dir"], undir, rule_buffer)
+
+        self._rules_buffer_prepare_dataset(rule_buffer, tmpdir)
+
         replace = options.get("replace")
         if replace and len(replace) == 2:
             rule_buffer = re.sub(replace[0], replace[1], rule_buffer)
@@ -812,6 +839,9 @@ outputs:
             rule_buffer = re.sub(replace[0], replace[1], rule_buffer)
 
         tmpdir = tempfile.mkdtemp()
+
+        self._rules_buffer_prepare_dataset(rule_buffer, tmpdir)
+
         config_file = self._prepare_conf(
             rule_buffer,
             tmpdir,
