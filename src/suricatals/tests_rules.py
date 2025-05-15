@@ -771,9 +771,20 @@ outputs:
 
     def rules_infos(self, rule_buffer, **kwargs):
         tmpdir = tempfile.mkdtemp()
-        config_file = self._prepare_conf(rule_buffer, tmpdir, **kwargs)
         rule_file = os.path.join(tmpdir, "file.rules")
 
+        options = self._rules_buffer_get_suricata_options(rule_buffer)
+        if options.get("dataset-dir"):
+            undir = re.sub(r"/", "_", options["dataset-dir"])
+            rule_buffer = rule_buffer.replace(options["dataset-dir"], undir)
+
+        self._rules_buffer_prepare_dataset(rule_buffer, tmpdir)
+
+        replace = options.get("replace")
+        if replace and len(replace) == 2:
+            rule_buffer = re.sub(replace[0], replace[1], rule_buffer)
+
+        config_file = self._prepare_conf(rule_buffer, tmpdir, **kwargs)
         suri_cmd = [
             self.suricata_binary,
             "--engine-analysis",
@@ -787,20 +798,9 @@ outputs:
             tmpdir,
         ]
 
-        options = self._rules_buffer_get_suricata_options(rule_buffer)
         suri_options = options.get("options")
         if suri_options:
             suri_cmd += suri_options
-
-        if options.get("dataset-dir"):
-            undir = re.sub(r"/", "_", options["dataset-dir"])
-            rule_buffer = re.sub(options["dataset-dir"], undir, rule_buffer)
-
-        self._rules_buffer_prepare_dataset(rule_buffer, tmpdir)
-
-        replace = options.get("replace")
-        if replace and len(replace) == 2:
-            rule_buffer = re.sub(replace[0], replace[1], rule_buffer)
 
         suriprocess = subprocess.Popen(
             suri_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
