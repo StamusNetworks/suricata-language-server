@@ -1,0 +1,2 @@
+## SLS dataset-dir: /path/to/dataset/
+alert http any any -> any any (msg:"test"; file_data; dataset:isset,fi,type string,load /path/to/dataset/dd.lst; sid:1;)

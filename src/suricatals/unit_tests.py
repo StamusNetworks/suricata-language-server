@@ -63,6 +63,13 @@ class TestSyntax(unittest.TestCase):
         for diag in diags:
             self.assertEqual(diag.severity, 2)
 
+    def test_dataset_load(self):
+        s = LangServer(conn=None, settings=None)
+        _, diags = s.analyse_file("tests/dataset.rules")
+        self.assertEqual(len(diags), 1)
+        for diag in diags:
+            self.assertEqual(diag.severity, 4)
+
 
 if __name__ == "__main__":
     unittest.main()
