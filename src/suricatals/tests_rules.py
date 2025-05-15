@@ -726,7 +726,7 @@ outputs:
             extra_conf=kwargs.get("extra_conf"),
         )
 
-    def rules_buffer_get_suricata_options(self, rule_buffer):
+    def _rules_buffer_get_suricata_options(self, rule_buffer):
         regexp = {
             "options": re.compile(r"^##\s*SLS\s+suricata-options:\s*(.*)$"),
             "replace": re.compile(r"^##\s*SLS\s+replace:\s*(.*)$"),
@@ -787,7 +787,7 @@ outputs:
             tmpdir,
         ]
 
-        options = self.rules_buffer_get_suricata_options(rule_buffer)
+        options = self._rules_buffer_get_suricata_options(rule_buffer)
         suri_options = options.get("options")
         if suri_options:
             suri_cmd += suri_options
@@ -829,7 +829,7 @@ outputs:
         extra_buffers=None,
         **kwargs,
     ):
-        options = self.rules_buffer_get_suricata_options(rule_buffer)
+        options = self._rules_buffer_get_suricata_options(rule_buffer)
         suri_options = options.get("options")
         if options.get("dataset-dir"):
             undir = re.sub(r"/", "_", options["dataset-dir"])
