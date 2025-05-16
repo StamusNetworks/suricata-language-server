@@ -5,17 +5,20 @@ from suricatals.langserver import LangServer
 
 class TestSyntax(unittest.TestCase):
 
-    def test_cleanrules(self):
+    def _test_rules_file(self, filename, expected_diags):
         s = LangServer(conn=None, settings=None)
-        _, diags = s.analyse_file("tests/clean.rules")
-        self.assertTrue(len(diags) == 3)
+        _, diags = s.analyse_file(os.path.join(os.getcwd(), "tests", filename))
+        if expected_diags is not None:
+            self.assertEqual(len(diags), expected_diags)
+        return diags
+
+    def test_cleanrules(self):
+        diags = self._test_rules_file("clean.rules", 6)
         for diag in diags:
             self.assertTrue(diag.severity == 4)
 
     def test_invalid_multilines(self):
-        s = LangServer(conn=None, settings=None)
-        _, diags = s.analyse_file("tests/invalid-multiline.rules")
-        self.assertTrue(len(diags) == 2)
+        diags = self._test_rules_file("invalid-multiline.rules", 3)
         has_missing = False
         for diag in diags:
             if diag.severity == 2 and diag.message.startswith("Missing closing"):
@@ -23,8 +26,7 @@ class TestSyntax(unittest.TestCase):
         self.assertTrue(has_missing)
 
     def test_missing_incomplete(self):
-        s = LangServer(conn=None, settings=None)
-        _, diags = s.analyse_file("tests/missing-incomplete.rules")
+        diags = self._test_rules_file("missing-incomplete.rules", None)
         has_missing = 0
         for diag in diags:
             if diag.severity == 2 and diag.message.startswith("Missing closing"):
@@ -32,11 +34,11 @@ class TestSyntax(unittest.TestCase):
         self.assertEqual(has_missing, 2)
 
     def test_fast_pattern_analysis(self):
-        s = LangServer(conn=None, settings=None)
-        _, diags = s.analyse_file("tests/fast-pattern-analysis.rules")
-        self.assertEqual(len(diags), 3)
+        diags = self._test_rules_file("fast-pattern-analysis.rules", 7)
         for diag in diags:
             self.assertEqual(diag.severity, 4)
+            if "Rule type" in diag.message:
+                continue
             if diag.range.line_start in [0, 1]:
                 self.assertTrue("is used in" in diag.message)
             if diag.range.line_start == 2:
@@ -44,29 +46,24 @@ class TestSyntax(unittest.TestCase):
                 self.assertFalse("is used in" in diag.message)
 
     def test_invalid_http_host(self):
-        s = LangServer(conn=None, settings=None)
-        _, diags = s.analyse_file("tests/invalid-http-host.rules")
-        self.assertEqual(len(diags), 1)
+        diags = self._test_rules_file("invalid-http-host.rules", 1)
         for diag in diags:
             self.assertEqual(diag.severity, 1)
 
     def test_pattern_error(self):
-        s = LangServer(conn=None, settings=None)
-        _, diags = s.analyse_file("tests/pattern-syntax.rules")
-        self.assertEqual(len(diags), 3)
+        diags = self._test_rules_file("pattern-syntax.rules", 7)
         for diag in diags:
             self.assertEqual(diag.severity, 4)
 
     def test_sig_shadow(self):
-        s = LangServer(conn=None, settings=None)
-        _, diags = s.analyse_file("tests/sig-shadow.rules")
-        self.assertEqual(len(diags), 1)
+        diags = self._test_rules_file("sig-shadow.rules", 2)
         for diag in diags:
+            if "Rule type" in diag.message:
+                continue
             self.assertEqual(diag.severity, 2)
 
     def test_dataset_load(self):
-        s = LangServer(conn=None, settings=None)
-        _, diags = s.analyse_file(os.path.join(os.getcwd(), "tests", "datasets.rules"))
+        diags = self._test_rules_file("datasets.rules", 1)
         self.assertEqual(len(diags), 1)
         for diag in diags:
             self.assertEqual(diag.severity, 4)
