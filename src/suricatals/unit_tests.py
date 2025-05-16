@@ -52,8 +52,13 @@ class TestSyntax(unittest.TestCase):
 
     def test_pattern_error(self):
         diags = self._test_rules_file("pattern-syntax.rules", 7)
+        fast_pattern_diags = 0
         for diag in diags:
-            self.assertEqual(diag.severity, 4)
+            if "Rule type" in diag.message:
+                continue
+            if diag.severity == 4 and diag.message.startswith("Fast Pattern"):
+                fast_pattern_diags += 1
+        self.assertEqual(fast_pattern_diags, 3)
 
     def test_sig_shadow(self):
         diags = self._test_rules_file("sig-shadow.rules", 2)
@@ -61,6 +66,7 @@ class TestSyntax(unittest.TestCase):
             if "Rule type" in diag.message:
                 continue
             self.assertEqual(diag.severity, 2)
+            self.assertTrue("Signature with newer revision" in diag.message)
 
     def test_dataset_load(self):
         diags = self._test_rules_file("datasets.rules", 1)
