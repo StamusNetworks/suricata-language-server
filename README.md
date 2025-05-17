@@ -35,7 +35,7 @@ the potential issues seen of the signatures.
 
 You can use pip to install the Suricata language server :
 
-```shell
+```sh
 pip install suricata-language-server
 ```
 
@@ -47,7 +47,7 @@ which is not convenient for our use case where the editor is running the
 server. A workaround is to force the installation outside a virtualenv
 by doing :
 
-```shell
+```sh
 pip install --break-system-packages suricata-language-server
 ```
 
@@ -62,7 +62,7 @@ page](https://www.python.org/downloads/windows/) is working well.
 After cloning the repository, you need to install first the server by
 running in the root directory of the project :
 
-```shell
+```sh
 pip install .
 ```
 
