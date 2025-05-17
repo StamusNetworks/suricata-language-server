@@ -51,6 +51,12 @@ by doing :
 pip install --break-system-packages suricata-language-server
 ```
 
+> [!TIP]
+> It is also possible to install the server in a virtualenv and then
+> you can set up your editor to use the virtualenv. This is done by
+> specifying in the editor configuration the path to the
+> `suricata-language-server` in the virtualenv.
+
 If you are a Microsoft Windows user and need to install Suricata, you
 can use the MSI available on [Suricata download
 page](https://suricata.io/download/). For Python, the installer from
