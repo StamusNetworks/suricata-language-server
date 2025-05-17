@@ -83,7 +83,7 @@ needed.
 
 ![image](https://raw.githubusercontent.com/StamusNetworks/suricata-language-server/main/images/nvim-completion.png)
 
-One simple way tis to use
+One simple way is to use
 [nvim-lspconfig](https://github.com/neovim/nvim-lspconfig) and add the
 following snippet to your configuration :
 
@@ -106,7 +106,7 @@ if not configs.suricata_language_server then
 end
 ```
 
-If you want to setup a custom suricata binary, you can use the following
+If you want to setup a custom Suricata binary, you can use the following
 trick: :
 
 ```lua
@@ -199,7 +199,7 @@ the Language Server Protocol :
 }
 ```
 
-The second option giving the path to suricata binary is only necessary
+The second option giving the path to Suricata binary is only necessary
 if you have a binary in a custom location.
 
 ## Server options
@@ -207,13 +207,13 @@ if you have a binary in a custom location.
 See `suricata-language-server -h` for complete and
 up-to-date help.
 
--   `--suricata-binary`: path to the suricata binary used for signatures
+-   `--suricata-binary`: path to the Suricata binary used for signatures
     testing (optional)
--   `--suricata-config`: path to the suricata config used for signatures
+-   `--suricata-config`: path to the Suricata config used for signatures
     testing (optional)
--   `--max-lines`: don\'t run suricata tests if file is bigger than this
+-   `--max-lines`: don\'t run Suricata tests if file is bigger than this
     limit (auto-completion only)
--   `--max-tracked-files`: don\'t start suricata analysis if workspace
+-   `--max-tracked-files`: don\'t start Suricata analysis if workspace
     file count is superior to this limit
 -   `--batch-file`: batch mode to parse only the file in argument and
     return result on stdout
