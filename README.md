@@ -142,33 +142,33 @@ One simple way tis to use
 following snippet to your configuration :
 
 ```lua
-    local lspconfig = require 'lspconfig'
-    local configs = require 'lspconfig.configs'
-    -- Check if the config is already defined (useful when reloading this file)
-    if not configs.suricata_language_server then
-      configs.suricata_language_server = {
-        default_config = {
-          cmd = {'suricata-language-server'};
-          filetypes = {'suricata', 'hog'};
-          root_dir = function(fname)
-            return lspconfig.util.find_git_ancestor(fname)
-          end;
-          single_file_support = true;
-          settings = {};
-        };
-      }
-    end
+local lspconfig = require 'lspconfig'
+local configs = require 'lspconfig.configs'
+-- Check if the config is already defined (useful when reloading this file)
+if not configs.suricata_language_server then
+  configs.suricata_language_server = {
+    default_config = {
+      cmd = {'suricata-language-server'};
+      filetypes = {'suricata', 'hog'};
+      root_dir = function(fname)
+        return lspconfig.util.find_git_ancestor(fname)
+      end;
+      single_file_support = true;
+      settings = {};
+    };
+  }
+end
 ```
 
 If you want to setup a custom suricata binary, you can use the following
 trick: :
 
 ```lua
-    local suricata_ls_cmd = {'suricata-language-server', '--suricata-binary=/my/own/suricata'}
-    require'lspconfig'.suricata_language_server.setup{
-      cmd = suricata_ls_cmd,
-      on_attach = on_attach,
-    }
+local suricata_ls_cmd = {'suricata-language-server', '--suricata-binary=/my/own/suricata'}
+require'lspconfig'.suricata_language_server.setup{
+  cmd = suricata_ls_cmd,
+  on_attach = on_attach,
+}
 ```
 
 ### Visual Studio code
