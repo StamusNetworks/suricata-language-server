@@ -77,66 +77,6 @@ will be invoked transparently by the editors that are configured to use
 it. You can use `sudo pip install .` to install it system wide if
 needed.
 
-## Server options
-
-See `suricata-language-server -h` for complete and
-up-to-date help.
-
--   `--suricata-binary`: path to the suricata binary used for signatures
-    testing (optional)
--   `--suricata-config`: path to the suricata config used for signatures
-    testing (optional)
--   `--max-lines`: don\'t run suricata tests if file is bigger than this
-    limit (auto-completion only)
--   `--max-tracked-files`: don\'t start suricata analysis if workspace
-    file count is superior to this limit
--   `--batch-file`: batch mode to parse only the file in argument and
-    return result on stdout
-
-### Passing options to Suricata
-
-You can pass options to Suricata by adding a specific comment in a rules
-file. This is done by adding the `## SLS suricata-options:` prefix to
-the comment. What is after this prefix is passed to Suricata as command
-line options. For example, if you want to use custom address groups and
-specific options, you can add the following line to your rules file :
-
-```
-## SLS suricata-options: --set vars.address-groups.SCANNERS="127.0.0.3" --set datasets.rules.allow-absolute-filenames: true
-```
-
-### Dataset directory handling
-
-As the system were the signature are developed is not the same as the
-one where they are deployed, settings such as absolute path to files are
-not working. The directory of dataset files is the main example of this.
-The Suricata Language Server is allowing to fix analysis by using a
-specific comment in the rules file. This is done by adding the
-`## SLS dataset-dir:` prefix :
-
-```
-## SLS dataset-dir: /path/to/dataset/
-```
-
-With this line, a signature such as the following one will be correctly
-parsed and evaluated :
-
-```
-alert http any any -> any any (msg:"test"; file_data; dataset:isset,fi,type string, load /path/to/dataset/dd.lst; sid:1;)
-```
-
-### Modification of rules buffer
-
-It is possible to modify the rules buffer by using the `## SLS replace:`
-prefix. This is done by adding a comment line with this prefix and the
-text to replace. For example, if you want to replace the text `foo` by
-`bar` in the rules buffer, you can add the following line to your rules
-file :
-
-```
-## SLS replace: foo bar
-```
-
 ## Editors Configuration
 
 ### Neovim
@@ -262,7 +202,67 @@ the Language Server Protocol :
 The second option giving the path to suricata binary is only necessary
 if you have a binary in a custom location.
 
-# Getting help
+## Server options
+
+See `suricata-language-server -h` for complete and
+up-to-date help.
+
+-   `--suricata-binary`: path to the suricata binary used for signatures
+    testing (optional)
+-   `--suricata-config`: path to the suricata config used for signatures
+    testing (optional)
+-   `--max-lines`: don\'t run suricata tests if file is bigger than this
+    limit (auto-completion only)
+-   `--max-tracked-files`: don\'t start suricata analysis if workspace
+    file count is superior to this limit
+-   `--batch-file`: batch mode to parse only the file in argument and
+    return result on stdout
+
+### Passing options to Suricata
+
+You can pass options to Suricata by adding a specific comment in a rules
+file. This is done by adding the `## SLS suricata-options:` prefix to
+the comment. What is after this prefix is passed to Suricata as command
+line options. For example, if you want to use custom address groups and
+specific options, you can add the following line to your rules file :
+
+```
+## SLS suricata-options: --set vars.address-groups.SCANNERS="127.0.0.3" --set datasets.rules.allow-absolute-filenames: true
+```
+
+### Dataset directory handling
+
+As the system were the signature are developed is not the same as the
+one where they are deployed, settings such as absolute path to files are
+not working. The directory of dataset files is the main example of this.
+The Suricata Language Server is allowing to fix analysis by using a
+specific comment in the rules file. This is done by adding the
+`## SLS dataset-dir:` prefix :
+
+```
+## SLS dataset-dir: /path/to/dataset/
+```
+
+With this line, a signature such as the following one will be correctly
+parsed and evaluated :
+
+```
+alert http any any -> any any (msg:"test"; file_data; dataset:isset,fi,type string, load /path/to/dataset/dd.lst; sid:1;)
+```
+
+### Modification of rules buffer
+
+It is possible to modify the rules buffer by using the `## SLS replace:`
+prefix. This is done by adding a comment line with this prefix and the
+text to replace. For example, if you want to replace the text `foo` by
+`bar` in the rules buffer, you can add the following line to your rules
+file :
+
+```
+## SLS replace: foo bar
+```
+
+## Getting help
 
 You can get help by:
 
