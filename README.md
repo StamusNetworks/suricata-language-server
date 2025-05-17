@@ -73,18 +73,18 @@ needed.
 
 ### Server options
 
-See [suricata-language-server -h]{.title-ref} for complete and
+See `suricata-language-server -h` for complete and
 up-to-date help.
 
--   \--suricata-binary: path to the suricata binary used for signatures
+-   `--suricata-binary`: path to the suricata binary used for signatures
     testing (optional)
--   \--suricata-config: path to the suricata config used for signatures
+-   `--suricata-config`: path to the suricata config used for signatures
     testing (optional)
--   \--max-lines: don\'t run suricata tests if file is bigger than this
+-   `--max-lines`: don\'t run suricata tests if file is bigger than this
     limit (auto-completion only)
--   \--max-tracked-files: don\'t start suricata analysis if workspace
+-   `--max-tracked-files`: don\'t start suricata analysis if workspace
     file count is superior to this limit
--   \--batch-file: batch mode to parse only the file in argument and
+-   `--batch-file`: batch mode to parse only the file in argument and
     return result on stdout
 
 ### Passing options to Suricata
@@ -205,9 +205,9 @@ a new syntax for Suricata file by using the content of [Suricata Sublime
 syntax from OzurieXV](https://github.com/ozuriexv/SublimeSuricata)
 
 To do so you can click on `Tools > Developer > New Syntax` then paste
-the content of the file and modify the text [text.suricata]{.title-ref}
-to [source.suricata]{.title-ref}. This will provide syntax highlighting
-as well as a [source.suricata]{.title-ref} Sublime selector that can be
+the content of the file and modify the text `text.suricata`
+to `source.suricata`. This will provide syntax highlighting
+as well as a `source.suricata` Sublime selector that can be
 used to trigger the Suricata Language Server activation.
 
 To do that, you can setup the Suricata Language Server by following the
