@@ -1,6 +1,4 @@
----
-title: Suricata Language Server
----
+# Suricata Language Server
 
 Suricata Language Server is an implementation of the Language Server
 Protocol for Suricata signatures. It adds syntax check and hints as well
@@ -15,7 +13,7 @@ server](https://github.com/hansec/fortran-language-server) and
 incorporate code from [Stamus Networks\'
 scirius](https://github.com/StamusNetworks/scirius).
 
-# Features and architecture
+## Features and architecture
 
 Suricata Language Server currently supports auto-completion and advanced
 syntax checking. Both features are using the capabilities of the
@@ -33,7 +31,7 @@ Warnings and hints are also provided by using a detection engine
 analysis done by Suricata. This is returning warnings and hints about
 the potential issues seen of the signatures.
 
-# Installation
+## Installation
 
 You can use pip to install the Suricata language server :
 
@@ -59,7 +57,7 @@ page](https://suricata.io/download/). For Python, the installer from
 Python website available on their [Download
 page](https://www.python.org/downloads/windows/) is working well.
 
-## Manual Installation
+### Manual Installation
 
 After cloning the repository, you need to install first the server by
 running in the root directory of the project :
@@ -73,7 +71,7 @@ will be invoked transparently by the editors that are configured to use
 it. You can use `sudo pip install .` to install it system wide if
 needed.
 
-## Server options
+### Server options
 
 See [suricata-language-server -h]{.title-ref} for complete and
 up-to-date help.
@@ -89,7 +87,7 @@ up-to-date help.
 -   \--batch-file: batch mode to parse only the file in argument and
     return result on stdout
 
-## Passing options to Suricata
+### Passing options to Suricata
 
 You can pass options to Suricata by adding a specific comment in a rules
 file. This is done by adding the `## SLS suricata-options:` prefix to
@@ -101,7 +99,7 @@ specific options, you can add the following line to your rules file :
 ## SLS suricata-options: --set vars.address-groups.SCANNERS="127.0.0.3" --set datasets.rules.allow-absolute-filenames: true
 ```
 
-## Dataset directory handling
+### Dataset directory handling
 
 As the system were the signature are developed is not the same as the
 one where they are deployed, settings such as absolute path to files are
@@ -121,7 +119,7 @@ parsed and evaluated :
 alert http any any -> any any (msg:"test"; file_data; dataset:isset,fi,type string, load /path/to/dataset/dd.lst; sid:1;)
 ```
 
-## Modification of rules buffer
+### Modification of rules buffer
 
 It is possible to modify the rules buffer by using the `## SLS replace:`
 prefix. This is done by adding a comment line with this prefix and the
@@ -133,9 +131,9 @@ file :
 ## SLS replace: foo bar
 ```
 
-# Editors Configuration
+## Editors Configuration
 
-## Neovim
+### Neovim
 
 ![image](https://raw.githubusercontent.com/StamusNetworks/suricata-language-server/main/images/nvim-completion.png)
 
@@ -173,7 +171,7 @@ trick: :
     }
 ```
 
-## Visual Studio code
+### Visual Studio code
 
 Download the Suricata IntelliSense extension published by [Stamus
 Networks](https://www.stamus-networks.com/) from [Visual studio
@@ -197,7 +195,7 @@ settings look like:
 The Suricata IntelliSense extension is hosted on its [own project on
 GitHub](https://github.com/StamusNetworks/suricata-ls-vscode).
 
-## Sublime Text 3
+### Sublime Text 3
 
 You can use the [LSP](https://lsp.sublimetext.io/) Package to provide
 support for LSP to Sublime Text 3.
@@ -232,7 +230,7 @@ The following configuration is known to work :
 }
 ```
 
-## Kate
+### Kate
 
 You can use Suricata Language Server in Kate by activating the [LSP
 Client
