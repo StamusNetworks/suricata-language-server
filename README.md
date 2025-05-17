@@ -77,7 +77,7 @@ will be invoked transparently by the editors that are configured to use
 it. You can use `sudo pip install .` to install it system wide if
 needed.
 
-### Server options
+## Server options
 
 See `suricata-language-server -h` for complete and
 up-to-date help.
