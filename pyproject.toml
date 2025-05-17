@@ -13,7 +13,7 @@ maintainers = [
   { name="Eric Leblond", email="el@stamus-networks.com" },
 ]
 description = "Language Server Protocol for Suricata signatures"
-readme = "README.rst"
+readme = "README.md"
 requires-python = ">=3.7"
 license-files = [ "LICENSE" ]
 classifiers = [
