@@ -3,8 +3,8 @@
     "name": "sid",
     "description": "set rule ID",
     "app layer": "Unset",
-    "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/meta.html#sid-signature-id",
+    "features": "supports firewall",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/meta.html#sid-signature-id",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -13,7 +13,7 @@
     "description": "rules with a higher priority will be examined first",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/meta.html#priority",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/meta.html#priority",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -22,7 +22,7 @@
     "description": "set version of the rule",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/meta.html#rev-revision",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/meta.html#rev-revision",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -31,7 +31,7 @@
     "description": "information about the classification of rules and alerts",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/meta.html#classtype",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/meta.html#classtype",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -39,8 +39,8 @@
     "name": "app-layer-protocol",
     "description": "match on the detected app-layer protocol",
     "app layer": "Unset",
-    "features": "prefilter",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/app-layer.html#app-layer-protocol",
+    "features": "supports firewall:prefilter",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/app-layer.html#app-layer-protocol",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -49,7 +49,7 @@
     "description": "check for a specific TCP acknowledgement number",
     "app layer": "Unset",
     "features": "prefilter",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/header-keywords.html#ack",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/header-keywords.html#ack",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -58,7 +58,7 @@
     "description": "check for a specific TCP sequence number",
     "app layer": "Unset",
     "features": "prefilter",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/header-keywords.html#seq",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/header-keywords.html#seq",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -67,7 +67,7 @@
     "description": "check for a specific TCP window size",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/header-keywords.html#window",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/header-keywords.html#window",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -76,7 +76,7 @@
     "description": "check if a specific IP option is set",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/header-keywords.html#ipopts",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/header-keywords.html#ipopts",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -85,7 +85,7 @@
     "description": "Sticky buffer for src_ip",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/ipaddr.html#ip-src",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/ipaddr.html#ip-src",
     "initial_version": "7.0.0",
     "last_version": "8.0.0"
   },
@@ -94,7 +94,7 @@
     "description": "Sticky buffer for dest_ip",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/ipaddr.html#ip-dst",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/ipaddr.html#ip-dst",
     "initial_version": "7.0.0",
     "last_version": "8.0.0"
   },
@@ -102,8 +102,8 @@
     "name": "tcp.flags",
     "description": "detect which flags are set in the TCP header",
     "app layer": "Unset",
-    "features": "prefilter",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/header-keywords.html#tcp-flags",
+    "features": "supports firewall:prefilter",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/header-keywords.html#tcp-flags",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -112,7 +112,7 @@
     "description": "check if the fragmentation and reserved bits are set in the IP header",
     "app layer": "Unset",
     "features": "prefilter",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/header-keywords.html#fragbits-ip-fragmentation",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/header-keywords.html#fragbits-ip-fragmentation",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -121,7 +121,7 @@
     "description": "match on specific decimal values of the IP fragment offset field",
     "app layer": "Unset",
     "features": "prefilter",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/header-keywords.html#fragoffset",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/header-keywords.html#fragoffset",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -130,7 +130,7 @@
     "description": "check for a specific IP time-to-live value",
     "app layer": "Unset",
     "features": "prefilter",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/header-keywords.html#ttl",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/header-keywords.html#ttl",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -139,7 +139,7 @@
     "description": "match on specific decimal values of the IP header TOS field",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/header-keywords.html#tos",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/header-keywords.html#tos",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -147,8 +147,8 @@
     "name": "itype",
     "description": "match on a specific ICMP type",
     "app layer": "Unset",
-    "features": "prefilter",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/header-keywords.html#itype",
+    "features": "supports firewall:prefilter",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/header-keywords.html#itype",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -157,7 +157,7 @@
     "description": "match on specific ICMP id-value",
     "app layer": "Unset",
     "features": "prefilter",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/header-keywords.html#icode",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/header-keywords.html#icode",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -166,7 +166,7 @@
     "description": "check for a ICMP ID",
     "app layer": "Unset",
     "features": "prefilter",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/header-keywords.html#icmp-id",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/header-keywords.html#icmp-id",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -175,7 +175,7 @@
     "description": "check for a ICMP sequence number",
     "app layer": "Unset",
     "features": "prefilter",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/header-keywords.html#icmp-seq",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/header-keywords.html#icmp-seq",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -184,7 +184,7 @@
     "description": "sticky buffer to match on the ICMP v4 header",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/header-keywords.html#icmpv4-hdr",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/header-keywords.html#icmpv4-hdr",
     "initial_version": "6.0.1",
     "last_version": "8.0.0"
   },
@@ -192,8 +192,8 @@
     "name": "dsize",
     "description": "match on the size of the packet payload",
     "app layer": "Unset",
-    "features": "prefilter",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/payload-keywords.html#dsize",
+    "features": "supports firewall:prefilter",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/payload-keywords.html#dsize",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -201,8 +201,8 @@
     "name": "flow",
     "description": "match on direction and state of the flow",
     "app layer": "Unset",
-    "features": "prefilter",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/flow-keywords.html#flow",
+    "features": "supports firewall:prefilter",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/flow-keywords.html#flow",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -211,7 +211,7 @@
     "description": "control the rule's alert frequency",
     "app layer": "Unset",
     "features": "compatible with IP only rule",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/thresholding.html#threshold",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/thresholding.html#threshold",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -219,8 +219,8 @@
     "name": "flowbits",
     "description": "operate on flow flag",
     "app layer": "Unset",
-    "features": "compatible with IP only rule:prefilter",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/flow-keywords.html#flowbits",
+    "features": "compatible with IP only rule:supports firewall:prefilter",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/flow-keywords.html#flowbits",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -238,7 +238,7 @@
     "description": "operate on a per-flow integer",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/flow-keywords.html#flowint",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/flow-keywords.html#flowint",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -255,8 +255,8 @@
     "name": "xbits",
     "description": "operate on bits",
     "app layer": "Unset",
-    "features": "compatible with IP only rule",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/xbits.html",
+    "features": "compatible with IP only rule:supports firewall",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/xbits.html",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -273,8 +273,8 @@
     "name": "content",
     "description": "match on payload content",
     "app layer": "Unset",
-    "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/payload-keywords.html#content",
+    "features": "supports firewall",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/payload-keywords.html#content",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -283,7 +283,7 @@
     "description": "legacy keyword to match on the request URI buffer",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/http-keywords.html#uricontent",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/http-keywords.html#uricontent",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -292,7 +292,7 @@
     "description": "match on regular expression",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/payload-keywords.html#pcre-perl-compatible-regular-expressions",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/payload-keywords.html#pcre-perl-compatible-regular-expressions",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -301,7 +301,7 @@
     "description": "designate how many bytes from the beginning of the payload will be checked",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/payload-keywords.html#depth",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/payload-keywords.html#depth",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -310,7 +310,7 @@
     "description": "pattern must be at the start of a buffer (same as 'depth:<pattern len>')",
     "app layer": "Unset",
     "features": "No option",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/payload-keywords.html#startswith",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/payload-keywords.html#startswith",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -319,7 +319,7 @@
     "description": "make sure the previous content matches exactly at the end of the buffer",
     "app layer": "Unset",
     "features": "No option",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/payload-keywords.html#endswith",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/payload-keywords.html#endswith",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -328,7 +328,7 @@
     "description": "indicates a relation between this content keyword and the content preceding it",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/payload-keywords.html#distance",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/payload-keywords.html#distance",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -337,7 +337,7 @@
     "description": "indicate that this content match has to be within a certain distance of the previous content keyword match",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/payload-keywords.html#within",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/payload-keywords.html#within",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -346,7 +346,7 @@
     "description": "designate from which byte in the payload will be checked to find a match",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/payload-keywords.html#offset",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/payload-keywords.html#offset",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -355,7 +355,7 @@
     "description": "only to be used in IPS-mode. Change the following content into another",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/payload-keywords.html#replace",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/payload-keywords.html#replace",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -364,7 +364,7 @@
     "description": "modify content match to be case insensitive",
     "app layer": "Unset",
     "features": "No option",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/payload-keywords.html#nocase",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/payload-keywords.html#nocase",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -373,7 +373,7 @@
     "description": "force using preceding content in the multi pattern matcher",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/prefilter-keywords.html#fast-pattern",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/prefilter-keywords.html#fast-pattern",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -382,7 +382,7 @@
     "description": "dummy keyword to be compatible with snort signatures without effect",
     "app layer": "Unset",
     "features": "No option",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/payload-keywords.html#rawbytes",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/payload-keywords.html#rawbytes",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -391,7 +391,7 @@
     "description": "extract <num of bytes> and perform an operation selected with <operator> against the value in <test value> at a particular <offset>",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/payload-keywords.html#byte-test",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/payload-keywords.html#byte-test",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -400,7 +400,7 @@
     "description": "allow the ability to select a <num of bytes> from an <offset> and move the detection pointer to that position",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/payload-keywords.html#byte-jump",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/payload-keywords.html#byte-jump",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -418,7 +418,7 @@
     "description": "extract <num of bytes> at a particular <offset> and store it in <var_name>",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/payload-keywords.html#byte-extract",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/payload-keywords.html#byte-extract",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -427,7 +427,7 @@
     "description": "match sticky buffer against datasets (experimental)",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/dataset-keywords.html#dataset",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/dataset-keywords.html#dataset",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -436,7 +436,7 @@
     "description": "operate on datasets (experimental)",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/dataset-keywords.html#datarep",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/dataset-keywords.html#datarep",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -445,7 +445,7 @@
     "description": "Decodes base64 encoded data.",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/base64-keywords.html#base64-decode",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/base64-keywords.html#base64-decode",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -454,7 +454,7 @@
     "description": "Content match base64 decoded data.",
     "app layer": "Unset",
     "features": "No option",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/base64-keywords.html#base64-data",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/base64-keywords.html#base64-data",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -462,8 +462,8 @@
     "name": "bsize",
     "description": "match on the length of a buffer",
     "app layer": "Unset",
-    "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/payload-keywords.html#bsize",
+    "features": "supports firewall",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/payload-keywords.html#bsize",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -481,7 +481,7 @@
     "description": "match via a lua script",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/rule-lua-scripting.html",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/rule-lua-scripting.html",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -490,7 +490,7 @@
     "description": "check if there is still data at a specific part of the payload",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/payload-keywords.html#isdataat",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/payload-keywords.html#isdataat",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -499,7 +499,7 @@
     "description": "match on the length of the HTTP uri",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/http-keywords.html#urilen",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/http-keywords.html#urilen",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -508,7 +508,7 @@
     "description": "test if the buffer is absent",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/payload-keywords.html#absent",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/payload-keywords.html#absent",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -517,7 +517,7 @@
     "description": "calculate entropy",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/payload-keywords.html#entropy",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -526,7 +526,7 @@
     "description": "used for logging",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/meta.html#metadata",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/meta.html#metadata",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -535,7 +535,7 @@
     "description": "direct to places where information about the rule can be found",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/meta.html#reference",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/meta.html#reference",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -552,8 +552,8 @@
     "name": "msg",
     "description": "information about the rule and the possible alert",
     "app layer": "Unset",
-    "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/meta.html#msg-message",
+    "features": "supports firewall",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/meta.html#msg-message",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -562,16 +562,16 @@
     "description": "check if the IP address of the source is the same as the IP address of the destination",
     "app layer": "Unset",
     "features": "No option",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/header-keywords.html#sameip",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/header-keywords.html#sameip",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
   {
     "name": "geoip",
-    "description": "match on the source, destination or source and destination IP addresses of network traffic, and to see to which country it belongs",
+    "description": "keyword to match on country of src and or dst IP",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/header-keywords.html#geoip",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/header-keywords.html#geoip",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -580,7 +580,7 @@
     "description": "match on the IP protocol in the packet-header",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/header-keywords.html#ip-proto",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/header-keywords.html#ip-proto",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -589,8 +589,17 @@
     "description": "detect FTP bounce attacks",
     "app layer": "Unset",
     "features": "No option",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/ftp-keywords.html#ftpbounce",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/ftp-keywords.html#ftpbounce",
     "initial_version": "4.1.5",
+    "last_version": "8.0.0"
+  },
+  {
+    "name": "ftp.dynamic_port",
+    "description": "match on the FTP dynamic_port buffer",
+    "app layer": "Unset",
+    "features": "none",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/ftp-keywords.html#ftp-dynamic_port",
+    "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
   {
@@ -598,7 +607,7 @@
     "description": "match on a specific IP ID value",
     "app layer": "Unset",
     "features": "prefilter",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/header-keywords.html#id",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/header-keywords.html#id",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -607,7 +616,7 @@
     "description": "match RPC procedure numbers and RPC version",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/payload-keywords.html#rpc",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/payload-keywords.html#rpc",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -616,7 +625,7 @@
     "description": "no alert will be generated by the rule",
     "app layer": "Unset",
     "features": "No option",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/noalert.html",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/noalert.html",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -625,7 +634,7 @@
     "description": "alert will be generated by the rule",
     "app layer": "Unset",
     "features": "No option",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/noalert.html",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/noalert.html",
     "initial_version": "7.0.7",
     "last_version": "8.0.0"
   },
@@ -697,7 +706,7 @@
     "description": "match on amount of bytes of a stream",
     "app layer": "Unset",
     "features": "prefilter",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/flow-keywords.html#stream-size",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/flow-keywords.html#stream-size",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -706,7 +715,7 @@
     "description": "alert on every match after a threshold has been reached",
     "app layer": "Unset",
     "features": "compatible with IP only rule",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/thresholding.html#detection-filter",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/thresholding.html#detection-filter",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -724,7 +733,7 @@
     "description": "give different groups of signatures another id value",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/meta.html#gid-group-id",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/meta.html#gid-group-id",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -751,7 +760,7 @@
     "description": "match flow age",
     "app layer": "Unset",
     "features": "prefilter",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/flow-keywords.html#flow-age",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/flow-keywords.html#flow-age",
     "initial_version": "7.0.0",
     "last_version": "8.0.0"
   },
@@ -760,7 +769,7 @@
     "description": "match number of packets in a flow",
     "app layer": "Unset",
     "features": "prefilter",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/flow-keywords.html#flow-pkts",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/flow-keywords.html#flow-pkts",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -769,7 +778,7 @@
     "description": "match number of packets in a flow in to server direction",
     "app layer": "Unset",
     "features": "prefilter",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/flow-keywords.html#flow-pkts",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/flow-keywords.html#flow-pkts",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -778,7 +787,7 @@
     "description": "match number of packets in a flow in to client direction",
     "app layer": "Unset",
     "features": "prefilter",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/flow-keywords.html#flow-pkts",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/flow-keywords.html#flow-pkts",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -787,7 +796,7 @@
     "description": "match number of bytes in a flow",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/flow-keywords.html#flow-bytes",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/flow-keywords.html#flow-bytes",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -796,7 +805,7 @@
     "description": "match number of bytes in a flow in to server dir",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/flow-keywords.html#flow-bytes",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/flow-keywords.html#flow-bytes",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -805,7 +814,7 @@
     "description": "match number of bytes in a flow in to client dir",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/flow-keywords.html#flow-bytes",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/flow-keywords.html#flow-bytes",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -814,7 +823,7 @@
     "description": "require Suricata version or features",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/meta-keywords.html#requires",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/meta-keywords.html#requires",
     "initial_version": "7.0.3",
     "last_version": "8.0.0"
   },
@@ -822,8 +831,8 @@
     "name": "tls.version",
     "description": "match on TLS/SSL version",
     "app layer": "Unset",
-    "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/tls-keywords.html#tls-version",
+    "features": "supports firewall",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/tls-keywords.html#tls-version",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -832,7 +841,7 @@
     "description": "match TLS/SSL certificate Subject field",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/tls-keywords.html#tls-subject",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/tls-keywords.html#tls-subject",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -841,7 +850,7 @@
     "description": "match TLS/SSL certificate IssuerDN field",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/tls-keywords.html#tls-issuerdn",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/tls-keywords.html#tls-issuerdn",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -850,7 +859,7 @@
     "description": "match TLS certificate notBefore field",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/tls-keywords.html#tls-cert-notbefore",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/tls-keywords.html#tls-cert-notbefore",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -859,7 +868,7 @@
     "description": "match TLS certificate notAfter field",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/tls-keywords.html#tls-cert-notafter",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/tls-keywords.html#tls-cert-notafter",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -868,7 +877,7 @@
     "description": "match expired TLS certificates",
     "app layer": "Unset",
     "features": "No option",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/tls-keywords.html#tls-cert-expired",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/tls-keywords.html#tls-cert-expired",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -877,7 +886,7 @@
     "description": "match valid TLS certificates",
     "app layer": "Unset",
     "features": "No option",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/tls-keywords.html#tls-cert-valid",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/tls-keywords.html#tls-cert-valid",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -886,7 +895,7 @@
     "description": "match TLS/SSL certificate SHA1 fingerprint",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/tls-keywords.html#tls-fingerprint",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/tls-keywords.html#tls-fingerprint",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -895,7 +904,7 @@
     "description": "store TLS/SSL certificate on disk",
     "app layer": "Unset",
     "features": "No option",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/tls-keywords.html#tls-store",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/tls-keywords.html#tls-store",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -904,7 +913,7 @@
     "description": "match TLS certificate chain length",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/tls-keywords.html#tls-cert-chain-len",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/tls-keywords.html#tls-cert-chain-len",
     "initial_version": "7.0.0",
     "last_version": "8.0.0"
   },
@@ -913,7 +922,7 @@
     "description": "sticky buffer to match the TLS ALPN buffer",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/tls-keywords.html#tls-alpn",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/tls-keywords.html#tls-alpn",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -922,7 +931,7 @@
     "description": "content modifier to match only on the HTTP cookie-buffer",
     "app layer": "Unset",
     "features": "No option:content modifier",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/http-keywords.html#http-cookie",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/http-keywords.html#http-cookie",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -931,7 +940,7 @@
     "description": "sticky buffer to match on the HTTP Cookie/Set-Cookie buffers",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/http-keywords.html#http-cookie",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/http-keywords.html#http-cookie",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -940,7 +949,7 @@
     "description": "content modifier to match only on the HTTP method-buffer",
     "app layer": "Unset",
     "features": "No option:content modifier",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/http-keywords.html#http-method",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/http-keywords.html#http-method",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -949,7 +958,7 @@
     "description": "sticky buffer to match specifically and only on the HTTP method buffer",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/http-keywords.html#http-method",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/http-keywords.html#http-method",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -958,7 +967,7 @@
     "description": "http_protocol sticky buffer",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/http-keywords.html#http-protocol",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/http-keywords.html#http-protocol",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -967,7 +976,7 @@
     "description": "http_start sticky buffer",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/http-keywords.html#http-start",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/http-keywords.html#http-start",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -976,7 +985,7 @@
     "description": "content modifier to match only on HTTP request-body",
     "app layer": "Unset",
     "features": "No option:content modifier",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/http-keywords.html#http-client-body",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/http-keywords.html#http-client-body",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -985,7 +994,7 @@
     "description": "sticky buffer to match the HTTP request body buffer",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/http-keywords.html#http-client-body",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/http-keywords.html#http-client-body",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -994,7 +1003,7 @@
     "description": "content modifier to match on the HTTP response-body",
     "app layer": "Unset",
     "features": "No option:content modifier",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/http-keywords.html#http-server-body",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/http-keywords.html#http-server-body",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -1003,7 +1012,7 @@
     "description": "sticky buffer to match the HTTP response body buffer",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/http-keywords.html#http-server-body",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/http-keywords.html#http-server-body",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -1012,7 +1021,7 @@
     "description": "content modifier to match only on the HTTP header-buffer",
     "app layer": "Unset",
     "features": "No option:content modifier",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/http-keywords.html#http-header-and-http-raw-header",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/http-keywords.html#http-header-and-http-raw-header",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -1021,7 +1030,7 @@
     "description": "sticky buffer to match on the normalized HTTP header-buffer",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/http-keywords.html#http-header-and-http-raw-header",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/http-keywords.html#http-header-and-http-raw-header",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -1030,7 +1039,7 @@
     "description": "http_header_names sticky buffer",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/http-keywords.html#http-header-names",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/http-keywords.html#http-header-names",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -1039,7 +1048,7 @@
     "description": "http.accept sticky buffer for the http accept header",
     "app layer": "Unset",
     "features": "sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/http-keywords.html#http-accept",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/http-keywords.html#http-accept",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -1048,7 +1057,7 @@
     "description": "http.accept_lang sticky buffer for the http accept language header",
     "app layer": "Unset",
     "features": "sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/http-keywords.html#http-accept-lang",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/http-keywords.html#http-accept-lang",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -1057,7 +1066,7 @@
     "description": "http.accept_enc sticky buffer for the http accept encoding header",
     "app layer": "Unset",
     "features": "sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/http-keywords.html#http-accept-enc",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/http-keywords.html#http-accept-enc",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -1066,7 +1075,7 @@
     "description": "http.connection sticky buffer for the http connection header",
     "app layer": "Unset",
     "features": "sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/http-keywords.html#http-connection",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/http-keywords.html#http-connection",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -1075,7 +1084,7 @@
     "description": "http.content_len sticky buffer for the http content length header",
     "app layer": "Unset",
     "features": "sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/http-keywords.html#http-content-len",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/http-keywords.html#http-content-len",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -1084,7 +1093,7 @@
     "description": "http.content_type sticky buffer for the http content type header",
     "app layer": "Unset",
     "features": "sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/http-keywords.html#http-content-type",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/http-keywords.html#http-content-type",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -1093,7 +1102,7 @@
     "description": "http.location sticky buffer for the http location header",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/http-keywords.html#http-location",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/http-keywords.html#http-location",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -1102,7 +1111,7 @@
     "description": "http.server sticky buffer for the http server header",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/http-keywords.html#http-server",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/http-keywords.html#http-server",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -1111,7 +1120,7 @@
     "description": "http.referer sticky buffer for the http referer header",
     "app layer": "Unset",
     "features": "sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/http-keywords.html#http-referer",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/http-keywords.html#http-referer",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -1120,7 +1129,7 @@
     "description": "content modifier to match the raw HTTP header buffer",
     "app layer": "Unset",
     "features": "No option:content modifier",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/http-keywords.html#http-header-and-http-raw-header",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/http-keywords.html#http-header-and-http-raw-header",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -1129,7 +1138,7 @@
     "description": "sticky buffer to match the raw HTTP header buffer",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/http-keywords.html#http-header-and-http-raw-header",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/http-keywords.html#http-header-and-http-raw-header",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -1138,7 +1147,7 @@
     "description": "content modifier to match specifically and only on the HTTP uri-buffer",
     "app layer": "Unset",
     "features": "No option:content modifier",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/http-keywords.html#http-uri-and-http-uri-raw",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/http-keywords.html#http-uri-and-http-uri-raw",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -1147,7 +1156,7 @@
     "description": "sticky buffer to match specifically and only on the normalized HTTP URI buffer",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/http-keywords.html#http-uri-and-http-uri-raw",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/http-keywords.html#http-uri-and-http-uri-raw",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -1156,7 +1165,7 @@
     "description": "sticky buffer to match specifically and only on the raw HTTP URI buffer",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/http-keywords.html#http-uri-and-http-raw-uri",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/http-keywords.html#http-uri-and-http-raw-uri",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -1165,7 +1174,7 @@
     "description": "content modifier to match on the raw HTTP uri",
     "app layer": "Unset",
     "features": "No option:content modifier",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/http-keywords.html#http_uri-and-http_raw-uri",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/http-keywords.html#http_uri-and-http_raw-uri",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -1174,7 +1183,7 @@
     "description": "content modifier to match on HTTP stat-msg-buffer",
     "app layer": "Unset",
     "features": "No option:content modifier",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/http-keywords.html#http-stat-msg",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/http-keywords.html#http-stat-msg",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -1183,7 +1192,7 @@
     "description": "sticky buffer to match on the HTTP response status message",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/http-keywords.html#http-stat-msg",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/http-keywords.html#http-stat-msg",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -1192,7 +1201,7 @@
     "description": "content modifier to match only on HTTP stat-code-buffer",
     "app layer": "Unset",
     "features": "No option:content modifier",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/http-keywords.html#http-stat-code",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/http-keywords.html#http-stat-code",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -1201,7 +1210,7 @@
     "description": "sticky buffer to match only on HTTP stat-code-buffer",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/http-keywords.html#http-stat-code",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/http-keywords.html#http-stat-code",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -1210,7 +1219,7 @@
     "description": "content modifier to match only on the HTTP User-Agent header",
     "app layer": "Unset",
     "features": "No option:content modifier",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/http-keywords.html#http-user-agent",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/http-keywords.html#http-user-agent",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -1219,7 +1228,7 @@
     "description": "sticky buffer to match specifically and only on the HTTP User Agent buffer",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/http-keywords.html#http-user-agent",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/http-keywords.html#http-user-agent",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -1228,7 +1237,7 @@
     "description": "content modifier to match on the HTTP hostname",
     "app layer": "Unset",
     "features": "No option:content modifier",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/http-keywords.html#http-host-and-http-raw-host",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/http-keywords.html#http-host-and-http-raw-host",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -1237,7 +1246,7 @@
     "description": "sticky buffer to match on the HTTP Host buffer",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/http-keywords.html#http-host-and-http-raw-host",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/http-keywords.html#http-host-and-http-raw-host",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -1246,7 +1255,7 @@
     "description": "content modifier to match on the HTTP host header or the raw hostname from the HTTP uri",
     "app layer": "Unset",
     "features": "No option:content modifier",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/http-keywords.html#http-host-and-http-raw-host",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/http-keywords.html#http-host-and-http-raw-host",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -1255,7 +1264,7 @@
     "description": "sticky buffer to match on the HTTP host header or the raw hostname from the HTTP uri",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/http-keywords.html#http-host-and-http-raw-host",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/http-keywords.html#http-host-and-http-raw-host",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -1264,7 +1273,7 @@
     "description": "sticky buffer to match on the HTTP request line",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/http-keywords.html#http-request-line",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/http-keywords.html#http-request-line",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -1273,7 +1282,7 @@
     "description": "content modifier to match only on the HTTP response line",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/http-keywords.html#http-response-line",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/http-keywords.html#http-response-line",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -1282,7 +1291,7 @@
     "description": "match NFS procedure",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/nfs-keywords.html#procedure",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/nfs-keywords.html#procedure",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -1291,7 +1300,7 @@
     "description": "match NFS version",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/nfs-keywords.html#version",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/nfs-keywords.html#version",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -1300,7 +1309,7 @@
     "description": "ssh.proto sticky buffer",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/ssh-keywords.html#ssh-proto",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/ssh-keywords.html#ssh-proto",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -1318,7 +1327,7 @@
     "description": "ssh_software sticky buffer",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/ssh-keywords.html#ssh-software",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/ssh-keywords.html#ssh-software",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -1336,7 +1345,7 @@
     "description": "ssh.hassh sticky buffer",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/ssh-keywords.html#hassh",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/ssh-keywords.html#hassh",
     "initial_version": "6.0.0",
     "last_version": "8.0.0"
   },
@@ -1345,7 +1354,7 @@
     "description": "ssh.hassh.server sticky buffer",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/ssh-keywords.html#ssh.hassh.server",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/ssh-keywords.html#ssh.hassh.server",
     "initial_version": "6.0.0",
     "last_version": "8.0.0"
   },
@@ -1354,7 +1363,7 @@
     "description": "ssh.hassh.string sticky buffer",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/ssh-keywords.html#hassh.string",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/ssh-keywords.html#hassh.string",
     "initial_version": "6.0.0",
     "last_version": "8.0.0"
   },
@@ -1363,7 +1372,7 @@
     "description": "ssh.hassh.server.string sticky buffer",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/ssh-keywords.html#ssh.hassh.server.string",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/ssh-keywords.html#ssh.hassh.server.string",
     "initial_version": "6.0.0",
     "last_version": "8.0.0"
   },
@@ -1372,7 +1381,7 @@
     "description": "match version of SSL/TLS record",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/tls-keywords.html#ssl-version",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/tls-keywords.html#ssl-version",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -1381,7 +1390,7 @@
     "description": "match the state of the SSL connection",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/tls-keywords.html#ssl-state",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/tls-keywords.html#ssl-state",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -1390,7 +1399,7 @@
     "description": "make content keywords match on file data",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/file-keywords.html#file-data",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/file-keywords.html#file-data",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -1408,7 +1417,7 @@
     "description": "match on events generated by the App Layer Parsers and the protocol detection engine",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/app-layer.html#app-layer-event",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/app-layer.html#app-layer-event",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -1417,7 +1426,7 @@
     "description": "match on events generated by the App Layer Parsers and the protocol detection engine",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/app-layer.html#app-layer-event",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/app-layer.html#app-layer-event",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -1426,7 +1435,7 @@
     "description": "match on HTTP2 frame type field",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/http2-keywords.html#frametype",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/http2-keywords.html#frametype",
     "initial_version": "6.0.0",
     "last_version": "8.0.0"
   },
@@ -1435,7 +1444,7 @@
     "description": "match on HTTP2 error code field",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/http2-keywords.html#errorcode",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/http2-keywords.html#errorcode",
     "initial_version": "6.0.0",
     "last_version": "8.0.0"
   },
@@ -1444,7 +1453,7 @@
     "description": "match on HTTP2 priority weight field",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/http2-keywords.html#priority",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/http2-keywords.html#priority",
     "initial_version": "6.0.0",
     "last_version": "8.0.0"
   },
@@ -1453,7 +1462,7 @@
     "description": "match on HTTP2 window update size increment field",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/http2-keywords.html#window",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/http2-keywords.html#window",
     "initial_version": "6.0.0",
     "last_version": "8.0.0"
   },
@@ -1462,7 +1471,7 @@
     "description": "match on HTTP2 dynamic headers table size update",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/http2-keywords.html#sizeupdate",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/http2-keywords.html#sizeupdate",
     "initial_version": "6.0.0",
     "last_version": "8.0.0"
   },
@@ -1471,7 +1480,7 @@
     "description": "match on HTTP2 settings identifier and value fields",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/http2-keywords.html#settings",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/http2-keywords.html#settings",
     "initial_version": "6.0.0",
     "last_version": "8.0.0"
   },
@@ -1480,7 +1489,7 @@
     "description": "sticky buffer to match on one HTTP2 header name",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/http2-keywords.html#header_name",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/http2-keywords.html#header_name",
     "initial_version": "6.0.0",
     "last_version": "8.0.0"
   },
@@ -1489,7 +1498,7 @@
     "description": "sticky buffer to match on only one HTTP header name and value",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/http-keywords.html#request_header",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/http-keywords.html#request_header",
     "initial_version": "7.0.0",
     "last_version": "8.0.0"
   },
@@ -1498,7 +1507,7 @@
     "description": "sticky buffer to match on only one HTTP header name and value",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/http2-keywords.html#response_header",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/http2-keywords.html#response_header",
     "initial_version": "7.0.0",
     "last_version": "8.0.0"
   },
@@ -1570,7 +1579,7 @@
     "description": "smb keyword to match on SMB version",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/smb-keywords.html#smb-version",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/smb-keywords.html#smb-version",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -1596,7 +1605,7 @@
     "name": "config",
     "description": "",
     "app layer": "Unset",
-    "features": "none",
+    "features": "supports firewall",
     "documentation": "",
     "initial_version": "6.0.0",
     "last_version": "8.0.0"
@@ -1606,7 +1615,7 @@
     "description": "match on the file name",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/file-keywords.html#filename",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/file-keywords.html#filename",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -1615,7 +1624,7 @@
     "description": "sticky buffer to match on the file name",
     "app layer": "Unset",
     "features": "sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/file-keywords.html#filename",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/file-keywords.html#filename",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -1624,7 +1633,7 @@
     "description": "match on the extension of a file name",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/file-keywords.html#fileext",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/file-keywords.html#fileext",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -1633,7 +1642,7 @@
     "description": "stores files to disk if the rule matched",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/file-keywords.html#filestore",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/file-keywords.html#filestore",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -1642,7 +1651,7 @@
     "description": "match on the information libmagic returns about a file",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/file-keywords.html#filemagic",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/file-keywords.html#filemagic",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -1651,7 +1660,7 @@
     "description": "sticky buffer to match on the file magic",
     "app layer": "Unset",
     "features": "sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/file-keywords.html#filemagic",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/file-keywords.html#filemagic",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -1660,7 +1669,7 @@
     "description": "match file MD5 against list of MD5 checksums",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/file-keywords.html#filemd5",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/file-keywords.html#filemd5",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -1669,7 +1678,7 @@
     "description": "match file SHA-1 against list of SHA-1 checksums",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/file-keywords.html#filesha1",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/file-keywords.html#filesha1",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -1678,7 +1687,7 @@
     "description": "match file SHA-256 against list of SHA-256 checksums",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/file-keywords.html#filesha256",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/file-keywords.html#filesha256",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -1687,7 +1696,7 @@
     "description": "match on the size of the file as it is being transferred",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/file-keywords.html#filesize",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/file-keywords.html#filesize",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -1705,35 +1714,8 @@
     "description": "match on the IP reputation information for a host",
     "app layer": "Unset",
     "features": "compatible with IP only rule",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/ip-reputation-rules.html#iprep",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/ip-reputation-rules.html#iprep",
     "initial_version": "4.1.5",
-    "last_version": "8.0.0"
-  },
-  {
-    "name": "dns.query",
-    "description": "sticky buffer to match DNS query-buffer",
-    "app layer": "Unset",
-    "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/dns-keywords.html#dns-query",
-    "initial_version": "5.0.0",
-    "last_version": "8.0.0"
-  },
-  {
-    "name": "dns.opcode",
-    "description": "Match the DNS header opcode flag.",
-    "app layer": "Unset",
-    "features": "none",
-    "documentation": "",
-    "initial_version": "5.0.0",
-    "last_version": "8.0.0"
-  },
-  {
-    "name": "dns.rcode",
-    "description": "Match the DNS header rcode flag.",
-    "app layer": "Unset",
-    "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/dns-keywords.html#dns-rcode",
-    "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
   {
@@ -1741,16 +1723,7 @@
     "description": "DNS response sticky buffer",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/dns-keywords.html#dns-response-rrname",
-    "initial_version": "8.0.0",
-    "last_version": "8.0.0"
-  },
-  {
-    "name": "dns.rrtype",
-    "description": "Match the DNS rrtype in message body.",
-    "app layer": "Unset",
-    "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/dns-keywords.html#dns-rrtype",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/dns-keywords.html#dns-response-rrname",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -1759,7 +1732,7 @@
     "description": "sticky buffer to match specifically and only on the TLS SNI buffer",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/tls-keywords.html#tls-sni",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/tls-keywords.html#tls-sni",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -1768,7 +1741,7 @@
     "description": "sticky buffer to match the TLS certificate buffer",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/tls-keywords.html#tls-certs",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/tls-keywords.html#tls-certs",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -1777,7 +1750,7 @@
     "description": "sticky buffer to match specifically and only on the TLS cert issuer buffer",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/tls-keywords.html#tls-cert-issuer",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/tls-keywords.html#tls-cert-issuer",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -1786,7 +1759,7 @@
     "description": "sticky buffer to match specifically and only on the TLS cert subject buffer",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/tls-keywords.html#tls-cert-subject",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/tls-keywords.html#tls-cert-subject",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -1795,7 +1768,7 @@
     "description": "sticky buffer to match the TLS cert serial buffer",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/tls-keywords.html#tls-cert-serial",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/tls-keywords.html#tls-cert-serial",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -1804,7 +1777,7 @@
     "description": "sticky buffer to match the TLS cert fingerprint buffer",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/tls-keywords.html#tls-cert-fingerprint",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/tls-keywords.html#tls-cert-fingerprint",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -1813,7 +1786,7 @@
     "description": "sticky buffer to match the TLS Subject Alternative Name buffer",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/tls-keywords.html#tls-subjectaltname",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/tls-keywords.html#tls-subjectaltname",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -1822,7 +1795,7 @@
     "description": "sticky buffer to match specifically and only on the first 4 bytes of a TLS random buffer",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/tls-keywords.html#tls-random-time",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/tls-keywords.html#tls-random-time",
     "initial_version": "7.0.0",
     "last_version": "8.0.0"
   },
@@ -1831,7 +1804,7 @@
     "description": "sticky buffer to match specifically and only on the last 28 bytes of a TLS random buffer",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/tls-keywords.html#tls-random-bytes",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/tls-keywords.html#tls-random-bytes",
     "initial_version": "7.0.0",
     "last_version": "8.0.0"
   },
@@ -1840,7 +1813,7 @@
     "description": "sticky buffer to match specifically and only on a TLS random buffer",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/tls-keywords.html#tls-random",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/tls-keywords.html#tls-random",
     "initial_version": "7.0.0",
     "last_version": "8.0.0"
   },
@@ -1849,7 +1822,7 @@
     "description": "sticky buffer to match the JA3 hash buffer",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/ja3-keywords.html#ja3-hash",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/ja3-keywords.html#ja3-hash",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -1858,7 +1831,7 @@
     "description": "sticky buffer to match the JA3 string buffer",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/ja3-keywords.html#ja3-string",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/ja3-keywords.html#ja3-string",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -1867,7 +1840,7 @@
     "description": "sticky buffer to match the JA3S hash buffer",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/ja3-keywords.html#ja3s-hash",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/ja3-keywords.html#ja3s-hash",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -1876,7 +1849,7 @@
     "description": "sticky buffer to match the JA3S string buffer",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/ja3-keywords.html#ja3s-string",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/ja3-keywords.html#ja3s-string",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -1885,7 +1858,7 @@
     "description": "match on various properties of Modbus requests",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/modbus-keyword.html#modbus-keyword",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/modbus-keyword.html#modbus-keyword",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -1894,7 +1867,7 @@
     "description": "make the following content options to match on the re-assembled application buffer",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/dnp3-keywords.html#dnp3-data",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/dnp3-keywords.html#dnp3-data",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -1903,7 +1876,7 @@
     "description": "match on the application function code found in DNP3 request and responses",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/dnp3-keywords.html#dnp3-func",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/dnp3-keywords.html#dnp3-func",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -1912,7 +1885,7 @@
     "description": "match on the DNP3 internal indicator flags in the response application header",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/dnp3-keywords.html#dnp3-ind",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/dnp3-keywords.html#dnp3-ind",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -1921,7 +1894,7 @@
     "description": "match on the DNP3 application data objects",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/dnp3-keywords.html#dnp3-obj",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/dnp3-keywords.html#dnp3-obj",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -1930,7 +1903,7 @@
     "description": "match Kerberos 5 error code",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/kerberos-keywords.html#krb5-err-code",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/kerberos-keywords.html#krb5-err-code",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -1939,7 +1912,7 @@
     "description": "match Kerberos 5 message type",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/kerberos-keywords.html#krb5-msg-type",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/kerberos-keywords.html#krb5-msg-type",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -1948,7 +1921,7 @@
     "description": "sticky buffer to match on Kerberos 5 client name",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/kerberos-keywords.html#krb5-cname",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/kerberos-keywords.html#krb5-cname",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -1957,7 +1930,7 @@
     "description": "sticky buffer to match on Kerberos 5 server name",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/kerberos-keywords.html#krb5-sname",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/kerberos-keywords.html#krb5-sname",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -1966,7 +1939,7 @@
     "description": "match Kerberos 5 ticket encryption",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/kerberos-keywords.html#krb5-ticket-encryption",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/kerberos-keywords.html#krb5-ticket-encryption",
     "initial_version": "7.0.0",
     "last_version": "8.0.0"
   },
@@ -1975,7 +1948,7 @@
     "description": "sticky buffer to match on the SIP method buffer",
     "app layer": "Unset",
     "features": "No option",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/sip-keywords.html#sip-method",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/sip-keywords.html#sip-method",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -1984,7 +1957,7 @@
     "description": "sticky buffer to match on the SIP URI",
     "app layer": "Unset",
     "features": "No option",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/sip-keywords.html#sip-uri",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/sip-keywords.html#sip-uri",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -1993,7 +1966,7 @@
     "description": "TODO describe the keyword",
     "app layer": "Unset",
     "features": "prefilter",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/header-keywords.html#template2",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/header-keywords.html#template2",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -2002,7 +1975,7 @@
     "description": "sticky buffer to match on the IPV4 header",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/header-keywords.html#ipv4hdr",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/header-keywords.html#ipv4hdr",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -2011,7 +1984,7 @@
     "description": "sticky buffer to match on the IPV6 header",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/header-keywords.html#ipv6hdr",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/header-keywords.html#ipv6hdr",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -2020,7 +1993,7 @@
     "description": "sticky buffer to match on the ICMP V6 header",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/header-keywords.html#icmpv6hdr",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/header-keywords.html#icmpv6hdr",
     "initial_version": "6.0.0",
     "last_version": "8.0.0"
   },
@@ -2029,7 +2002,7 @@
     "description": "match on ICMPv6 MTU field",
     "app layer": "Unset",
     "features": "prefilter",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/header-keywords.html#icmpv6mtu",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/header-keywords.html#icmpv6mtu",
     "initial_version": "6.0.0",
     "last_version": "8.0.0"
   },
@@ -2038,7 +2011,7 @@
     "description": "sticky buffer to match on the TCP header",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/header-keywords.html#tcphdr",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/header-keywords.html#tcphdr",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -2047,7 +2020,7 @@
     "description": "sticky buffer to match on the UDP header",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/header-keywords.html#udphdr",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/header-keywords.html#udphdr",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -2056,8 +2029,17 @@
     "description": "match on TCP MSS option field",
     "app layer": "Unset",
     "features": "prefilter",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/header-keywords.html#tcpmss",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/header-keywords.html#tcpmss",
     "initial_version": "5.0.0",
+    "last_version": "8.0.0"
+  },
+  {
+    "name": "tcp.wscale",
+    "description": "match on TCP WSCALE option field",
+    "app layer": "Unset",
+    "features": "supports firewall:prefilter",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/header-keywords.html#tcpwscale",
+    "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
   {
@@ -2065,7 +2047,7 @@
     "description": "match FTP command triggering a FTP data channel",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/ftp-keywords.html#ftpdata-command",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/ftp-keywords.html#ftpdata-command",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -2074,7 +2056,7 @@
     "description": "indicate to output module which side is the target of the attack",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/meta.html#target",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/meta.html#target",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -2083,7 +2065,7 @@
     "description": "match Quic version",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/quic-keywords.html#quic-version",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/quic-keywords.html#quic-version",
     "initial_version": "7.0.0",
     "last_version": "8.0.0"
   },
@@ -2092,7 +2074,7 @@
     "description": "match Quic sni",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/quic-keywords.html#quic-sni",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/quic-keywords.html#quic-sni",
     "initial_version": "7.0.0",
     "last_version": "8.0.0"
   },
@@ -2101,7 +2083,7 @@
     "description": "match Quic ua",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/quic-keywords.html#quic-ua",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/quic-keywords.html#quic-ua",
     "initial_version": "7.0.0",
     "last_version": "8.0.0"
   },
@@ -2110,7 +2092,7 @@
     "description": "sticky buffer to match on the QUIC CYU hash",
     "app layer": "Unset",
     "features": "No option",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/quic-cyu.html#quic-cyu-hash",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/quic-cyu.html#quic-cyu-hash",
     "initial_version": "7.0.0",
     "last_version": "8.0.0"
   },
@@ -2119,7 +2101,7 @@
     "description": "sticky buffer to match on the QUIC CYU string",
     "app layer": "Unset",
     "features": "No option",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/quic-cyu.html#quic-cyu-string",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/quic-cyu.html#quic-cyu-string",
     "initial_version": "7.0.0",
     "last_version": "8.0.0"
   },
@@ -2128,7 +2110,7 @@
     "description": "call the bypass callback when the match of a sig is complete",
     "app layer": "Unset",
     "features": "No option",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/bypass-keyword.html",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/bypass-keyword.html",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -2137,7 +2119,7 @@
     "description": "force a condition to be used as prefilter",
     "app layer": "Unset",
     "features": "No option",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/prefilter-keywords.html#prefilter",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/prefilter-keywords.html#prefilter",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -2146,34 +2128,16 @@
     "description": "modify buffer via PCRE before inspection",
     "app layer": "Unset",
     "features": "transform",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/transforms.html#pcre-xform",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/transforms.html#pcre-xform",
     "initial_version": "6.0.0",
     "last_version": "8.0.0"
   },
   {
-    "name": "from_base64",
-    "description": "convert the base64 decode of the buffer",
+    "name": "luaxform",
+    "description": "pass inspection buffer to a Lua function along with arguments supplied to the transform",
     "app layer": "Unset",
     "features": "transform",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/transforms.html#from_base64",
-    "initial_version": "8.0.0",
-    "last_version": "8.0.0"
-  },
-  {
-    "name": "domain",
-    "description": "modify buffer to extract the domain",
-    "app layer": "Unset",
-    "features": "No option:transform",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/transforms.html#domain",
-    "initial_version": "8.0.0",
-    "last_version": "8.0.0"
-  },
-  {
-    "name": "tld",
-    "description": "modify buffer to extract the tld",
-    "app layer": "Unset",
-    "features": "No option:transform",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/transforms.html#tld",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/transforms.html#luaxform",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -2182,7 +2146,7 @@
     "description": "match IKE exchange type",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/ike-keywords.html#ike-exchtype",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/ike-keywords.html#ike-exchtype",
     "initial_version": "7.0.0",
     "last_version": "8.0.0"
   },
@@ -2191,7 +2155,7 @@
     "description": "sticky buffer to match on the IKE spi initiator",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/ike-keywords.html#ike-init_spi",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/ike-keywords.html#ike-init_spi",
     "initial_version": "7.0.0",
     "last_version": "8.0.0"
   },
@@ -2200,7 +2164,7 @@
     "description": "sticky buffer to match on the IKE spi responder",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/ike-keywords.html#ike-resp_spi",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/ike-keywords.html#ike-resp_spi",
     "initial_version": "7.0.0",
     "last_version": "8.0.0"
   },
@@ -2209,7 +2173,7 @@
     "description": "match IKE Vendor",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/ike-keywords.html#ike-vendor",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/ike-keywords.html#ike-vendor",
     "initial_version": "7.0.0",
     "last_version": "8.0.0"
   },
@@ -2218,7 +2182,7 @@
     "description": "match IKE chosen SA Attribute",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/ike-keywords.html#ike-chosen_sa_attribute",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/ike-keywords.html#ike-chosen_sa_attribute",
     "initial_version": "7.0.0",
     "last_version": "8.0.0"
   },
@@ -2227,7 +2191,7 @@
     "description": "match IKE key exchange payload length",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/ike-keywords.html#ike-key-exchange-payload-length",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/ike-keywords.html#ike-key-exchange-payload-length",
     "initial_version": "7.0.0",
     "last_version": "8.0.0"
   },
@@ -2236,7 +2200,7 @@
     "description": "match IKE nonce payload length",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/ike-keywords.html#ike-nonce-payload-length",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/ike-keywords.html#ike-nonce-payload-length",
     "initial_version": "7.0.0",
     "last_version": "8.0.0"
   },
@@ -2245,7 +2209,7 @@
     "description": "sticky buffer to match on the IKE nonce_payload",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/ike-keywords.html#ike-nonce_payload",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/ike-keywords.html#ike-nonce_payload",
     "initial_version": "7.0.0",
     "last_version": "8.0.0"
   },
@@ -2254,7 +2218,7 @@
     "description": "sticky buffer to match on the IKE key_exchange_payload",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/ike-keywords.html#ike-key_exchange_payload",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/ike-keywords.html#ike-key_exchange_payload",
     "initial_version": "7.0.0",
     "last_version": "8.0.0"
   },
@@ -2263,7 +2227,7 @@
     "description": "sticky buffer to match the JA4 hash buffer",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/ja4-keywords.html#ja4-hash",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/ja4-keywords.html#ja4-hash",
     "initial_version": "7.0.6",
     "last_version": "8.0.0"
   },
@@ -2272,7 +2236,7 @@
     "description": "sticky buffer to match on the FTP command buffer",
     "app layer": "Unset",
     "features": "No option",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/ftp-keywords.html#ftp-command",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/ftp-keywords.html#ftp-command",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -2281,7 +2245,7 @@
     "description": "sticky buffer to match on the FTP command data buffer",
     "app layer": "Unset",
     "features": "No option",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/ftp-keywords.html#ftp-command_data",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/ftp-keywords.html#ftp-command_data",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -2290,7 +2254,34 @@
     "description": "sticky buffer to match on the FTP reply buffer",
     "app layer": "Unset",
     "features": "No option",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/ftp-keywords.html#ftp-reply",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/ftp-keywords.html#ftp-reply",
+    "initial_version": "8.0.0",
+    "last_version": "8.0.0"
+  },
+  {
+    "name": "ftp.mode",
+    "description": "sticky buffer to match on the FTP mode buffer",
+    "app layer": "Unset",
+    "features": "none",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/ftp-keywords.html#ftp-mode",
+    "initial_version": "8.0.0",
+    "last_version": "8.0.0"
+  },
+  {
+    "name": "ftp.reply_received",
+    "description": "match on FTP whether a reply was received",
+    "app layer": "Unset",
+    "features": "none",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/ftp-keywords.html#ftp.reply_received",
+    "initial_version": "8.0.0",
+    "last_version": "8.0.0"
+  },
+  {
+    "name": "ftp.completion_code",
+    "description": "sticky buffer to match on the FTP completion code buffer",
+    "app layer": "Unset",
+    "features": "No option",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/ftp-keywords.html#ftp-completion_code",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -2299,7 +2290,7 @@
     "description": "match vlan id",
     "app layer": "Unset",
     "features": "prefilter",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/vlan-keywords.html#vlan-id",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/vlan-keywords.html#vlan-id",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -2308,7 +2299,7 @@
     "description": "match number of vlan layers",
     "app layer": "Unset",
     "features": "prefilter",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/vlan-keywords.html#vlan-layers",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/vlan-keywords.html#vlan-layers",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -2317,7 +2308,7 @@
     "description": "DNS query rrname sticky buffer",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/dns-keywords.html#dns.queries.rrname",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/dns-keywords.html#dns.queries.rrname",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -2326,7 +2317,7 @@
     "description": "DNS answer rrname sticky buffer",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/dns-keywords.html#dns.answers.rrname",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/dns-keywords.html#dns.answers.rrname",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -2335,7 +2326,7 @@
     "description": "DNS additionals rrname sticky buffer",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/dns-keywords.html#dns-additionals-rrname",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/dns-keywords.html#dns-additionals-rrname",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -2344,7 +2335,52 @@
     "description": "DNS authorities rrname sticky buffer",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/dns-keywords.html#dns-authorities-rrname",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/dns-keywords.html#dns-authorities-rrname",
+    "initial_version": "8.0.0",
+    "last_version": "8.0.0"
+  },
+  {
+    "name": "mdns.queries.rrname",
+    "description": "mDNS query rrname sticky buffer",
+    "app layer": "Unset",
+    "features": "No option:sticky buffer",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/mdns-keywords.html#mdns.queries.rrname",
+    "initial_version": "8.0.0",
+    "last_version": "8.0.0"
+  },
+  {
+    "name": "mdns.answers.rrname",
+    "description": "mDNS answer rrname sticky buffer",
+    "app layer": "Unset",
+    "features": "No option:sticky buffer",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/mdns-keywords.html#mdns.answers.rrname",
+    "initial_version": "8.0.0",
+    "last_version": "8.0.0"
+  },
+  {
+    "name": "mdns.additionals.rrname",
+    "description": "mDNS additionals rrname sticky buffer",
+    "app layer": "Unset",
+    "features": "No option:sticky buffer",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/mdns-keywords.html#mdns-additionals-rrname",
+    "initial_version": "8.0.0",
+    "last_version": "8.0.0"
+  },
+  {
+    "name": "mdns.authorities.rrname",
+    "description": "mDNS authorities rrname sticky buffer",
+    "app layer": "Unset",
+    "features": "No option:sticky buffer",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/mdns-keywords.html#mdns-authorities-rrname",
+    "initial_version": "8.0.0",
+    "last_version": "8.0.0"
+  },
+  {
+    "name": "mdns.response.rrname",
+    "description": "mDNS response rrname buffer",
+    "app layer": "Unset",
+    "features": "No option:sticky buffer",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/mdns-keywords.html#mdns-response-rrname",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -2353,7 +2389,7 @@
     "description": "modify buffer to compress consecutive whitespace characters into a single one before inspection",
     "app layer": "Unset",
     "features": "No option:transform",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/transforms.html#compress-whitespace",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/transforms.html#compress-whitespace",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -2362,7 +2398,7 @@
     "description": "modify buffer to strip whitespace before inspection",
     "app layer": "Unset",
     "features": "No option:transform",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/transforms.html#strip-whitespace",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/transforms.html#strip-whitespace",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -2371,7 +2407,7 @@
     "description": "modify buffer via stripping pseudo headers",
     "app layer": "Unset",
     "features": "No option:transform",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/transforms.html#strip_pseudo_headers",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/transforms.html#strip_pseudo_headers",
     "initial_version": "7.0.3",
     "last_version": "8.0.0"
   },
@@ -2380,7 +2416,7 @@
     "description": "convert to md5 hash of the buffer",
     "app layer": "Unset",
     "features": "No option:transform",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/transforms.html#to-md5",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/transforms.html#to-md5",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -2389,7 +2425,7 @@
     "description": "convert to sha1 hash of the buffer",
     "app layer": "Unset",
     "features": "No option:transform",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/transforms.html#to-sha1",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/transforms.html#to-sha1",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -2398,7 +2434,7 @@
     "description": "convert to sha256 hash of the buffer",
     "app layer": "Unset",
     "features": "No option:transform",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/transforms.html#to-sha256",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/transforms.html#to-sha256",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -2407,7 +2443,7 @@
     "description": "modify buffer to extract the dotprefix",
     "app layer": "Unset",
     "features": "No option:transform",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/transforms.html#dotprefix",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/transforms.html#dotprefix",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -2416,7 +2452,7 @@
     "description": "modify buffer to decode urlencoded data before inspection",
     "app layer": "Unset",
     "features": "No option:transform",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/transforms.html#url-decode",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/transforms.html#url-decode",
     "initial_version": "6.0.0",
     "last_version": "8.0.0"
   },
@@ -2425,7 +2461,7 @@
     "description": "modify buffer via XOR decoding before inspection",
     "app layer": "Unset",
     "features": "transform",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/transforms.html#xor",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/transforms.html#xor",
     "initial_version": "7.0.0",
     "last_version": "8.0.0"
   },
@@ -2434,7 +2470,7 @@
     "description": "convert buffer to lowercase",
     "app layer": "Unset",
     "features": "No option:transform",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/transforms.html#to_lowercase",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/transforms.html#to_lowercase",
     "initial_version": "7.0.3",
     "last_version": "8.0.0"
   },
@@ -2443,7 +2479,7 @@
     "description": "convert buffer to uppercase",
     "app layer": "Unset",
     "features": "No option:transform",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/transforms.html#to_uppercase",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/transforms.html#to_uppercase",
     "initial_version": "7.0.3",
     "last_version": "8.0.0"
   },
@@ -2452,8 +2488,35 @@
     "description": "modify buffer via lowercaseing header names",
     "app layer": "Unset",
     "features": "No option:transform",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/transforms.html#header_lowercase",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/transforms.html#header_lowercase",
     "initial_version": "7.0.3",
+    "last_version": "8.0.0"
+  },
+  {
+    "name": "from_base64",
+    "description": "convert the base64 decode of the buffer",
+    "app layer": "Unset",
+    "features": "transform",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/transforms.html#from_base64",
+    "initial_version": "8.0.0",
+    "last_version": "8.0.0"
+  },
+  {
+    "name": "domain",
+    "description": "modify buffer to extract the domain",
+    "app layer": "Unset",
+    "features": "No option:transform",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/transforms.html#domain",
+    "initial_version": "8.0.0",
+    "last_version": "8.0.0"
+  },
+  {
+    "name": "tld",
+    "description": "modify buffer to extract the tld",
+    "app layer": "Unset",
+    "features": "No option:transform",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/transforms.html#tld",
+    "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
   {
@@ -2461,7 +2524,7 @@
     "description": "'From' field from an email",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/email-keywords.html#email.from",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/email-keywords.html#email.from",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -2470,7 +2533,7 @@
     "description": "'Subject' field from an email",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/email-keywords.html#email.subject",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/email-keywords.html#email.subject",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -2479,7 +2542,7 @@
     "description": "'To' field from an email",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/email-keywords.html#email.to",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/email-keywords.html#email.to",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -2488,7 +2551,7 @@
     "description": "'Cc' field from an email",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/email-keywords.html#email.cc",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/email-keywords.html#email.cc",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -2497,7 +2560,7 @@
     "description": "'Date' field from an email",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/email-keywords.html#email.date",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/email-keywords.html#email.date",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -2506,7 +2569,7 @@
     "description": "'Message-Id' field from an email",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/email-keywords.html#email.message_id",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/email-keywords.html#email.message_id",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -2515,7 +2578,25 @@
     "description": "'X-Mailer' field from an email",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/email-keywords.html#email.x_mailer",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/email-keywords.html#email.x_mailer",
+    "initial_version": "8.0.0",
+    "last_version": "8.0.0"
+  },
+  {
+    "name": "email.url",
+    "description": "'Url' extracted from an email",
+    "app layer": "Unset",
+    "features": "No option:sticky buffer",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/email-keywords.html#email.url",
+    "initial_version": "8.0.0",
+    "last_version": "8.0.0"
+  },
+  {
+    "name": "email.received",
+    "description": "'Received' field from an email",
+    "app layer": "Unset",
+    "features": "No option:sticky buffer",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/email-keywords.html#email.received",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -2524,7 +2605,7 @@
     "description": "SMTP helo buffer",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/smtp-keywords.html#smtp-helo",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/smtp-keywords.html#smtp-helo",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -2533,7 +2614,7 @@
     "description": "SMTP mail from buffer",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/smtp-keywords.html#smtp-mail-from",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/smtp-keywords.html#smtp-mail-from",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -2542,7 +2623,7 @@
     "description": "SMTP rcpt to buffer",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/smtp-keywords.html#smtp-rcpt-to",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/smtp-keywords.html#smtp-rcpt-to",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -2551,7 +2632,7 @@
     "description": "match DHCP leasetime",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/dhcp-keywords.html#dhcp-leasetime",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/dhcp-keywords.html#dhcp-leasetime",
     "initial_version": "7.0.0",
     "last_version": "8.0.0"
   },
@@ -2560,7 +2641,7 @@
     "description": "match DHCP rebinding time",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/dhcp-keywords.html#dhcp-rebinding-time",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/dhcp-keywords.html#dhcp-rebinding-time",
     "initial_version": "7.0.0",
     "last_version": "8.0.0"
   },
@@ -2569,7 +2650,7 @@
     "description": "match DHCP renewal time",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/dhcp-keywords.html#dhcp-renewal-time",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/dhcp-keywords.html#dhcp-renewal-time",
     "initial_version": "7.0.0",
     "last_version": "8.0.0"
   },
@@ -2578,7 +2659,7 @@
     "description": "match WebSocket opcode",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/websocket-keywords.html#websocket-opcode",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/websocket-keywords.html#websocket-opcode",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -2587,7 +2668,7 @@
     "description": "match WebSocket mask",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/websocket-keywords.html#websocket-mask",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/websocket-keywords.html#websocket-mask",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -2596,7 +2677,7 @@
     "description": "match WebSocket flags",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/websocket-keywords.html#websocket-flags",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/websocket-keywords.html#websocket-flags",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -2605,7 +2686,7 @@
     "description": "match WebSocket payload",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/websocket-keywords.html#websocket-payload",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/websocket-keywords.html#websocket-payload",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -2614,7 +2695,7 @@
     "description": "match on CIP Service, and optionnally class and attribute",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/enip-keyword.html#cip_service",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/enip-keyword.html#cip_service",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -2623,7 +2704,7 @@
     "description": "rules for detecting EtherNet/IP capabilities",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/enip-keyword.html#enip-capabilities",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/enip-keyword.html#enip-capabilities",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -2632,7 +2713,7 @@
     "description": "rules for detecting EtherNet/IP cip_attribute",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/enip-keyword.html#enip-cip-attribute",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/enip-keyword.html#enip-cip-attribute",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -2641,7 +2722,7 @@
     "description": "rules for detecting EtherNet/IP cip_class",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/enip-keyword.html#enip-cip-class",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/enip-keyword.html#enip-cip-class",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -2650,7 +2731,7 @@
     "description": "rules for detecting EtherNet/IP vendor_id",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/enip-keyword.html#enip-vendor-id",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/enip-keyword.html#enip-vendor-id",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -2659,7 +2740,7 @@
     "description": "rules for detecting EtherNet/IP status",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/enip-keyword.html#enip-status",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/enip-keyword.html#enip-status",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -2668,7 +2749,7 @@
     "description": "rules for detecting EtherNet/IP state",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/enip-keyword.html#enip-state",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/enip-keyword.html#enip-state",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -2677,7 +2758,7 @@
     "description": "rules for detecting EtherNet/IP serial",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/enip-keyword.html#enip-serial",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/enip-keyword.html#enip-serial",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -2686,7 +2767,7 @@
     "description": "rules for detecting EtherNet/IP revision",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/enip-keyword.html#enip-revision",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/enip-keyword.html#enip-revision",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -2695,7 +2776,7 @@
     "description": "rules for detecting EtherNet/IP protocol_version",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/enip-keyword.html#enip-protocol-version",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/enip-keyword.html#enip-protocol-version",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -2704,7 +2785,7 @@
     "description": "rules for detecting EtherNet/IP product_code",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/enip-keyword.html#enip-product-code",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/enip-keyword.html#enip-product-code",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -2713,7 +2794,7 @@
     "description": "rules for detecting EtherNet/IP command",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/enip-keyword.html#enip_command",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/enip-keyword.html#enip_command",
     "initial_version": "4.1.5",
     "last_version": "8.0.0"
   },
@@ -2722,7 +2803,7 @@
     "description": "rules for detecting EtherNet/IP identity_status",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/enip-keyword.html#enip-identity-status",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/enip-keyword.html#enip-identity-status",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -2731,7 +2812,7 @@
     "description": "rules for detecting EtherNet/IP device_type",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/enip-keyword.html#enip-device-type",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/enip-keyword.html#enip-device-type",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -2740,7 +2821,7 @@
     "description": "rules for detecting EtherNet/IP cip_status",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/enip-keyword.html#enip-cip-status",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/enip-keyword.html#enip-cip-status",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -2749,7 +2830,7 @@
     "description": "rules for detecting EtherNet/IP cip_instance",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/enip-keyword.html#enip-cip-instance",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/enip-keyword.html#enip-cip-instance",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -2758,7 +2839,7 @@
     "description": "rules for detecting EtherNet/IP cip_extendedstatus",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/enip-keyword.html#enip-cip-extendedstatus",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/enip-keyword.html#enip-cip-extendedstatus",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -2767,7 +2848,7 @@
     "description": "sticky buffer to match EtherNet/IP product name",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/enip-keyword.html#enip-product-name",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/enip-keyword.html#enip-product-name",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -2776,7 +2857,7 @@
     "description": "sticky buffer to match EtherNet/IP service name",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/enip-keyword.html#enip-service-name",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/enip-keyword.html#enip-service-name",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -2785,7 +2866,7 @@
     "description": "sticky buffer to match MQTT UNSUBSCRIBE topic",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/mqtt-keywords.html#mqtt-unsubscribe-topic",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/mqtt-keywords.html#mqtt-unsubscribe-topic",
     "initial_version": "6.0.0",
     "last_version": "8.0.0"
   },
@@ -2794,7 +2875,7 @@
     "description": "match MQTT control packet type",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/mqtt-keywords.html#mqtt-type",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/mqtt-keywords.html#mqtt-type",
     "initial_version": "6.0.0",
     "last_version": "8.0.0"
   },
@@ -2803,7 +2884,7 @@
     "description": "sticky buffer to match MQTT SUBSCRIBE topic",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/mqtt-keywords.html#mqtt-subscribe-topic",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/mqtt-keywords.html#mqtt-subscribe-topic",
     "initial_version": "6.0.0",
     "last_version": "8.0.0"
   },
@@ -2812,7 +2893,7 @@
     "description": "match MQTT 5.0+ reason code",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/mqtt-keywords.html#mqtt-reason-code",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/mqtt-keywords.html#mqtt-reason-code",
     "initial_version": "6.0.0",
     "last_version": "8.0.0"
   },
@@ -2821,7 +2902,7 @@
     "description": "match MQTT CONNACK session present flag",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/mqtt-keywords.html#mqtt-connack-session-present",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/mqtt-keywords.html#mqtt-connack-session-present",
     "initial_version": "6.0.0",
     "last_version": "8.0.0"
   },
@@ -2830,7 +2911,7 @@
     "description": "match MQTT fixed header QOS level",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/mqtt-keywords.html#mqtt-qos",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/mqtt-keywords.html#mqtt-qos",
     "initial_version": "6.0.0",
     "last_version": "8.0.0"
   },
@@ -2839,7 +2920,7 @@
     "description": "sticky buffer to match on the MQTT PUBLISH topic",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1mqtt-keywords.html#mqtt-publish-topic",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1mqtt-keywords.html#mqtt-publish-topic",
     "initial_version": "6.0.0",
     "last_version": "8.0.0"
   },
@@ -2848,7 +2929,7 @@
     "description": "sticky buffer to match on the MQTT PUBLISH message",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1mqtt-keywords.html#mqtt-publish-message",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1mqtt-keywords.html#mqtt-publish-message",
     "initial_version": "6.0.0",
     "last_version": "8.0.0"
   },
@@ -2857,7 +2938,7 @@
     "description": "match MQTT protocol version",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/mqtt-keywords.html#mqtt-protocol-version",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/mqtt-keywords.html#mqtt-protocol-version",
     "initial_version": "6.0.0",
     "last_version": "8.0.0"
   },
@@ -2866,7 +2947,7 @@
     "description": "match MQTT fixed header flags",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/mqtt-keywords.html#mqtt-flags",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/mqtt-keywords.html#mqtt-flags",
     "initial_version": "6.0.0",
     "last_version": "8.0.0"
   },
@@ -2875,7 +2956,7 @@
     "description": "match MQTT CONNECT variable header flags",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/mqtt-keywords.html#mqtt-connect-flags",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/mqtt-keywords.html#mqtt-connect-flags",
     "initial_version": "6.0.0",
     "last_version": "8.0.0"
   },
@@ -2884,7 +2965,7 @@
     "description": "sticky buffer to match on the MQTT CONNECT will topic",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1mqtt-keywords.html#mqtt-connect-willtopic",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1mqtt-keywords.html#mqtt-connect-willtopic",
     "initial_version": "6.0.0",
     "last_version": "8.0.0"
   },
@@ -2893,7 +2974,7 @@
     "description": "sticky buffer to match on the MQTT CONNECT will message",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1mqtt-keywords.html#mqtt-connect-willmessage",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1mqtt-keywords.html#mqtt-connect-willmessage",
     "initial_version": "6.0.0",
     "last_version": "8.0.0"
   },
@@ -2902,7 +2983,7 @@
     "description": "sticky buffer to match on the MQTT CONNECT username",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1mqtt-keywords.html#mqtt-connect-username",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1mqtt-keywords.html#mqtt-connect-username",
     "initial_version": "6.0.0",
     "last_version": "8.0.0"
   },
@@ -2911,7 +2992,7 @@
     "description": "sticky buffer to match on the MQTT CONNECT protocol string",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1mqtt-keywords.html#mqtt-connect-protocol_string",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1mqtt-keywords.html#mqtt-connect-protocol_string",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -2920,7 +3001,7 @@
     "description": "sticky buffer to match on the MQTT CONNECT password",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1mqtt-keywords.html#mqtt-connect-password",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1mqtt-keywords.html#mqtt-connect-password",
     "initial_version": "6.0.0",
     "last_version": "8.0.0"
   },
@@ -2929,7 +3010,7 @@
     "description": "sticky buffer to match on the MQTT CONNECT clientid",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1mqtt-keywords.html#mqtt-connect-clientid",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1mqtt-keywords.html#mqtt-connect-clientid",
     "initial_version": "6.0.0",
     "last_version": "8.0.0"
   },
@@ -2938,7 +3019,7 @@
     "description": "sticky buffer to match on the RFB desktop name",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/rfb-keywords.html#rfb-name",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/rfb-keywords.html#rfb-name",
     "initial_version": "6.0.0",
     "last_version": "8.0.0"
   },
@@ -2947,7 +3028,7 @@
     "description": "match RFB security type",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/rfb-keywords.html#rfb-sectype",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/rfb-keywords.html#rfb-sectype",
     "initial_version": "6.0.0",
     "last_version": "8.0.0"
   },
@@ -2956,7 +3037,7 @@
     "description": "match RFB security result",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/rfb-keywords.html#rfb-secresult",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/rfb-keywords.html#rfb-secresult",
     "initial_version": "6.0.0",
     "last_version": "8.0.0"
   },
@@ -2964,8 +3045,8 @@
     "name": "sip.protocol",
     "description": "sticky buffer to match on the SIP protocol",
     "app layer": "Unset",
-    "features": "No option",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/sip-keywords.html#sip-protocol",
+    "features": "No option:sticky buffer",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/sip-keywords.html#sip-protocol",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -2973,8 +3054,8 @@
     "name": "sip.stat_code",
     "description": "sticky buffer to match on the SIP status code",
     "app layer": "Unset",
-    "features": "No option",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/sip-keywords.html#sip-stat-code",
+    "features": "No option:sticky buffer",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/sip-keywords.html#sip-stat-code",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -2982,8 +3063,8 @@
     "name": "sip.stat_msg",
     "description": "sticky buffer to match on the SIP status message",
     "app layer": "Unset",
-    "features": "No option",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/sip-keywords.html#sip-stat-msg",
+    "features": "No option:sticky buffer",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/sip-keywords.html#sip-stat-msg",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -2991,8 +3072,8 @@
     "name": "sip.request_line",
     "description": "sticky buffer to match on the SIP request line",
     "app layer": "Unset",
-    "features": "No option",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/sip-keywords.html#sip-request-line",
+    "features": "No option:sticky buffer",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/sip-keywords.html#sip-request-line",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -3000,8 +3081,8 @@
     "name": "sip.response_line",
     "description": "sticky buffer to match on the SIP response line",
     "app layer": "Unset",
-    "features": "No option",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/sip-keywords.html#sip-response-line",
+    "features": "No option:sticky buffer",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/sip-keywords.html#sip-response-line",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -3009,8 +3090,8 @@
     "name": "sip.from",
     "description": "sticky buffer to match on the SIP From header",
     "app layer": "Unset",
-    "features": "No option",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/sip-keywords.html#sip-from",
+    "features": "No option:sticky buffer",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/sip-keywords.html#sip-from",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -3018,8 +3099,8 @@
     "name": "sip.to",
     "description": "sticky buffer to match on the SIP To header",
     "app layer": "Unset",
-    "features": "No option",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/sip-keywords.html#sip-to",
+    "features": "No option:sticky buffer",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/sip-keywords.html#sip-to",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -3027,8 +3108,8 @@
     "name": "sip.via",
     "description": "sticky buffer to match on the SIP Via header",
     "app layer": "Unset",
-    "features": "No option",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/sip-keywords.html#sip-via",
+    "features": "No option:sticky buffer",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/sip-keywords.html#sip-via",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -3036,8 +3117,8 @@
     "name": "sip.user_agent",
     "description": "sticky buffer to match on the SIP User-Agent header",
     "app layer": "Unset",
-    "features": "No option",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/sip-keywords.html#sip-user-agent",
+    "features": "No option:sticky buffer",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/sip-keywords.html#sip-user-agent",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -3045,8 +3126,8 @@
     "name": "sip.content_type",
     "description": "sticky buffer to match on the SIP Content-Type header",
     "app layer": "Unset",
-    "features": "No option",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/sip-keywords.html#sip-content-type",
+    "features": "No option:sticky buffer",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/sip-keywords.html#sip-content-type",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -3054,8 +3135,8 @@
     "name": "sip.content_length",
     "description": "sticky buffer to match on the SIP Content-Length header",
     "app layer": "Unset",
-    "features": "No option",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/sip-keywords.html#sip-content-length",
+    "features": "No option:sticky buffer",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/sip-keywords.html#sip-content-length",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -3064,7 +3145,7 @@
     "description": "match LDAP request operation",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/ldap-keywords.html#ldap.request.operation",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/ldap-keywords.html#ldap.request.operation",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -3073,7 +3154,7 @@
     "description": "match LDAP responses operation",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/ldap-keywords.html#ldap.responses.operation",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/ldap-keywords.html#ldap.responses.operation",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -3082,7 +3163,7 @@
     "description": "match number of LDAP responses",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/ldap-keywords.html#ldap.responses.count",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/ldap-keywords.html#ldap.responses.count",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -3091,7 +3172,7 @@
     "description": "match request LDAPDN",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/ldap-keywords.html#ldap.request.dn",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/ldap-keywords.html#ldap.request.dn",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -3100,7 +3181,7 @@
     "description": "match responses LDAPDN",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/ldap-keywords.html#ldap.responses.dn",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/ldap-keywords.html#ldap.responses.dn",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -3109,7 +3190,7 @@
     "description": "match LDAPResult code",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/ldap-keywords.html#ldap.responses.result_code",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/ldap-keywords.html#ldap.responses.result_code",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -3118,7 +3199,7 @@
     "description": "match LDAPResult message for responses",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/ldap-keywords.html#ldap.responses.message",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/ldap-keywords.html#ldap.responses.message",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -3127,7 +3208,7 @@
     "description": "match request LDAP attribute type",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/ldap-keywords.html#ldap.request.attribute_type",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/ldap-keywords.html#ldap.request.attribute_type",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -3136,7 +3217,7 @@
     "description": "match LDAP responses attribute type",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/ldap-keywords.html#ldap.responses.attribute_type",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/ldap-keywords.html#ldap.responses.attribute_type",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -3144,8 +3225,8 @@
     "name": "sdp.session_name",
     "description": "sticky buffer to match on the SDP session name field",
     "app layer": "Unset",
-    "features": "No option",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/sdp-keywords.html#sdp-session-name",
+    "features": "No option:sticky buffer",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/sdp-keywords.html#sdp-session-name",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -3153,8 +3234,8 @@
     "name": "sdp.session_info",
     "description": "sticky buffer to match on the SDP session info field",
     "app layer": "Unset",
-    "features": "No option",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/sdp-keywords.html#sdp-session-info",
+    "features": "No option:sticky buffer",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/sdp-keywords.html#sdp-session-info",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -3162,8 +3243,8 @@
     "name": "sdp.origin",
     "description": "sticky buffer to match on the SDP origin field",
     "app layer": "Unset",
-    "features": "No option",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/sdp-keywords.html#sdp-origin",
+    "features": "No option:sticky buffer",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/sdp-keywords.html#sdp-origin",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -3171,8 +3252,8 @@
     "name": "sdp.uri",
     "description": "sticky buffer to match on the SDP uri field",
     "app layer": "Unset",
-    "features": "No option",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/sdp-keywords.html#sdp-uri",
+    "features": "No option:sticky buffer",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/sdp-keywords.html#sdp-uri",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -3180,8 +3261,8 @@
     "name": "sdp.email",
     "description": "sticky buffer to match on the SDP email field",
     "app layer": "Unset",
-    "features": "No option",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/sdp-keywords.html#sdp-email",
+    "features": "No option:sticky buffer",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/sdp-keywords.html#sdp-email",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -3189,8 +3270,8 @@
     "name": "sdp.phone_number",
     "description": "sticky buffer to match on the SDP phone number field",
     "app layer": "Unset",
-    "features": "No option",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/sdp-keywords.html#sdp-phone-number",
+    "features": "No option:sticky buffer",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/sdp-keywords.html#sdp-phone-number",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -3198,8 +3279,8 @@
     "name": "sdp.connection_data",
     "description": "sticky buffer to match on the SDP connection data field",
     "app layer": "Unset",
-    "features": "No option",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/sdp-keywords.html#sdp-connection-data",
+    "features": "No option:sticky buffer",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/sdp-keywords.html#sdp-connection-data",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -3207,8 +3288,8 @@
     "name": "sdp.bandwidth",
     "description": "sticky buffer to match on the SDP bandwidth field",
     "app layer": "Unset",
-    "features": "No option",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/sdp-keywords.html#sdp-bandwidth",
+    "features": "No option:sticky buffer",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/sdp-keywords.html#sdp-bandwidth",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -3216,8 +3297,8 @@
     "name": "sdp.time",
     "description": "sticky buffer to match on the SDP time field",
     "app layer": "Unset",
-    "features": "No option",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/sdp-keywords.html#time",
+    "features": "No option:sticky buffer",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/sdp-keywords.html#time",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -3225,8 +3306,8 @@
     "name": "sdp.repeat_time",
     "description": "sticky buffer to match on the SDP repeat time field",
     "app layer": "Unset",
-    "features": "No option",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/sdp-keywords.html#repeat-time",
+    "features": "No option:sticky buffer",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/sdp-keywords.html#repeat-time",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -3234,8 +3315,8 @@
     "name": "sdp.timezone",
     "description": "sticky buffer to match on the SDP timezone field",
     "app layer": "Unset",
-    "features": "No option",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/sdp-keywords.html#timezone",
+    "features": "No option:sticky buffer",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/sdp-keywords.html#timezone",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -3243,8 +3324,8 @@
     "name": "sdp.encryption_key",
     "description": "sticky buffer to match on the SDP encryption key field",
     "app layer": "Unset",
-    "features": "No option",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/sdp-keywords.html#encryption-key",
+    "features": "No option:sticky buffer",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/sdp-keywords.html#encryption-key",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -3252,8 +3333,8 @@
     "name": "sdp.attribute",
     "description": "sticky buffer to match on the SDP attribute field",
     "app layer": "Unset",
-    "features": "No option",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/sdp-keywords.html#sdp-attribute",
+    "features": "No option:sticky buffer",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/sdp-keywords.html#sdp-attribute",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -3261,8 +3342,8 @@
     "name": "sdp.media.media",
     "description": "sticky buffer to match on the SDP media subfield of the media_description field",
     "app layer": "Unset",
-    "features": "No option",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/sdp-keywords.html#media-description-media",
+    "features": "No option:sticky buffer",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/sdp-keywords.html#media-description-media",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -3270,8 +3351,8 @@
     "name": "sdp.media.media_info",
     "description": "sticky buffer to match on the SDP session info subfield of the media_description field",
     "app layer": "Unset",
-    "features": "No option",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/sdp-keywords.html#sdp-media-description-session-info",
+    "features": "No option:sticky buffer",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/sdp-keywords.html#sdp-media-description-session-info",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -3279,8 +3360,8 @@
     "name": "sdp.media.connection_data",
     "description": "sticky buffer to match on the SDP connection data subfield of the media_description field",
     "app layer": "Unset",
-    "features": "No option",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/sdp-keywords.html#sdp-media-description-connection-data",
+    "features": "No option:sticky buffer",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/sdp-keywords.html#sdp-media-description-connection-data",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -3288,8 +3369,71 @@
     "name": "sdp.media.encryption_key",
     "description": "sticky buffer to match on the SDP encryption key subfield of the media_description field",
     "app layer": "Unset",
-    "features": "No option",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/sdp-keywords.html#sdp-media-description-encryption-key",
+    "features": "No option:sticky buffer",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/sdp-keywords.html#sdp-media-description-encryption-key",
+    "initial_version": "8.0.0",
+    "last_version": "8.0.0"
+  },
+  {
+    "name": "dns.answer.name",
+    "description": "DNS answer name sticky buffer",
+    "app layer": "Unset",
+    "features": "No option:sticky buffer",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/dns-keywords.html#dns-answer-name",
+    "initial_version": "8.0.0",
+    "last_version": "8.0.0"
+  },
+  {
+    "name": "dns.opcode",
+    "description": "Match the DNS header opcode flag.",
+    "app layer": "Unset",
+    "features": "none",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1rules/dns-keywords.html#dns-opcode",
+    "initial_version": "5.0.0",
+    "last_version": "8.0.0"
+  },
+  {
+    "name": "dns.query.name",
+    "description": "DNS query name sticky buffer",
+    "app layer": "Unset",
+    "features": "No option:sticky buffer",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/dns-keywords.html#dns-query-name",
+    "initial_version": "8.0.0",
+    "last_version": "8.0.0"
+  },
+  {
+    "name": "dns.rcode",
+    "description": "Match the DNS header rcode flag.",
+    "app layer": "Unset",
+    "features": "none",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1rules/dns-keywords.html#dns-rcode",
+    "initial_version": "8.0.0",
+    "last_version": "8.0.0"
+  },
+  {
+    "name": "dns.rrtype",
+    "description": "Match the DNS rrtype in message body.",
+    "app layer": "Unset",
+    "features": "none",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1rules/dns-keywords.html#dns-rrtype",
+    "initial_version": "8.0.0",
+    "last_version": "8.0.0"
+  },
+  {
+    "name": "dns.query",
+    "description": "sticky buffer to match DNS query-buffer",
+    "app layer": "Unset",
+    "features": "No option:sticky buffer",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/dns-keywords.html#dns-query",
+    "initial_version": "5.0.0",
+    "last_version": "8.0.0"
+  },
+  {
+    "name": "pgsql.query",
+    "description": "match PGSQL  query request content",
+    "app layer": "Unset",
+    "features": "No option:sticky buffer",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/pgsql-keywords.html#pgsql.query",
     "initial_version": "8.0.0",
     "last_version": "8.0.0"
   },
@@ -3298,7 +3442,7 @@
     "description": "match SNMP version",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/snmp-keywords.html#snmp-version",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/snmp-keywords.html#snmp-version",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -3307,7 +3451,7 @@
     "description": "match SNMP PDU type",
     "app layer": "Unset",
     "features": "none",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/snmp-keywords.html#snmp-pdu-type",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/snmp-keywords.html#snmp-pdu-type",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
@@ -3316,7 +3460,7 @@
     "description": "SNMP content modifier to match on the SNMP usm",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/snmp-keywords.html#snmp-usm",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/snmp-keywords.html#snmp-usm",
     "initial_version": "7.0.0",
     "last_version": "8.0.0"
   },
@@ -3325,7 +3469,7 @@
     "description": "SNMP content modifier to match on the SNMP community",
     "app layer": "Unset",
     "features": "No option:sticky buffer",
-    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-beta1/rules/snmp-keywords.html#snmp-community",
+    "documentation": "https://docs.suricata.io/en/suricata-8.0.0-rc1/rules/snmp-keywords.html#snmp-community",
     "initial_version": "5.0.0",
     "last_version": "8.0.0"
   },
