@@ -1,3 +1,3 @@
-alert tls any any -> any any (msg:"test"; tls.sni; domain; dataset:isset,json_ioc,type string,format ndjson,load ioc.ndjson, context_key threat,value_key ioc; sid:1; rev:1;)
-alert tls any any -> any any (msg:"test"; tls.sni; content:".com"; pcre:"/(.*)\.com(.*)/,alert:domain_part,alert:wtf"; sid:2; rev:1;)
-alert http any any -> any any (msg:"test"; http.host; domain; dataset:isset,json_ioc,type string,format ndjson,load ioc.ndjson, context_key threat,value_key ioc; sid:3; rev:1;)
+alert tls any any -> any any (msg:"test"; tls.sni; domain; dataset:isset,json_ioc,type string,format ndjson,load ioc.ndjson, context_key threat,value_key ioc; sid:1; rev:1; requires: version >= 8.0.0;)
+alert tls any any -> any any (msg:"test"; tls.sni; content:".com"; pcre:"/(.*)\.com(.*)/,alert:domain_part,alert:wtf"; sid:2; rev:1; requires: version >= 8.0.0;)
+alert http any any -> any any (msg:"test"; http.host; domain; dataset:isset,json_ioc,type string,format ndjson,load ioc.ndjson, context_key threat,value_key ioc; sid:3; rev:1; requires: version >= 8.0.0;)
