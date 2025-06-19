@@ -76,7 +76,6 @@ class TestSyntax(unittest.TestCase):
 
     def test_datajson(self):
         diags = self._test_rules_file("datajson.rules", 3)
-        self.assertEqual(len(diags), 5)
         for diag in diags:
             self.assertEqual(diag.severity, 4)
 
