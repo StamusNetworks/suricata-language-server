@@ -24,9 +24,10 @@ import sys
 import argparse
 from suricatals.langserver import LangServer
 from suricatals.jsonrpc import JSONRPC2Connection, ReadWriter
+from suricatals.suri_cmd import SuriCmd
 import json
 
-__version__ = "1.0.1"
+__version__ = "1.1.0"
 
 
 def error_exit(error_str):
@@ -40,6 +41,17 @@ def main():
     parser.description = "Suricata Language Server ({0})".format(__version__)
     parser.add_argument(
         "--version", action="store_true", help="Print server version number and exit"
+    )
+    parser.add_argument(
+        "--docker",
+        action="store_true",
+        default=False,
+        help="Use docker to run Suricata",
+    )
+    parser.add_argument(
+        "--docker-image",
+        default=SuriCmd.SLS_DEFAULT_DOCKER_IMAGE,
+        help="Suricata docker image to use in docker mode",
     )
     parser.add_argument(
         "--suricata-binary", default="suricata", help="Path to Suricata binary"
@@ -83,6 +95,8 @@ def main():
     settings = {
         "suricata_binary": args.suricata_binary,
         "suricata_config": args.suricata_config,
+        "docker_mode": args.docker,
+        "docker_image": args.docker_image,
         "max_lines": args.max_lines,
         "max_tracked_files": args.max_tracked_files,
     }

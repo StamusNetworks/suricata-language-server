@@ -26,6 +26,7 @@ import re
 from suricatals.jsonrpc import path_from_uri, JSONRPC2Error
 from suricatals.parse_signatures import SuricataFile
 from suricatals.tests_rules import TestRules
+from suricatals.suri_cmd import SuriCmd
 
 log = logging.getLogger(__name__)
 
@@ -113,8 +114,15 @@ class LangServer:
         self.suricata_config = settings.get("suricata_config", None)
         self.max_lines = settings.get("max_lines", 1000)
         self.max_tracked_files = settings.get("max_tracked_files", 100)
+        self.docker = settings.get("docker_mode", False)
+        self.docker_image = settings.get(
+            "docker_image", SuriCmd.SLS_DEFAULT_DOCKER_IMAGE
+        )
         self.rules_tester = TestRules(
-            suricata_binary=self.suricata_binary, suricata_config=self.suricata_config
+            suricata_binary=self.suricata_binary,
+            suricata_config=self.suricata_config,
+            docker=self.docker,
+            docker_image=self.docker_image,
         )
         self.keywords_list = self.rules_tester.build_keywords_list()
         self.app_layer_list = self.rules_tester.build_app_layer_list()

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "suricata-language-server"
-version = "1.0.1"
+version = "1.1.0"
 authors = [
   { name="Eric Leblond", email="el@stamus-networks.com" },
   { name="Nicolas Frisoni", email="nfrisoni@stamus-networks.com" },
@@ -31,6 +31,9 @@ keywords = [
     "signature",
     "ids",
     "ips",
+]
+dependencies = [
+    "docker>=7.1.0",
 ]
 
 [project.urls]
