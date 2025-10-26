@@ -63,6 +63,13 @@ class Diagnosis(object):
             "sid": self.sid,
         }
 
+    def __repr__(self):
+        return "Diagnosis(sid=%s, message=%s, range=%s)" % (
+            self.sid,
+            self.message,
+            self.range,
+        )
+
     @property
     def content(self):
         return self._content
