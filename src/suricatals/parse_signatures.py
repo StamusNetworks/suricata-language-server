@@ -80,6 +80,8 @@ class Signature:
             fr = self._get_diag_range_by_keyword(keyword="sid:")
         elif mode == "msg":
             fr = self._get_diag_range_by_keyword(keyword="msg:")
+            if fr is None:
+                fr = self._get_diag_range_by_keyword(keyword="sid:")
         elif mode == "pattern":
             pattern_match = re.compile(f'content: *("{re.escape(pattern)}")')
             i = 0
