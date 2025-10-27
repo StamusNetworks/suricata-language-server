@@ -77,6 +77,19 @@ will be invoked transparently by the editors that are configured to use
 it. You can use `sudo pip install .` to install it system wide if
 needed.
 
+## Working modes
+
+Suricata Language Server can work in two modes : with a Suricata binary
+installed on the system or with Suricata installed in a Docker container.
+
+To use Suricata installed in a Docker container, you need to start the
+server with the `--docker` option. You can also specify a custom Docker
+image with the `--docker-image` option.
+
+To use Suricata installed on the system, you need to make sure that the
+Suricata binary is in the PATH or you can specify a custom path to the
+Suricata binary with the `--suricata-binary` option.
+
 ## Editors Configuration
 
 ### Neovim
@@ -208,6 +221,10 @@ up-to-date help.
     testing (optional)
 -   `--suricata-config`: path to the Suricata config used for signatures
     testing (optional)
+-   `--docker`: use Suricata installed in a Docker container
+    (optional)
+-   `--docker-image`: Docker image to use when `--docker` is enabled
+    (default: `jasonish/suricata:latest`)
 -   `--max-lines`: don\'t run Suricata tests if file is bigger than this
     limit (auto-completion only)
 -   `--max-tracked-files`: don\'t start Suricata analysis if workspace
