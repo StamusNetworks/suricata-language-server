@@ -127,6 +127,16 @@ require'lspconfig'.suricata_language_server.setup{
 }
 ```
 
+If you want to use the docker mode with a custom Suricata image, you can use the following:
+
+```lua
+local suricata_ls_cmd = {'suricata-language-server','--docker', '--docker-image=stamus/suricata'}
+require'lspconfig'.suricata_language_server.setup{
+  cmd = suricata_ls_cmd,
+  on_attach = on_attach,
+}
+```
+
 ### Visual Studio code
 
 Download the Suricata IntelliSense extension published by [Stamus
