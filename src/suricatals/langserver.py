@@ -22,6 +22,7 @@ import logging
 import os
 import traceback
 import re
+import uuid
 
 from suricatals.jsonrpc import path_from_uri, JSONRPC2Error
 from suricatals.parse_signatures import SuricataFile
@@ -118,19 +119,56 @@ class LangServer:
         self.docker_image = settings.get(
             "docker_image", SuriCmd.SLS_DEFAULT_DOCKER_IMAGE
         )
+        self.rules_tester = None
+        self.keywords_list = []
+        self.app_layer_list = []
+
+    def post_message(self, message, msg_type=1):
+        self.conn.send_notification(
+            "window/showMessage", {"type": msg_type, "message": message}
+        )
+
+    def server_initialized(self, request):
+        # Initialize the rules tester, this can take long in container
+        # mode as it is going to trigger a fetch.
+        progress_token = str(uuid.uuid4())
+        self.conn.send_notification(
+                "window/workDoneProgress/create",
+                {"token": progress_token}
+                )
+        self.conn.send_notification(
+                "$/progress",
+                {
+                    "token": progress_token,
+                    "value": {
+                        "kind": "begin",
+                        "title": "Suricata Container Init",
+                        "message": f"Initializing Suricata container and potentially fetching image",
+                        "cancellable": False  # Set to True if the user can cancel it
+                        }
+                    }
+        )
+
         self.rules_tester = TestRules(
             suricata_binary=self.suricata_binary,
             suricata_config=self.suricata_config,
             docker=self.docker,
             docker_image=self.docker_image,
         )
+
+        self.conn.send_notification(
+                "$/progress",
+                {
+                    "token": progress_token,
+                    "value": {
+                        "kind": "end",
+                        "message": f"Suricata {self.rules_tester.suricata_version}container ready."
+                        }
+                    }
+                )
+
         self.keywords_list = self.rules_tester.build_keywords_list()
         self.app_layer_list = self.rules_tester.build_app_layer_list()
-
-    def post_message(self, message, msg_type=1):
-        self.conn.send_notification(
-            "window/showMessage", {"type": msg_type, "message": message}
-        )
 
     def run(self):
         # Run server
@@ -170,10 +208,11 @@ class LangServer:
             "textDocument/didClose": self.serve_onClose,
             "textDocument/didChange": self.serve_onChange,
             "textDocument/codeAction": noop,
-            "initialized": noop,
+            "initialized": self.server_initialized,
             "workspace/didChangeWatchedFiles": noop,
             "workspace/symbol": noop,
             "$/cancelRequest": noop,
+            "$/setTrace": noop,
             "shutdown": noop,
             "exit": self.serve_exit,
         }.get(request["method"], self.serve_default)
@@ -407,9 +446,38 @@ class LangServer:
         # Skip update and remove objects if file is deleted
         if did_close and (not os.path.isfile(filepath)):
             return
+        progress_token = str(uuid.uuid4())
+        self.conn.send_request(
+                "window/workDoneProgress/create",
+                {"token": progress_token}
+                )
+        self.conn.send_notification(
+                "$/progress",
+                {
+                    "token": progress_token,
+                    "value": {
+                        "kind": "begin",
+                        "title": "File analysis",
+                        "message": "File analysis in progress",
+                        "cancellable": False  # Set to True if the user can cancel it
+                        }
+                    }
+        )
+
         did_change, err_str = self.update_workspace_file(
             filepath, read_file=True, allow_empty=did_open
         )
+        self.conn.send_notification(
+                "$/progress",
+                {
+                    "token": progress_token,
+                    "value": {
+                        "kind": "end",
+                        "message": "File analysis done"
+                        }
+                    }
+                )
+
         if err_str is not None:
             self.post_message(
                 'Save request failed for file "{0}": {1}'.format(filepath, err_str)
