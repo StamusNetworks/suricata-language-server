@@ -43,15 +43,15 @@ def main():
         "--version", action="store_true", help="Print server version number and exit"
     )
     parser.add_argument(
-        "--docker",
+        "--container",
         action="store_true",
         default=False,
-        help="Use docker to run Suricata",
+        help="Use a container to run Suricata",
     )
     parser.add_argument(
-        "--docker-image",
+        "--image",
         default=SuriCmd.SLS_DEFAULT_DOCKER_IMAGE,
-        help="Suricata docker image to use in docker mode",
+        help="Suricata image to use in container mode",
     )
     parser.add_argument(
         "--suricata-binary", default="suricata", help="Path to Suricata binary"
@@ -95,8 +95,8 @@ def main():
     settings = {
         "suricata_binary": args.suricata_binary,
         "suricata_config": args.suricata_config,
-        "docker_mode": args.docker,
-        "docker_image": args.docker_image,
+        "docker_mode": args.container,
+        "docker_image": args.image,
         "max_lines": args.max_lines,
         "max_tracked_files": args.max_tracked_files,
     }

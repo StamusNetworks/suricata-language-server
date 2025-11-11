@@ -80,11 +80,15 @@ needed.
 ## Working modes
 
 Suricata Language Server can work in two modes : with a Suricata binary
-installed on the system or with Suricata installed in a Docker container.
+installed on the system or with Suricata installed in a container.
 
-To use Suricata installed in a Docker container, you need to start the
-server with the `--docker` option. You can also specify a custom Docker
-image with the `--docker-image` option.
+To use Suricata commands in a container, you need to start the
+server with the `--container` option. You can also specify a custom
+image with the `--image` option.
+
+
+> [!INFO]
+> The current version only supports Docker containers.
 
 To use Suricata installed on the system, you need to make sure that the
 Suricata binary is in the PATH or you can specify a custom path to the
@@ -127,10 +131,10 @@ require'lspconfig'.suricata_language_server.setup{
 }
 ```
 
-If you want to use the docker mode with a custom Suricata image, you can use the following:
+If you want to use the container mode with a custom Suricata image, you can use the following:
 
 ```lua
-local suricata_ls_cmd = {'suricata-language-server','--docker', '--docker-image=stamus/suricata'}
+local suricata_ls_cmd = {'suricata-language-server','--container', '--image=stamus/suricata'}
 require'lspconfig'.suricata_language_server.setup{
   cmd = suricata_ls_cmd,
   on_attach = on_attach,
@@ -231,9 +235,8 @@ up-to-date help.
     testing (optional)
 -   `--suricata-config`: path to the Suricata config used for signatures
     testing (optional)
--   `--docker`: use Suricata installed in a Docker container
-    (optional)
--   `--docker-image`: Docker image to use when `--docker` is enabled
+-   `--container`: run Suricata commands in a container (optional)
+-   `--image`: image to use when `--container` is enabled
     (default: `jasonish/suricata:latest`)
 -   `--max-lines`: don\'t run Suricata tests if file is bigger than this
     limit (auto-completion only)
