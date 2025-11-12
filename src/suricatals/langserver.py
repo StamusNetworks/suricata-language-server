@@ -123,6 +123,14 @@ class LangServer:
         self.keywords_list = []
         self.app_layer_list = []
 
+    def create_rule_tester(self):
+        return TestRules(
+            suricata_binary=self.suricata_binary,
+            suricata_config=self.suricata_config,
+            docker=self.docker,
+            docker_image=self.docker_image,
+        )
+
     def post_message(self, message, msg_type=1):
         self.conn.send_notification(
             "window/showMessage", {"type": msg_type, "message": message}
@@ -149,13 +157,7 @@ class LangServer:
                     }
         )
 
-        self.rules_tester = TestRules(
-            suricata_binary=self.suricata_binary,
-            suricata_config=self.suricata_config,
-            docker=self.docker,
-            docker_image=self.docker_image,
-        )
-
+        self.rules_tester = self.create_rule_tester()
         self.conn.send_notification(
                 "$/progress",
                 {
@@ -599,9 +601,13 @@ class LangServer:
         )
 
     def analyse_file(self, filepath, engine_analysis=True, **kwargs):
+        if self.rules_tester == None:
+            self.rules_tester = self.create_rule_tester()
         file_obj = SuricataFile(filepath, self.rules_tester)
         file_obj.load_from_disk()
         return file_obj.check_file(engine_analysis=engine_analysis, **kwargs)
 
     def rules_infos(self, rule_buffer, **kwargs):
+        if self.rules_tester == None:
+            self.rules_tester = self.create_rule_tester()
         return self.rules_tester.rules_infos(rule_buffer, **kwargs)
