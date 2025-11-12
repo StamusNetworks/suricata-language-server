@@ -161,14 +161,36 @@ class LangServer:
                 {
                     "token": progress_token,
                     "value": {
-                        "kind": "end",
-                        "message": f"Suricata {self.rules_tester.suricata_version}container ready."
+                        "kind": "report",
+                        "percentage": 80,
+                        "message": f"Suricata v{self.rules_tester.suricata_version} container ready."
                         }
                     }
                 )
 
         self.keywords_list = self.rules_tester.build_keywords_list()
+        self.conn.send_notification(
+                "$/progress",
+                {
+                    "token": progress_token,
+                    "value": {
+                        "kind": "report",
+                        "percentage": 90,
+                        "message": "Suricata keywords fetched."
+                        }
+                    }
+                )
         self.app_layer_list = self.rules_tester.build_app_layer_list()
+        self.conn.send_notification(
+                "$/progress",
+                {
+                    "token": progress_token,
+                    "value": {
+                        "kind": "end",
+                        "message": "Suricata Language Server ready."
+                        }
+                    }
+                )
 
     def run(self):
         # Run server
