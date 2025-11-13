@@ -151,7 +151,7 @@ class LangServer:
                     "value": {
                         "kind": "begin",
                         "title": "Suricata Container Init",
-                        "message": f"Initializing Suricata container and potentially fetching image",
+                        "message": "Initializing Suricata container and potentially fetching image",
                         "cancellable": False  # Set to True if the user can cancel it
                         }
                     }

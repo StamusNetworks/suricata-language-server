@@ -374,7 +374,6 @@ class TestRules:
         if replace and len(replace) == 2:
             rule_buffer = re.sub(replace[0], replace[1], rule_buffer)
 
-        config_file = self._prepare_conf(rule_buffer, tmpdir, **kwargs)
         suri_cmd = [
             "--engine-analysis",
         ]
@@ -383,7 +382,7 @@ class TestRules:
         if suri_options:
             suri_cmd += suri_options
 
-        outdata = self.suricmd.run(suri_cmd)
+        self.suricmd.run(suri_cmd)
 
         res = {}
         json_path = os.path.join(tmpdir, "rules.json")
