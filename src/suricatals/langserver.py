@@ -569,6 +569,8 @@ class LangServer:
 
         pool = Pool(processes=self.nthreads)
         results = {}
+        if self.rules_tester == None:
+            self.rules_tester = self.create_rule_tester()
         for filepath in file_list:
             results[filepath] = pool.apply_async(
                 init_file, args=(filepath, self.rules_tester, self.max_lines)
