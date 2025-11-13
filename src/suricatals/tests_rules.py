@@ -361,7 +361,7 @@ class TestRules:
         self.suricmd.prepare()
         tmpdir = self.suricmd.get_tmpdir()
         if tmpdir is None:
-            raise Exception("Unable to get temporary directory for Suricata execution")
+            raise IOError("Unable to get temporary directory for Suricata execution")
 
         options = self._rules_buffer_get_suricata_options(rule_buffer)
         if options.get("dataset-dir"):
