@@ -136,7 +136,7 @@ class LangServer:
             "window/showMessage", {"type": msg_type, "message": message}
         )
 
-    def server_initialized(self, request):
+    def server_initialized(self, _request):
         # Initialize the rules tester, this can take long in container
         # mode as it is going to trigger a fetch.
         progress_token = str(uuid.uuid4())
