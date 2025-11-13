@@ -105,19 +105,17 @@ One simple way is to use
 following snippet to your configuration :
 
 ```lua
-local lspconfig = require 'lspconfig'
-local configs = require 'lspconfig.configs'
--- Check if the config is already defined (useful when reloading this file)
-if not configs.suricata_language_server then
-  configs.suricata_language_server = {
-    default_config = {
-      cmd = {'suricata-language-server'};
+local suricata_ls_cmd = {vim.fn.expand('$HOME/.local/bin/suricata-language-server')}
+vim.lsp.config('Suricata LS',
+  {
+      cmd = suricata_ls_cmd;
       filetypes = {'suricata', 'hog'};
       single_file_support = true;
       settings = {};
-    };
+      on_attach = on_attach,
   }
-end
+)
+vim.lsp.enable('Suricata LS')
 ```
 
 If you want to setup a custom Suricata binary, you can use the following
@@ -125,20 +123,32 @@ trick: :
 
 ```lua
 local suricata_ls_cmd = {'suricata-language-server', '--suricata-binary=/my/own/suricata'}
-require'lspconfig'.suricata_language_server.setup{
-  cmd = suricata_ls_cmd,
-  on_attach = on_attach,
-}
+vim.lsp.config('Suricata LS',
+  {
+      cmd = suricata_ls_cmd,
+      filetypes = {'suricata', 'hog'};
+      single_file_support = true;
+      settings = {};
+      on_attach = on_attach,
+  }
+)
+vim.lsp.enable('Suricata LS')
 ```
 
 If you want to use the container mode with a custom Suricata image, you can use the following:
 
 ```lua
-local suricata_ls_cmd = {'suricata-language-server','--container', '--image=stamus/suricata'}
-require'lspconfig'.suricata_language_server.setup{
-  cmd = suricata_ls_cmd,
-  on_attach = on_attach,
+local suricata_ls_cmd = {'suricata-language-server','--container', '--image=jasonish/suricata:7'}
+vim.lsp.config('Suricata LS',
+{
+      cmd = suricata_ls_cmd,
+      filetypes = {'suricata', 'hog'};
+      single_file_support = true;
+      settings = {};
+      on_attach = on_attach,
 }
+)
+vim.lsp.enable('Suricata LS')
 ```
 
 ### Visual Studio code
