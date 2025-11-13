@@ -154,7 +154,7 @@ vim.lsp.enable('Suricata LS')
 If you want to use the container mode with a custom Suricata image, you can use the following:
 
 ```lua
-local suricata_ls_cmd = {'suricata-language-server','--container', '--image=jasonish/suricata:7'}
+local suricata_ls_cmd = {'suricata-language-server','--container', '--image=jasonish/suricata:7.0.13'}
 vim.lsp.config('Suricata LS',
 {
       cmd = suricata_ls_cmd,
