@@ -117,6 +117,22 @@ vim.lsp.config('Suricata LS',
 )
 vim.lsp.enable('Suricata LS')
 ```
+If you want to use the container mode and thus skip Suricata installation, you can add the `--container`
+option. Following setup assume that `suricagta-language-server` is in your path:
+
+```lua
+local suricata_ls_cmd = {'suricata-language-server', '--container'}
+vim.lsp.config('Suricata LS',
+{
+      cmd = suricata_ls_cmd,
+      filetypes = {'suricata', 'hog'};
+      single_file_support = true;
+      settings = {};
+      on_attach = on_attach,
+}
+)
+vim.lsp.enable('Suricata LS')
+```
 
 If you want to setup a custom Suricata binary, you can use the following
 trick: :
