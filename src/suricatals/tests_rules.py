@@ -51,10 +51,25 @@ class TestRules:
         self.suricata_config = suricata_config
         self.docker = docker
         self.docker_image = docker_image
-        self.suricmd = SuriCmd(suricata_binary, suricata_config)
-        if docker:
-            self.suricmd.set_docker_mode(docker_image=docker_image)
+        self.create_suricmd()
         self.suricata_version = self.get_suricata_version()
+
+    def create_suricmd(self):
+        self.suricmd = SuriCmd(self.suricata_binary, self.suricata_config)
+        if self.docker:
+            self.suricmd.set_docker_mode(docker_image=self.docker_image)
+
+    def __getstate__(self):
+        # Create a copy of the instance's dictionary
+        state = self.__dict__.copy()
+        # Remove the unpicklable field before pickling
+        del state['suricmd']
+        return state
+
+    def __setstate__(self, state):
+        # Restore the attributes from the pickled state
+        self.__dict__.update(state)
+        self.create_suricmd()
 
     def get_suricata_version(self):
         outdata = self.suricmd.get_version()
