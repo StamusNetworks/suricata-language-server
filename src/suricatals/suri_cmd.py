@@ -396,9 +396,10 @@ config classification: command-and-control,Malware Command and Control Activity 
         self.tmpdir = None
         self.returncode = None
 
-    def set_docker_mode(self, docker_image=SLS_DEFAULT_DOCKER_IMAGE):
+    def set_docker_mode(self, docker_image=SLS_DEFAULT_DOCKER_IMAGE, image_version="latest"):
         self.docker = True
         self.docker_image = docker_image
+        self.image_version = image_version
         self.docker_client = docker.from_env()
 
     def build_cmd(self, cmd):
@@ -458,7 +459,7 @@ config classification: command-and-control,Malware Command and Control Activity 
         if self.tmpdir:
             try:
                 outdata = self.docker_client.containers.run(
-                    image=self.docker_image,
+                    image=':'.join([self.docker_image, self.image_version]),
                     command=suri_cmd,
                     volumes={self.tmpdir: {"bind": "/tmp/", "mode": "rw"}},
                     remove=True,
@@ -473,7 +474,7 @@ config classification: command-and-control,Malware Command and Control Activity 
         else:
             try:
                 outdata = self.docker_client.containers.run(
-                    image=self.docker_image,
+                    image=':'.join([self.docker_image, self.image_version]),
                     command=suri_cmd,
                     remove=True,
                     stdout=True,

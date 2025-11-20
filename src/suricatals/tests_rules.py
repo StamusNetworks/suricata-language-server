@@ -334,8 +334,9 @@ class TestRules:
             "options": re.compile(r"^##\s*SLS\s+suricata-options:\s*(.*)$"),
             "replace": re.compile(r"^##\s*SLS\s+replace:\s*(.*)$"),
             "dataset-dir": re.compile(r"^##\s*SLS\s+dataset-dir:\s*(.*)$"),
+            "version": re.compile(r"^##\s*SLS\s+suricata-version:\s*(.*)$"),
         }
-        result = {"options": [], "replace": [], "dataset-dir": None}
+        result = {"options": [], "replace": [], "dataset-dir": None, "version": None}
         for line in rule_buffer.splitlines():
             match = regexp["options"].match(line)
             if match:
@@ -346,6 +347,9 @@ class TestRules:
             match = regexp["dataset-dir"].match(line)
             if match:
                 result["dataset-dir"] = match.group(1)
+            match = regexp["version"].match(line)
+            if match:
+                result["version"] = match.group(1)
         return result
 
     def _rules_buffer_prepare_dataset(self, rule_buffer, tmpdir):
@@ -382,6 +386,8 @@ class TestRules:
         if options.get("dataset-dir"):
             undir = re.sub(r"/", "_", options["dataset-dir"])
             rule_buffer = rule_buffer.replace(options["dataset-dir"], undir)
+        if self.docker and options.get("version"):
+            self.suricmd.set_docker_mode(docker_image=self.docker_image, image_version=options["version"])
 
         self._rules_buffer_prepare_dataset(rule_buffer, tmpdir)
 
@@ -429,6 +435,8 @@ class TestRules:
         replace = options.get("replace")
         if replace and len(replace) == 2:
             rule_buffer = re.sub(replace[0], replace[1], rule_buffer)
+        if self.docker and options.get("version"):
+            self.suricmd.set_docker_mode(docker_image=self.docker_image, image_version=options["version"])
 
         self.suricmd.prepare()
         tmpdir = self.suricmd.get_tmpdir()
