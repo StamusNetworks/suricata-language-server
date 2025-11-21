@@ -329,12 +329,22 @@ class TestRules:
             extra_conf=kwargs.get("extra_conf"),
         )
 
+    def _sanitize_file(self, filepath):
+        # check if the file path is absolute or use .. construct and return
+        # an error if it is the case
+        if os.path.isabs(filepath):
+            raise ValueError("Absolute file paths are not allowed")
+        if ".." in filepath.split(os.path.sep):
+            raise ValueError("Parent directory references are not allowed")
+        # TODO file need to exists relatively of the current rules file
+
     def _rules_buffer_get_suricata_options(self, rule_buffer):
         regexp = {
             "options": re.compile(r"^##\s*SLS\s+suricata-options:\s*(.*)$"),
             "replace": re.compile(r"^##\s*SLS\s+replace:\s*(.*)$"),
             "dataset-dir": re.compile(r"^##\s*SLS\s+dataset-dir:\s*(.*)$"),
             "version": re.compile(r"^##\s*SLS\s+suricata-version:\s*(.*)$"),
+            "pcap": re.compile(r"^##\s*SLS\s+pcap-file:\s*(.*)$"),
         }
         result = {"options": [], "replace": [], "dataset-dir": None, "version": None}
         for line in rule_buffer.splitlines():
@@ -350,6 +360,14 @@ class TestRules:
             match = regexp["version"].match(line)
             if match:
                 result["version"] = match.group(1)
+            match = regexp["pcap"].match(line)
+            if match:
+                pcap_file = match.group(1)
+                try:
+                    self._sanitize_file(pcap_file)
+                    result["pcap"] = pcap_file
+                except ValueError:
+                    log.warning("Invalid pcap file path in rule buffer: %s", pcap_file)
         return result
 
     def _rules_buffer_prepare_dataset(self, rule_buffer, tmpdir):
@@ -504,8 +522,40 @@ class TestRules:
             mpm_analysis = self.mpm_parse_rules_json(tmpdir)
             result["mpm"] = mpm_analysis
 
+        if options.get("pcap"):
+            pcap_file = options["pcap"]
+            pcap_path = os.path.join(tmpdir, "test.pcap")
+            # FIXME check if pcap file exists in tmpdir
+            shutil.copy(pcap_file, pcap_path)
+
+            suri_cmd = [
+                "-r", os.path.join(self.suricmd.get_internal_tmpdir(), "test.pcap"),
+            ]
+
+            self.suricmd.run(suri_cmd)
+            result["matches"] = self.parse_eve(tmpdir)
+
         self.suricmd.cleanup()
         return result
+
+    def parse_eve(self, tmpdir):
+        eve_json_path = os.path.join(tmpdir, "eve.json")
+        matches = {}
+        try:
+            with open(eve_json_path, "r", encoding="utf-8") as eve_json:
+                for line in eve_json:
+                    try:
+                        event = json.loads(line)
+                    except JSONDecodeError:
+                        continue
+                    if event.get("event_type") == "alert":
+                        if event["alert"]["signature_id"] in matches:
+                            matches[event["alert"]["signature_id"]] += 1
+                        else:
+                            matches[event["alert"]["signature_id"]] = 1
+        except FileNotFoundError:
+            raise FileNotFoundError("Eve JSON file not found for parsing matches")
+        return matches
 
     def check_rule_buffer(
         self,

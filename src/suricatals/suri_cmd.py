@@ -552,7 +552,12 @@ stats:
   enabled: no
 outputs:
   - eve-log:
-    enabled: no
+      enabled: yes
+      filetype: regular
+      filename: eve.json
+      types:
+        - alert:
+          enabled: yes
 """
             )
 

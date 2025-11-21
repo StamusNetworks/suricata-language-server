@@ -391,6 +391,20 @@ class SuricataFile:
             sls_diag = sig.sls_syntax_check()
             if len(sls_diag):
                 diagnostics.extend(sls_diag)
+        # let's check for match in the pcap if exists
+        if "matches" in result:
+            for sid, count in result["matches"].items():
+                l_diag = Diagnosis()
+                l_diag.message = f"{count} alert(s) in test pcap"
+                l_diag.source = "Suricata Pcap Analysis"
+                l_diag.severity = Diagnosis.INFO_LEVEL
+                signature = self.sigset.get_sig_by_sid(sid)
+                if signature:
+                    sig_range = signature.get_diag_range(mode="sid")
+                    l_diag.range = sig_range
+                    l_diag.content = signature.content
+                    l_diag.sid = signature.sid
+                    diagnostics.append(l_diag)
         self.diagnosis = diagnostics
         return result["status"], sorted(diagnostics, key=self.sort_diagnosis)
 
