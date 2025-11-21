@@ -524,6 +524,9 @@ class TestRules:
 
         if options.get("pcap"):
             pcap_file = options["pcap"]
+            if "file_path" in kwargs:
+                base_dir = os.path.dirname(kwargs["file_path"])
+                pcap_file = os.path.join(base_dir, pcap_file)
             pcap_path = os.path.join(tmpdir, "test.pcap")
             # FIXME check if pcap file exists in tmpdir
             shutil.copy(pcap_file, pcap_path)

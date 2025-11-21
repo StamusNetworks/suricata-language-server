@@ -233,6 +233,7 @@ class SuricataFile:
         if not workspace:
             workspace = {}
         with open(self.path, "r", encoding="utf-8", errors="replace") as fhandle:
+            kwargs["file_path"] = self.path
             result = self.rules_tester.check_rule_buffer(
                 fhandle.read(), engine_analysis, **kwargs
             )
