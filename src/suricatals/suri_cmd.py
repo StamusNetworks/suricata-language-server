@@ -395,6 +395,7 @@ config classification: command-and-control,Malware Command and Control Activity 
         self.docker_client = None
         self.tmpdir = None
         self.returncode = None
+        self.image_version = "latest"
 
     def set_docker_mode(self, docker_image=SLS_DEFAULT_DOCKER_IMAGE, image_version="latest"):
         self.docker = True

@@ -336,7 +336,6 @@ class TestRules:
             raise ValueError("Absolute file paths are not allowed")
         if ".." in filepath.split(os.path.sep):
             raise ValueError("Parent directory references are not allowed")
-        # TODO file need to exists relatively of the current rules file
 
     def _rules_buffer_get_suricata_options(self, rule_buffer):
         regexp = {
@@ -528,7 +527,6 @@ class TestRules:
                 base_dir = os.path.dirname(kwargs["file_path"])
                 pcap_file = os.path.join(base_dir, pcap_file)
             pcap_path = os.path.join(tmpdir, "test.pcap")
-            # FIXME check if pcap file exists in tmpdir
             shutil.copy(pcap_file, pcap_path)
 
             suri_cmd = [
@@ -556,8 +554,8 @@ class TestRules:
                             matches[event["alert"]["signature_id"]] += 1
                         else:
                             matches[event["alert"]["signature_id"]] = 1
-        except FileNotFoundError:
-            raise FileNotFoundError("Eve JSON file not found for parsing matches")
+        except FileNotFoundError as e:
+            raise FileNotFoundError("Eve JSON file not found for parsing matches") from e
         return matches
 
     def check_rule_buffer(
