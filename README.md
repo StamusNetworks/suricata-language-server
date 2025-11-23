@@ -315,6 +315,34 @@ file :
 ## SLS replace: foo bar
 ```
 
+### Selectt Suricata version
+
+If the container option is used then it is possible to select the version of Suricata to use.
+By default `latest` tag is selected but by using a comment in the file, a specific version of Suricata
+is selected. The sytnax follows the double comment plus SLS prefix with the option being `suricata-version`.
+
+So to use version `7.0.13`, you can use the following line in the rules file:
+
+```
+## SLS suricata-version: 7.0.13
+```
+
+### Test signatures file against a pcap file
+
+IF the signature file contains a SLS comment with `pcap-file` option then the signatures in the file
+are going to be evaluated agains the specified pcap. The pcap file name has to be relative to the
+signatures file. For example, if the signature file is in in a directory containing a `tests` directory
+and if there is a `mta.pcap` then the following syntax can be used:
+
+
+```
+## SLS pcap-file: tests/mta.pcap
+
+```
+
+The preceeding syntax will work on Unix operating system, systems using backslash as directory separator
+will have to use it instead of slash.
+
 ## Getting help
 
 You can get help by:
