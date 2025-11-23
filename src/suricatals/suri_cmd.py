@@ -272,12 +272,17 @@ config classification: command-and-control,Malware Command and Control Activity 
         self.tmpdir = None
         self.returncode = None
         self.image_version = "latest"
+        self.image_version_run = "latest"
 
     def set_docker_mode(self, docker_image=SLS_DEFAULT_DOCKER_IMAGE, image_version="latest"):
         self.docker = True
         self.docker_image = docker_image
         self.image_version = image_version
+        self.image_version_run = image_version
         self.docker_client = docker.from_env()
+
+    def set_docker_version_for_run(self, image_version="latest"):
+        self.image_version_run = image_version
 
     def build_cmd(self, cmd):
         tmpdir = self.get_internal_tmpdir()
@@ -312,6 +317,7 @@ config classification: command-and-control,Malware Command and Control Activity 
             shutil.rmtree(self.tmpdir)
         self.tmpdir = None
         self.returncode = None
+        self.image_version_run = self.image_version
         return self
 
     def _run_suricata(self, suri_cmd):
@@ -336,7 +342,7 @@ config classification: command-and-control,Malware Command and Control Activity 
         if self.tmpdir:
             try:
                 outdata = self.docker_client.containers.run(
-                    image=':'.join([self.docker_image, self.image_version]),
+                    image=':'.join([self.docker_image, self.image_version_run]),
                     command=suri_cmd,
                     volumes={self.tmpdir: {"bind": "/tmp/", "mode": "rw"}},
                     remove=True,
@@ -351,13 +357,14 @@ config classification: command-and-control,Malware Command and Control Activity 
         else:
             try:
                 outdata = self.docker_client.containers.run(
-                    image=':'.join([self.docker_image, self.image_version]),
+                    image=':'.join([self.docker_image, self.image_version_run]),
                     command=suri_cmd,
                     remove=True,
                     stdout=True,
                     stderr=True,
                 ).decode("utf-8")
                 self.returncode = True
+                self.image_version_run = self.image_version
                 return outdata
             except docker.errors.ContainerError as e:
                 self.returncode = False

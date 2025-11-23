@@ -403,8 +403,9 @@ class TestRules:
         if options.get("dataset-dir"):
             undir = re.sub(r"/", "_", options["dataset-dir"])
             rule_buffer = rule_buffer.replace(options["dataset-dir"], undir)
+
         if self.docker and options.get("version"):
-            self.suricmd.set_docker_mode(docker_image=self.docker_image, image_version=options["version"])
+            self.suricmd.set_docker_version_for_run(image_version=options["version"])
 
         self._rules_buffer_prepare_dataset(rule_buffer, tmpdir)
 
@@ -453,7 +454,7 @@ class TestRules:
         if replace and len(replace) == 2:
             rule_buffer = re.sub(replace[0], replace[1], rule_buffer)
         if self.docker and options.get("version"):
-            self.suricmd.set_docker_mode(docker_image=self.docker_image, image_version=options["version"])
+            self.suricmd.set_docker_version_for_run(image_version=options["version"])
 
         self.suricmd.prepare()
         tmpdir = self.suricmd.get_tmpdir()
