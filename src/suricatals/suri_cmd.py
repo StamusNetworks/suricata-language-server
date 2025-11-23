@@ -442,6 +442,15 @@ outputs:
       types:
         - alert:
           enabled: yes
+profiling:
+  rules:
+    enabled: yes
+    append: no
+    filename: rule_perf.json
+    sort: ticks
+    active: yes
+    limit: 1000
+    json: yes
 """
             )
 

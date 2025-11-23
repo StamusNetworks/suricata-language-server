@@ -536,6 +536,7 @@ class TestRules:
 
             self.suricmd.run(suri_cmd)
             result["matches"] = self.parse_eve(tmpdir)
+            result["profiling"] = self.parse_profiling(tmpdir)
 
         self.suricmd.cleanup()
         return result
@@ -558,6 +559,21 @@ class TestRules:
         except FileNotFoundError as e:
             raise FileNotFoundError("Eve JSON file not found for parsing matches") from e
         return matches
+
+    def parse_profiling(self, tmpdir):
+        json_path = os.path.join(tmpdir, "rule_perf.json")
+        profiling = {}
+        try:
+            with open(json_path, "r", encoding="utf-8") as profiling_json:
+                for line in profiling_json:
+                    try:
+                        rules = json.loads(line).get("rules")
+                        return rules
+                    except JSONDecodeError:
+                        continue
+        except FileNotFoundError:
+            pass
+        return profiling
 
     def check_rule_buffer(
         self,

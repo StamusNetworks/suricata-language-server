@@ -406,6 +406,20 @@ class SuricataFile:
                     l_diag.content = signature.content
                     l_diag.sid = signature.sid
                     diagnostics.append(l_diag)
+        # let's check for profiling in the pcap if exists
+        if "profiling" in result:
+            for res in result["profiling"]:
+                l_diag = Diagnosis()
+                l_diag.message = f"Checks: {res['checks']}. Ticks: total {res['ticks_total']}, max {res['ticks_max']}, avg {res['ticks_avg']}"
+                l_diag.source = "Suricata Profiling on Pcap"
+                l_diag.severity = Diagnosis.INFO_LEVEL
+                signature = self.sigset.get_sig_by_sid(res["signature_id"])
+                if signature:
+                    sig_range = signature.get_diag_range(mode="sid")
+                    l_diag.range = sig_range
+                    l_diag.content = signature.content
+                    l_diag.sid = signature.sid
+                    diagnostics.append(l_diag)
         self.diagnosis = diagnostics
         return result["status"], sorted(diagnostics, key=self.sort_diagnosis)
 
