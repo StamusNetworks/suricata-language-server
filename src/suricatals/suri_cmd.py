@@ -118,6 +118,7 @@ app-layer:
       enabled: yes
       detection-ports:
         dp: 139, 445
+      stream-depth: 0
     nfs:
       enabled: yes
     tftp:
