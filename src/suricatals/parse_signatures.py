@@ -401,7 +401,7 @@ class SuricataFile:
                 l_diag.severity = Diagnosis.INFO_LEVEL
                 signature = self.sigset.get_sig_by_sid(sid)
                 if signature:
-                    sig_range = signature.get_diag_range(mode="sid")
+                    sig_range = signature.get_diag_range(mode="msg")
                     l_diag.range = sig_range
                     l_diag.content = signature.content
                     l_diag.sid = signature.sid
@@ -415,7 +415,7 @@ class SuricataFile:
                 l_diag.severity = Diagnosis.INFO_LEVEL
                 signature = self.sigset.get_sig_by_sid(res["signature_id"])
                 if signature:
-                    sig_range = signature.get_diag_range(mode="sid")
+                    sig_range = signature.get_diag_range(mode="msg")
                     l_diag.range = sig_range
                     l_diag.content = signature.content
                     l_diag.sid = signature.sid
