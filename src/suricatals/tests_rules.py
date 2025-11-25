@@ -63,7 +63,7 @@ class TestRules:
         # Create a copy of the instance's dictionary
         state = self.__dict__.copy()
         # Remove the unpicklable field before pickling
-        del state['suricmd']
+        del state["suricmd"]
         return state
 
     def __setstate__(self, state):
@@ -531,8 +531,12 @@ class TestRules:
             shutil.copy(pcap_file, pcap_path)
 
             suri_cmd = [
-                "-r", os.path.join(self.suricmd.get_internal_tmpdir(), "test.pcap"),
+                "-r",
+                os.path.join(self.suricmd.get_internal_tmpdir(), "test.pcap"),
             ]
+
+            if suri_options:
+                suri_cmd += suri_options
 
             self.suricmd.run(suri_cmd)
             result["matches"] = self.parse_eve(tmpdir)
@@ -557,7 +561,9 @@ class TestRules:
                         else:
                             matches[event["alert"]["signature_id"]] = 1
         except FileNotFoundError as e:
-            raise FileNotFoundError("Eve JSON file not found for parsing matches") from e
+            raise FileNotFoundError(
+                "Eve JSON file not found for parsing matches"
+            ) from e
         return matches
 
     def parse_profiling(self, tmpdir):
