@@ -37,6 +37,23 @@ logging:
   - console:
       enabled: yes
       type: json
+outputs:
+  - eve-log:
+      enabled: yes
+      filetype: regular
+      filename: eve.json
+      types:
+        - alert:
+          enabled: yes
+profiling:
+  rules:
+    enabled: yes
+    append: no
+    filename: rule_perf.json
+    sort: ticks
+    active: yes
+    limit: 1000
+    json: yes
 app-layer:
   protocols:
     telnet:
@@ -274,7 +291,9 @@ config classification: command-and-control,Malware Command and Control Activity 
         self.image_version = "latest"
         self.image_version_run = "latest"
 
-    def set_docker_mode(self, docker_image=SLS_DEFAULT_DOCKER_IMAGE, image_version="latest"):
+    def set_docker_mode(
+        self, docker_image=SLS_DEFAULT_DOCKER_IMAGE, image_version="latest"
+    ):
         self.docker = True
         self.docker_image = docker_image
         self.image_version = image_version
@@ -342,7 +361,7 @@ config classification: command-and-control,Malware Command and Control Activity 
         if self.tmpdir:
             try:
                 outdata = self.docker_client.containers.run(
-                    image=':'.join([self.docker_image, self.image_version_run]),
+                    image=":".join([self.docker_image, self.image_version_run]),
                     command=suri_cmd,
                     volumes={self.tmpdir: {"bind": "/tmp/", "mode": "rw"}},
                     remove=True,
@@ -357,7 +376,7 @@ config classification: command-and-control,Malware Command and Control Activity 
         else:
             try:
                 outdata = self.docker_client.containers.run(
-                    image=':'.join([self.docker_image, self.image_version_run]),
+                    image=":".join([self.docker_image, self.image_version_run]),
                     command=suri_cmd,
                     remove=True,
                     stdout=True,
@@ -421,8 +440,8 @@ config classification: command-and-control,Malware Command and Control Activity 
             )
             if extra_conf:
                 cf.write(extra_conf.format(tmpdir=tmpdir))
-            cf.write(
-                """
+                cf.write(
+                    """
 engine-analysis:
   rules-fast-pattern: yes
   rules: yes
@@ -452,7 +471,7 @@ profiling:
     limit: 1000
     json: yes
 """
-            )
+                )
 
         related_files = related_files or {}
         for rfile in related_files:
