@@ -154,7 +154,7 @@ app-layer:
     dhcp:
       enabled: yes
     sip:
-      #enabled: yes
+      enabled: yes
     ldap:
       tcp:
         enabled: yes
@@ -164,6 +164,8 @@ app-layer:
         enabled: yes
         detection-ports:
           dp: 389, 3268
+    mdns:
+      enabled: yes
 security:
   lua:
     allow-rules: yes
