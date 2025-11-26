@@ -1,6 +1,6 @@
 """
 Copyright(C) 2018-2021 Chris Hansen <hansec@uw.edu>
-Copyright(C) 2021-2022 Stamus Networks
+Copyright(C) 2021-2025 Stamus Networks
 
 This file is part of Suricata Language Server.
 
@@ -141,58 +141,54 @@ class LangServer:
         # mode as it is going to trigger a fetch.
         progress_token = str(uuid.uuid4())
         self.conn.send_notification(
-                "window/workDoneProgress/create",
-                {"token": progress_token}
-                )
+            "window/workDoneProgress/create", {"token": progress_token}
+        )
         self.conn.send_notification(
-                "$/progress",
-                {
-                    "token": progress_token,
-                    "value": {
-                        "kind": "begin",
-                        "title": "Suricata Container Init",
-                        "message": "Initializing Suricata container and potentially fetching image",
-                        "cancellable": False  # Set to True if the user can cancel it
-                        }
-                    }
+            "$/progress",
+            {
+                "token": progress_token,
+                "value": {
+                    "kind": "begin",
+                    "title": "Suricata Container Init",
+                    "message": "Initializing Suricata container and potentially fetching image",
+                    "cancellable": False,  # Set to True if the user can cancel it
+                },
+            },
         )
 
         self.rules_tester = self.create_rule_tester()
         self.conn.send_notification(
-                "$/progress",
-                {
-                    "token": progress_token,
-                    "value": {
-                        "kind": "report",
-                        "percentage": 80,
-                        "message": f"Suricata v{self.rules_tester.suricata_version} container ready."
-                        }
-                    }
-                )
+            "$/progress",
+            {
+                "token": progress_token,
+                "value": {
+                    "kind": "report",
+                    "percentage": 80,
+                    "message": f"Suricata v{self.rules_tester.suricata_version} container ready.",
+                },
+            },
+        )
 
         self.keywords_list = self.rules_tester.build_keywords_list()
         self.conn.send_notification(
-                "$/progress",
-                {
-                    "token": progress_token,
-                    "value": {
-                        "kind": "report",
-                        "percentage": 90,
-                        "message": "Suricata keywords fetched."
-                        }
-                    }
-                )
+            "$/progress",
+            {
+                "token": progress_token,
+                "value": {
+                    "kind": "report",
+                    "percentage": 90,
+                    "message": "Suricata keywords fetched.",
+                },
+            },
+        )
         self.app_layer_list = self.rules_tester.build_app_layer_list()
         self.conn.send_notification(
-                "$/progress",
-                {
-                    "token": progress_token,
-                    "value": {
-                        "kind": "end",
-                        "message": "Suricata Language Server ready."
-                        }
-                    }
-                )
+            "$/progress",
+            {
+                "token": progress_token,
+                "value": {"kind": "end", "message": "Suricata Language Server ready."},
+            },
+        )
 
     def run(self):
         # Run server
@@ -472,35 +468,31 @@ class LangServer:
             return
         progress_token = str(uuid.uuid4())
         self.conn.send_request(
-                "window/workDoneProgress/create",
-                {"token": progress_token}
-                )
+            "window/workDoneProgress/create", {"token": progress_token}
+        )
         self.conn.send_notification(
-                "$/progress",
-                {
-                    "token": progress_token,
-                    "value": {
-                        "kind": "begin",
-                        "title": "File analysis",
-                        "message": "File analysis in progress",
-                        "cancellable": False  # Set to True if the user can cancel it
-                        }
-                    }
+            "$/progress",
+            {
+                "token": progress_token,
+                "value": {
+                    "kind": "begin",
+                    "title": "File analysis",
+                    "message": "File analysis in progress",
+                    "cancellable": False,  # Set to True if the user can cancel it
+                },
+            },
         )
 
         did_change, err_str = self.update_workspace_file(
             filepath, read_file=True, allow_empty=did_open
         )
         self.conn.send_notification(
-                "$/progress",
-                {
-                    "token": progress_token,
-                    "value": {
-                        "kind": "end",
-                        "message": "File analysis done"
-                        }
-                    }
-                )
+            "$/progress",
+            {
+                "token": progress_token,
+                "value": {"kind": "end", "message": "File analysis done"},
+            },
+        )
 
         if err_str is not None:
             self.post_message(
