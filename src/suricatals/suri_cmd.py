@@ -21,6 +21,7 @@ along with Suricata Language Server.  If not, see <http://www.gnu.org/licenses/>
 import os
 import subprocess
 import docker
+from docker.errors import ContainerError
 import tempfile
 import shutil
 
@@ -373,9 +374,10 @@ config classification: command-and-control,Malware Command and Control Activity 
                 ).decode("utf-8")
                 self.returncode = True
                 return outdata
-            except docker.errors.ContainerError as e:
+            except ContainerError as e:
                 self.returncode = False
-                return e.stderr.decode("utf-8")
+                if e.stderr is not None:
+                    return e.stderr
         else:
             try:
                 outdata = self.docker_client.containers.run(
@@ -388,9 +390,9 @@ config classification: command-and-control,Malware Command and Control Activity 
                 self.returncode = True
                 self.image_version_run = self.image_version
                 return outdata
-            except docker.errors.ContainerError as e:
+            except ContainerError as e:
                 self.returncode = False
-                return e.stderr.decode("utf-8")
+                return e.stderr
 
     def run(self, cmd):
         suri_cmd = self.build_cmd(cmd)
@@ -487,4 +489,6 @@ profiling:
     def get_version(self):
         cmd = ["-V"]
         output = self.run(cmd)
+        if output is None:
+            return ""
         return output.strip()
