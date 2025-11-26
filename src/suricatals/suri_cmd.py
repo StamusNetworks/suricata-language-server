@@ -378,7 +378,11 @@ config classification: command-and-control,Malware Command and Control Activity 
             except ContainerError as e:
                 self.returncode = False
                 if e.stderr is not None:
-                    return e.stderr
+                    if isinstance(e.stderr, bytes):
+                        return e.stderr.decode("utf-8")
+                    else:
+                        return e.stderr
+                return None
         else:
             try:
                 outdata = self.docker_client.containers.run(
@@ -393,7 +397,12 @@ config classification: command-and-control,Malware Command and Control Activity 
                 return outdata
             except ContainerError as e:
                 self.returncode = False
-                return e.stderr
+                if e.stderr is not None:
+                    if isinstance(e.stderr, bytes):
+                        return e.stderr.decode("utf-8")
+                    else:
+                        return e.stderr
+                return None
 
     def run(self, cmd):
         suri_cmd = self.build_cmd(cmd)
