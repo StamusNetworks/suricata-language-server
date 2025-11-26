@@ -352,3 +352,14 @@ You can get help by:
 -   Asking on
     [#suricata-language-server](https://discord.com/channels/911231224448712714/927591953967751199)
     on Discord.
+
+## Developement
+
+Suricata Language Server is open source and contributions are welcome. You can used GitHub pull requests to
+propose changes.
+
+Suricata Language Server uses [pre-commit](https://pre-commit.com/) to manage code formatting and checks. You can install the git hooks by running:
+
+```sh
+pre-commit install
+```
