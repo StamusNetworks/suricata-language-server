@@ -491,5 +491,5 @@ profiling:
         cmd = ["-V"]
         output = self.run(cmd)
         if output is None:
-            return ""
+            raise RuntimeError("Failed to get Suricata version")
         return output.strip()
