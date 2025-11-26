@@ -352,6 +352,7 @@ config classification: command-and-control,Malware Command and Control Activity 
                 stderr=subprocess.PIPE,
                 text=True,
                 check=True,
+                shell=False,
             )
             self.returncode = True
             return result.stdout
