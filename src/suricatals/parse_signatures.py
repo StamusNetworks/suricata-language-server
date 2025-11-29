@@ -396,7 +396,7 @@ class SuricataFile:
         if "matches" in result:
             for sid, count in result["matches"].items():
                 l_diag = Diagnosis()
-                l_diag.message = f"{count} alert(s) in test pcap"
+                l_diag.message = f"Alerts: {count}"
                 l_diag.source = "Suricata Pcap Analysis"
                 l_diag.severity = Diagnosis.INFO_LEVEL
                 signature = self.sigset.get_sig_by_sid(sid)
