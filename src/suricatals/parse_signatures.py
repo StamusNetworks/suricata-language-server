@@ -411,7 +411,7 @@ class SuricataFile:
             for res in result["profiling"]:
                 l_diag = Diagnosis()
                 l_diag.message = f"Checks: {res['checks']}. Ticks: total {res['ticks_total']}, max {res['ticks_max']}, avg {res['ticks_avg']}"
-                l_diag.source = "Suricata Profiling on Pcap"
+                l_diag.source = "Suricata Pcap Profiling"
                 l_diag.severity = Diagnosis.INFO_LEVEL
                 signature = self.sigset.get_sig_by_sid(res["signature_id"])
                 if signature:
