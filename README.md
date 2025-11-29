@@ -173,7 +173,7 @@ Download the Suricata IntelliSense extension published by [Stamus
 Networks](https://www.stamus-networks.com/) from [Visual studio
 Marketplace](https://marketplace.visualstudio.com/items?itemName=StamusNetworks.suricata-ls)
 and install it into your Visual Studio Code instance. You can also
-direcly install it from Visual Studio Code via the Extensions menu.
+directly install it from Visual Studio Code via the Extensions menu.
 
 Then you can configure it via the settings. Main settings are the path
 to the Suricata Language Server binary and the path to the Suricata
@@ -315,11 +315,11 @@ file :
 ## SLS replace: foo bar
 ```
 
-### Selectt Suricata version
+### Select Suricata version
 
 If the container option is used then it is possible to select the version of Suricata to use.
 By default `latest` tag is selected but by using a comment in the file, a specific version of Suricata
-is selected. The sytnax follows the double comment plus SLS prefix with the option being `suricata-version`.
+is selected. The syntax follows the double comment plus SLS prefix with the option being `suricata-version`.
 
 So to use version `7.0.13`, you can use the following line in the rules file:
 
@@ -330,7 +330,7 @@ So to use version `7.0.13`, you can use the following line in the rules file:
 ### Test signatures file against a pcap file
 
 IF the signature file contains a SLS comment with `pcap-file` option then the signatures in the file
-are going to be evaluated agains the specified pcap. The pcap file name has to be relative to the
+are going to be evaluated against the specified pcap. The pcap file name has to be relative to the
 signatures file. For example, if the signature file is in in a directory containing a `tests` directory
 and if there is a `mta.pcap` then the following syntax can be used:
 
