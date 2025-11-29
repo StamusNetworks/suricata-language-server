@@ -177,7 +177,9 @@ directly install it from Visual Studio Code via the Extensions menu.
 
 Then you can configure it via the settings. Main settings are the path
 to the Suricata Language Server binary and the path to the Suricata
-binary.
+binary. But you can also use the container mode by selecting the `container`
+option in the settings. This will run Suricata commands in a Docker container
+so you don't need to have Suricata installed on your system.
 
 For the settings on Microsoft Windows, you will need to escape the
 backslash in the paths you need to enter. With a standard Suricata msi
