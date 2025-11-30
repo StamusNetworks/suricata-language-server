@@ -93,6 +93,8 @@ class LangServer:
         },
     ]
 
+    PROGRESS_MSG = "$/progress"
+
     def __init__(self, conn, debug_log=False, settings=None):
         self.conn = conn
         self.running = True
@@ -144,7 +146,7 @@ class LangServer:
             "window/workDoneProgress/create", {"token": progress_token}
         )
         self.conn.send_notification(
-            "$/progress",
+            self.PROGRESS_MSG,
             {
                 "token": progress_token,
                 "value": {
@@ -158,7 +160,7 @@ class LangServer:
 
         self.rules_tester = self.create_rule_tester()
         self.conn.send_notification(
-            "$/progress",
+            self.PROGRESS_MSG,
             {
                 "token": progress_token,
                 "value": {
@@ -171,7 +173,7 @@ class LangServer:
 
         self.keywords_list = self.rules_tester.build_keywords_list()
         self.conn.send_notification(
-            "$/progress",
+            self.PROGRESS_MSG,
             {
                 "token": progress_token,
                 "value": {
@@ -183,7 +185,7 @@ class LangServer:
         )
         self.app_layer_list = self.rules_tester.build_app_layer_list()
         self.conn.send_notification(
-            "$/progress",
+            self.PROGRESS_MSG,
             {
                 "token": progress_token,
                 "value": {"kind": "end", "message": "Suricata Language Server ready."},
@@ -471,7 +473,7 @@ class LangServer:
             "window/workDoneProgress/create", {"token": progress_token}
         )
         self.conn.send_notification(
-            "$/progress",
+            self.PROGRESS_MSG,
             {
                 "token": progress_token,
                 "value": {
@@ -487,7 +489,7 @@ class LangServer:
             filepath, read_file=True, allow_empty=did_open
         )
         self.conn.send_notification(
-            "$/progress",
+            self.PROGRESS_MSG,
             {
                 "token": progress_token,
                 "value": {"kind": "end", "message": "File analysis done"},
