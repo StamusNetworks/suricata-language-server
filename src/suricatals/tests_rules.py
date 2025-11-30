@@ -625,7 +625,7 @@ class TestRules:
             return analysis
         with open(analysis_path, "r", encoding="utf-8") as analysis_file:
             in_sid_data = False
-            signature = {}
+            signature: dict[str, (str | list[str])] = {}
             for line in analysis_file:
                 if line.startswith("== "):
                     in_sid_data = True
@@ -642,10 +642,14 @@ class TestRules:
                     warning = line.split("Warning: ")[1]
                     if "warnings" not in signature:
                         signature["warnings"] = []
+                    if isinstance(signature["warnings"], str):
+                        raise ValueError("Signature warnings is not a list")
                     signature["warnings"].append(warning.strip())
                 elif in_sid_data and "Fast Pattern" in line:
                     if "info" not in signature:
                         signature["info"] = []
+                    if isinstance(signature["info"], str):
+                        raise ValueError("Signature info is not a list")
                     signature["info"].append(line.strip())
         return analysis
 

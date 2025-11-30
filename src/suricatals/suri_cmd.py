@@ -308,9 +308,9 @@ config classification: command-and-control,Malware Command and Control Activity 
         self.image_version_run = image_version
 
     def build_cmd(self, cmd):
-        tmpdir = self.get_internal_tmpdir()
-        if tmpdir is None:
+        if self.tmpdir is None:
             return cmd
+        tmpdir = self.get_internal_tmpdir()
         suri_cmd = cmd
         # Add common options
         if self.tmpdir:
@@ -322,14 +322,20 @@ config classification: command-and-control,Malware Command and Control Activity 
 
     def prepare(self):
         self.tmpdir = tempfile.mkdtemp(prefix="sls_")
+        if self.tmpdir is None:
+            raise RuntimeError("Failed to create temporary directory")
         return self
 
-    def get_tmpdir(self):
+    def get_tmpdir(self) -> str:
+        if self.tmpdir is None:
+            self.prepare()
+        if self.tmpdir is None:
+            raise RuntimeError("Temporary directory is not set")
         return self.tmpdir
 
     def get_internal_tmpdir(self):
         if self.tmpdir is None:
-            return None
+            raise RuntimeError("Temporary directory is not set")
         if self.docker:
             return "/tmp/"
         else:
