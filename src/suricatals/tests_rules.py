@@ -339,11 +339,11 @@ class TestRules:
 
     def _rules_buffer_get_suricata_options(self, rule_buffer):
         regexp = {
-            "options": re.compile(r"^##\s*SLS\s+suricata-options:\s*(.*)$"),
-            "replace": re.compile(r"^##\s*SLS\s+replace:\s*(.*)$"),
-            "dataset-dir": re.compile(r"^##\s*SLS\s+dataset-dir:\s*(.*)$"),
-            "version": re.compile(r"^##\s*SLS\s+suricata-version:\s*(.*)$"),
-            "pcap": re.compile(r"^##\s*SLS\s+pcap-file:\s*(.*)$"),
+            "options": re.compile(r"^##\s*SLS\s+suricata-options:\s*(\S.*)$"),
+            "replace": re.compile(r"^##\s*SLS\s+replace:\s*(\S.*)$"),
+            "dataset-dir": re.compile(r"^##\s*SLS\s+dataset-dir:\s*(\S.*)$"),
+            "version": re.compile(r"^##\s*SLS\s+suricata-version:\s*(\S.*)$"),
+            "pcap": re.compile(r"^##\s*SLS\s+pcap-file:\s*(\S.*)$"),
         }
         result = {"options": [], "replace": [], "dataset-dir": None, "version": None}
         for line in rule_buffer.splitlines():
