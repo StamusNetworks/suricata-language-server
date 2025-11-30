@@ -1,5 +1,6 @@
 ## SLS pcap-file: pcap/smb.pcap
 ## SLS suricata-options: -k none
+## SLS suricata-version: 7.0.12
 alert smb any any -> any any (msg:"SMB file got no dot"; flow:established,to_server; file.name; content:!"|2e|"; flowbits:set,sn.smb.filetransfer; sid:1; rev:1;)
 alert smb any any -> any any (msg:"SMB file got dot"; flow:established,to_server; file.name; content:"|2e|"; flowbits:set,sn.smb.filetransfer; sid:2; rev:1;)
-alert smb any any -> any any (msg:"EICAR file"; flow:established; file.name; content:"b38109b.exe"; sid:3; rev:1;)
+alert smb any any -> any any (msg:"EICAR file"; flow:established,to_server; file.name; content:"b38109b.exe"; sid:3; rev:1;)

@@ -79,6 +79,16 @@ class TestSyntax(unittest.TestCase):
         for diag in diags:
             self.assertEqual(diag.severity, 4)
 
+    def test_pcap_parse(self):
+        diags = self._test_rules_file("pcap.rules", 7)
+        number_of_alerts = 0
+        for diag in diags:
+            self.assertEqual(diag.severity, 4)
+            if diag.message.startswith("Alerts"):
+                self.assertTrue(diag.message == "Alerts: 1")
+                number_of_alerts += 1
+        self.assertEqual(number_of_alerts, 2)
+
 
 if __name__ == "__main__":
     unittest.main()
