@@ -214,7 +214,7 @@ class SuricataFile:
             contents = ""
             with open(self.path, "r", encoding="utf-8", errors="replace") as fhandle:
                 contents = fhandle.read()
-            self.hash = hashlib.md5(contents.encode("utf-8")).hexdigest()
+            self.hash = hashlib.sha256(contents.encode("utf-8")).hexdigest()
             self.contents_split = contents.splitlines()
             self.nLines = len(self.contents_split)
             self.parse_file()
