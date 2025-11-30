@@ -330,12 +330,12 @@ config classification: command-and-control,Malware Command and Control Activity 
         if self.tmpdir is None:
             self.prepare()
         if self.tmpdir is None:
-            raise RuntimeError("Temporary directory is not set")
+            raise RuntimeError("Temporary directory can not be created")
         return self.tmpdir
 
     def get_internal_tmpdir(self):
         if self.tmpdir is None:
-            raise RuntimeError("Temporary directory is not set")
+            raise RuntimeError("Temporary directory is not created")
         if self.docker:
             return "/tmp/"  # NOSONAR(S5443)
         else:
@@ -454,7 +454,7 @@ config classification: command-and-control,Malware Command and Control Activity 
             # write the config file in temp dir
             internal_tmpdir = self.get_internal_tmpdir()
             if internal_tmpdir is None:
-                raise RuntimeError("Temporary directory is not set")
+                raise RuntimeError("Temporary directory does not exist")
             cf.write(config_buffer)
             cf.write("mpm-algo: ac-bs\n")
             cf.write("default-rule-path: " + internal_tmpdir + "\n")
