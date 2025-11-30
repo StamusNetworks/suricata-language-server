@@ -862,6 +862,8 @@ class TestRules:
         self.suricmd.generate_config(tmpdir)
         outdata = self.suricmd.run(["--list-keywords=csv"])
         self.suricmd.cleanup()
+        if outdata is None:
+            return []
         official_keywords = self.get_keywords_from_json()
         keywords = outdata.splitlines()
         keywords.pop(0)
@@ -911,6 +913,8 @@ class TestRules:
         outdata = self.suricmd.run(suri_cmd)
         # start suricata in test mode
         self.suricmd.cleanup()
+        if outdata is None:
+            return []
         applayers = outdata.splitlines()
         while not applayers[0].startswith("===="):
             applayers.pop(0)
