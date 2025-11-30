@@ -337,7 +337,7 @@ config classification: command-and-control,Malware Command and Control Activity 
         if self.tmpdir is None:
             raise RuntimeError("Temporary directory is not set")
         if self.docker:
-            return "/tmp/"  # //NOSONAR(python:S5443)
+            return "/tmp/"  # //NOSONAR(S5443)
         else:
             return self.tmpdir
 
@@ -376,7 +376,7 @@ config classification: command-and-control,Malware Command and Control Activity 
                     command=suri_cmd,
                     volumes={
                         self.tmpdir: {
-                            "bind": "/tmp/",  # //NOSONAR(python:S5443)
+                            "bind": "/tmp/",  # //NOSONAR(S5443)
                             "mode": "rw",
                         }
                     },
