@@ -227,22 +227,9 @@ class SuricataFile:
     def sort_diagnosis(self, key):
         return -key.severity
 
-    def check_file(self, workspace=None, engine_analysis=True, **kwargs):
+    def build_errors_diagnostics(self, errors):
         diagnostics = []
-        result = {}
-        if not workspace:
-            workspace = {}
-        with open(self.path, "r", encoding="utf-8", errors="replace") as fhandle:
-            kwargs["file_path"] = self.path
-            result = self.rules_tester.check_rule_buffer(
-                fhandle.read(), engine_analysis, **kwargs
-            )
-            self.mpm = result.get("mpm", {}).get("buffer")
-            for sid in result.get("mpm", {}).get("sids", []):
-                signature = self.sigset.get_sig_by_sid(sid)
-                if signature is not None:
-                    signature.mpm = result.get("mpm", {}).get("sids", {}).get(sid)
-        for error in result.get("errors", []):
+        for error in errors:
             if "line" in error:
                 l_diag = Diagnosis()
                 l_diag.message = error["message"]
@@ -262,7 +249,11 @@ class SuricataFile:
                     l_diag.sid = error.get("sid", "UNKNOWN")
 
                 diagnostics.append(l_diag)
-        for warning in result.get("warnings", []):
+        return diagnostics
+
+    def build_warnings_diagnostics(self, warnings):
+        diagnostics = []
+        for warning in warnings:
             line = None
             signature = None
             l_diag = Diagnosis()
@@ -296,130 +287,170 @@ class SuricataFile:
                 l_diag.sid = warning.get("sid", "UNKNOWN")
 
             diagnostics.append(l_diag)
+        return diagnostics
 
-        if engine_analysis:
-            for info in result.get("info", []):
-                line = None
-                signature = None
-                l_diag = Diagnosis()
-                l_diag.message = info["message"]
-                l_diag.source = info["source"]
-                l_diag.severity = Diagnosis.INFO_LEVEL
-                if "line" in info:
-                    line = info["line"]
-                elif "content" in info:
-                    signature = self.sigset.get_sig_by_content(info["content"])
-                    if signature:
-                        line = signature.line
-                if line is None:
-                    continue
-                sig_range = FileRange(line, 0, line, 1)
-                if signature is not None:
-                    if 'Fast Pattern "' in info["message"]:
-                        if signature.mpm is not None:
-                            sig_range = signature.get_diag_range(
-                                mode="pattern", pattern=signature.mpm["pattern"]
-                            )
-                        else:
-                            sig_range = signature.get_diag_range(mode="msg")
+    def build_engine_diagnostics(self, engine_results, workspace):
+        diagnostics = []
+        for info in engine_results:
+            line = None
+            signature = None
+            l_diag = Diagnosis()
+            l_diag.message = info["message"]
+            l_diag.source = info["source"]
+            l_diag.severity = Diagnosis.INFO_LEVEL
+            if "line" in info:
+                line = info["line"]
+            elif "content" in info:
+                signature = self.sigset.get_sig_by_content(info["content"])
+                if signature:
+                    line = signature.line
+            if line is None:
+                continue
+            sig_range = FileRange(line, 0, line, 1)
+            if signature is not None:
+                if 'Fast Pattern "' in info["message"]:
+                    if signature.mpm is not None:
+                        sig_range = signature.get_diag_range(
+                            mode="pattern", pattern=signature.mpm["pattern"]
+                        )
                     else:
                         sig_range = signature.get_diag_range(mode="msg")
-
-                    l_diag.content = signature.content
-                    l_diag.sid = signature.sid
                 else:
-                    l_diag.content = info.get("content", "")
-                    l_diag.sid = info.get("sid", "UNKNOWN")
+                    sig_range = signature.get_diag_range(mode="msg")
 
-                l_diag.range = sig_range
-                diagnostics.append(l_diag)
-            for sig in self.sigset.signatures:
-                if sig.mpm is None:
-                    if sig.sid and sig.has_error is False:
-                        message = "No Fast Pattern used, if possible add one content match to improve performance."
-                        l_diag = Diagnosis()
-                        l_diag.message = message
-                        l_diag.source = "Suricata MPM Analysis"
-                        l_diag.severity = Diagnosis.INFO_LEVEL
-                        l_diag.range = sig.get_diag_range(mode="msg")
-                        l_diag.sid = sig.sid
-                        l_diag.content = sig.content
-                        diagnostics.append(l_diag)
-                    continue
-                # mpm is content:"$pattern"
-                pattern = self.mpm.get(sig.mpm["buffer"], {}).get(sig.mpm["pattern"])
-                if pattern is None:
-                    continue
-                pattern_count = pattern["count"]
-                for sig_file in workspace:
-                    if sig_file != self.path:
-                        file_obj = workspace.get(sig_file)
-                        if file_obj is None or file_obj.mpm is None:
-                            continue
-                        f_pattern = file_obj.mpm.get(sig.mpm["buffer"], {}).get(
-                            sig.mpm["pattern"]
-                        )
-                        if f_pattern is None:
-                            continue
-                        pattern_count += f_pattern["count"]
-                l_diag = Diagnosis()
-                if pattern_count > 1:
-                    l_diag.message = (
-                        "Fast Pattern '%s' on '%s' buffer is used in %d different signatures, "
-                        "consider using a unique fast pattern to improve performance."
-                        % (sig.mpm["pattern"], sig.mpm["buffer"], pattern_count)
-                    )
-                    l_diag.source = "SLS MPM Analysis"
-                else:
-                    if sig.get_content_keyword_count() == 1:
-                        continue
-                    l_diag.message = "Fast Pattern '%s' on '%s' buffer" % (
-                        sig.mpm["pattern"],
-                        sig.mpm["buffer"],
-                    )
+                l_diag.content = signature.content
+                l_diag.sid = signature.sid
+            else:
+                l_diag.content = info.get("content", "")
+                l_diag.sid = info.get("sid", "UNKNOWN")
+
+            l_diag.range = sig_range
+            diagnostics.append(l_diag)
+        for sig in self.sigset.signatures:
+            if sig.mpm is None:
+                if sig.sid and sig.has_error is False:
+                    message = "No Fast Pattern used, if possible add one content match to improve performance."
+                    l_diag = Diagnosis()
+                    l_diag.message = message
                     l_diag.source = "Suricata MPM Analysis"
-                sig_range = sig.get_diag_range(
-                    mode="pattern", pattern=sig.mpm["pattern"]
+                    l_diag.severity = Diagnosis.INFO_LEVEL
+                    l_diag.range = sig.get_diag_range(mode="msg")
+                    l_diag.sid = sig.sid
+                    l_diag.content = sig.content
+                    diagnostics.append(l_diag)
+                continue
+            # mpm is content:"$pattern"
+            pattern = self.mpm.get(sig.mpm["buffer"], {}).get(sig.mpm["pattern"])
+            if pattern is None:
+                continue
+            pattern_count = pattern["count"]
+            for sig_file in workspace:
+                if sig_file != self.path:
+                    file_obj = workspace.get(sig_file)
+                    if file_obj is None or file_obj.mpm is None:
+                        continue
+                    f_pattern = file_obj.mpm.get(sig.mpm["buffer"], {}).get(
+                        sig.mpm["pattern"]
+                    )
+                    if f_pattern is None:
+                        continue
+                    pattern_count += f_pattern["count"]
+            l_diag = Diagnosis()
+            if pattern_count > 1:
+                l_diag.message = (
+                    "Fast Pattern '%s' on '%s' buffer is used in %d different signatures, "
+                    "consider using a unique fast pattern to improve performance."
+                    % (sig.mpm["pattern"], sig.mpm["buffer"], pattern_count)
                 )
-                l_diag.severity = Diagnosis.INFO_LEVEL
-                l_diag.range = sig.get_diag_range(
-                    mode="pattern", pattern=sig.mpm["pattern"]
+                l_diag.source = "SLS MPM Analysis"
+            else:
+                if sig.get_content_keyword_count() == 1:
+                    continue
+                l_diag.message = "Fast Pattern '%s' on '%s' buffer" % (
+                    sig.mpm["pattern"],
+                    sig.mpm["buffer"],
                 )
-                l_diag.sid = sig.sid
-                l_diag.content = sig.content
+                l_diag.source = "Suricata MPM Analysis"
+            sig_range = sig.get_diag_range(mode="pattern", pattern=sig.mpm["pattern"])
+            l_diag.severity = Diagnosis.INFO_LEVEL
+            l_diag.range = sig.get_diag_range(
+                mode="pattern", pattern=sig.mpm["pattern"]
+            )
+            l_diag.sid = sig.sid
+            l_diag.content = sig.content
+            diagnostics.append(l_diag)
+        return diagnostics
+
+    def build_pcap_diagnostics(self, pcap_results):
+        diagnostics = []
+        for sid, count in pcap_results.items():
+            l_diag = Diagnosis()
+            l_diag.message = f"Alerts: {count}"
+            l_diag.source = "Suricata Pcap Analysis"
+            l_diag.severity = Diagnosis.INFO_LEVEL
+            signature = self.sigset.get_sig_by_sid(sid)
+            if signature:
+                sig_range = signature.get_diag_range(mode="msg")
+                l_diag.range = sig_range
+                l_diag.content = signature.content
+                l_diag.sid = signature.sid
                 diagnostics.append(l_diag)
+
+        return diagnostics
+
+    def build_profiling_diagnostics(self, profiling_results):
+        diagnostics = []
+        for res in profiling_results:
+            l_diag = Diagnosis()
+            l_diag.message = f"Checks: {res['checks']}. Ticks: total {res['ticks_total']}, max {res['ticks_max']}, avg {res['ticks_avg']}"
+            l_diag.source = "Suricata Pcap Profiling"
+            l_diag.severity = Diagnosis.INFO_LEVEL
+            signature = self.sigset.get_sig_by_sid(res["signature_id"])
+            if signature:
+                sig_range = signature.get_diag_range(mode="msg")
+                l_diag.range = sig_range
+                l_diag.content = signature.content
+                l_diag.sid = signature.sid
+                diagnostics.append(l_diag)
+        return diagnostics
+
+    def check_file(self, workspace=None, engine_analysis=True, **kwargs):
+        diagnostics = []
+        result = {}
+        if not workspace:
+            workspace = {}
+        with open(self.path, "r", encoding="utf-8", errors="replace") as fhandle:
+            kwargs["file_path"] = self.path
+            result = self.rules_tester.check_rule_buffer(
+                fhandle.read(), engine_analysis, **kwargs
+            )
+            self.mpm = result.get("mpm", {}).get("buffer")
+            for sid in result.get("mpm", {}).get("sids", []):
+                signature = self.sigset.get_sig_by_sid(sid)
+                if signature is not None:
+                    signature.mpm = result.get("mpm", {}).get("sids", {}).get(sid)
+        errors = self.build_errors_diagnostics(result.get("errors", []))
+        diagnostics.extend(errors)
+        warnings = self.build_warnings_diagnostics(result.get("warnings", []))
+        diagnostics.extend(warnings)
+
+        if engine_analysis:
+            analysis_diags = self.build_engine_diagnostics(
+                result.get("info", {}), workspace
+            )
+            diagnostics.extend(analysis_diags)
         for sig in self.sigset.signatures:
             sls_diag = sig.sls_syntax_check()
             if len(sls_diag):
                 diagnostics.extend(sls_diag)
         # let's check for match in the pcap if exists
         if "matches" in result:
-            for sid, count in result["matches"].items():
-                l_diag = Diagnosis()
-                l_diag.message = f"Alerts: {count}"
-                l_diag.source = "Suricata Pcap Analysis"
-                l_diag.severity = Diagnosis.INFO_LEVEL
-                signature = self.sigset.get_sig_by_sid(sid)
-                if signature:
-                    sig_range = signature.get_diag_range(mode="msg")
-                    l_diag.range = sig_range
-                    l_diag.content = signature.content
-                    l_diag.sid = signature.sid
-                    diagnostics.append(l_diag)
+            matches = self.build_pcap_diagnostics(result["matches"])
+            diagnostics.extend(matches)
         # let's check for profiling in the pcap if exists
         if "profiling" in result:
-            for res in result["profiling"]:
-                l_diag = Diagnosis()
-                l_diag.message = f"Checks: {res['checks']}. Ticks: total {res['ticks_total']}, max {res['ticks_max']}, avg {res['ticks_avg']}"
-                l_diag.source = "Suricata Pcap Profiling"
-                l_diag.severity = Diagnosis.INFO_LEVEL
-                signature = self.sigset.get_sig_by_sid(res["signature_id"])
-                if signature:
-                    sig_range = signature.get_diag_range(mode="msg")
-                    l_diag.range = sig_range
-                    l_diag.content = signature.content
-                    l_diag.sid = signature.sid
-                    diagnostics.append(l_diag)
+            profiling = self.build_profiling_diagnostics(result.get("profiling", {}))
+            diagnostics.extend(profiling)
         self.diagnosis = diagnostics
         return result["status"], sorted(diagnostics, key=self.sort_diagnosis)
 
