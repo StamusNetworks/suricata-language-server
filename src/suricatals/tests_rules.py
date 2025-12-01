@@ -346,7 +346,7 @@ class TestRules:
             "pcap": re.compile(r"^##\s*SLS\s+pcap-file:\s*(\S.*)$"),
         }
         result = {"options": [], "replace": [], "dataset-dir": None, "version": None}
-        for line in rule_buffer.splitlines():
+        for line_number, line in enumerate(rule_buffer.splitlines(), start=0):
             match = regexp["options"].match(line)
             if match:
                 result["options"] = shlex.split(match.group(1))
@@ -365,6 +365,7 @@ class TestRules:
                 try:
                     self._sanitize_file(pcap_file)
                     result["pcap"] = pcap_file
+                    result["pcap_line"] = line_number
                 except ValueError:
                     log.warning("Invalid pcap file path in rule buffer: %s", pcap_file)
         return result
@@ -528,6 +529,21 @@ class TestRules:
                 base_dir = os.path.dirname(kwargs["file_path"])
                 pcap_file = os.path.join(base_dir, pcap_file)
             pcap_path = os.path.join(tmpdir, "test.pcap")
+
+            if not os.path.exists(pcap_file):
+                if "warnings" not in result:
+                    result["warnings"] = []
+                pcap_file_line = options.get("pcap_line", 0)
+                result["warnings"].append(
+                    {
+                        "message": f'PCAP file "{pcap_file}" not found for rules testing',
+                        "source": self.SURICATA_SYNTAX_CHECK,
+                        "line": pcap_file_line,
+                    }
+                )
+                self.suricmd.cleanup()
+                return result
+
             shutil.copy(pcap_file, pcap_path)
 
             suri_cmd = [
