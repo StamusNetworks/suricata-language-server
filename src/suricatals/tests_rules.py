@@ -528,6 +528,21 @@ class TestRules:
                 base_dir = os.path.dirname(kwargs["file_path"])
                 pcap_file = os.path.join(base_dir, pcap_file)
             pcap_path = os.path.join(tmpdir, "test.pcap")
+
+            if not os.path.exists(pcap_file):
+                ddeded
+                if "warnings" not in result:
+                    result["warnings"] = []
+                result["warnings"].append(
+                    {
+                        "message": f'PCAP file "{pcap_file}" not found for rule testing',
+                        "source": self.SURICATA_SYNTAX_CHECK,
+                        "content": "## SLS pcap-file: pcap/smb.pca",
+                    }
+                )
+                self.suricmd.cleanup()
+                return result
+
             shutil.copy(pcap_file, pcap_path)
 
             suri_cmd = [
