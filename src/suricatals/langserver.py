@@ -218,6 +218,7 @@ class LangServer:
         handler = {
             "initialize": self.serve_initialize,
             "textDocument/documentSymbol": noop,
+            "textDocument/documentHighlight": noop,
             "textDocument/completion": self.serve_autocomplete,
             "textDocument/signatureHelp": noop,
             "textDocument/definition": noop,
