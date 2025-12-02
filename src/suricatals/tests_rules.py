@@ -544,7 +544,34 @@ class TestRules:
                 self.suricmd.cleanup()
                 return result
 
-            shutil.copy(pcap_file, pcap_path)
+            try:
+                shutil.copy(pcap_file, pcap_path)
+            except PermissionError as e:
+                if "warnings" not in result:
+                    result["warnings"] = []
+                pcap_file_line = options.get("pcap_line", 0)
+                result["warnings"].append(
+                    {
+                        "message": f'Permission error during PCAP file "{pcap_file}" copy: {str(e)}',
+                        "source": self.SURICATA_SYNTAX_CHECK,
+                        "line": pcap_file_line,
+                    }
+                )
+                self.suricmd.cleanup()
+                return result
+            except Exception as e:
+                if "warnings" not in result:
+                    result["warnings"] = []
+                pcap_file_line = options.get("pcap_line", 0)
+                result["warnings"].append(
+                    {
+                        "message": f'Error during PCAP file "{pcap_file}" copy: {str(e)}',
+                        "source": self.SURICATA_SYNTAX_CHECK,
+                        "line": pcap_file_line,
+                    }
+                )
+                self.suricmd.cleanup()
+                return result
 
             suri_cmd = [
                 "-r",
