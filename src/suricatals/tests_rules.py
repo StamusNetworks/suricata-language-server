@@ -387,7 +387,7 @@ class TestRules:
                 else:
                     base_file = dataset.split("_")[-1]
                     if os.path.exists(base_file):
-                        shutil.copy(base_file, os.path.join(tmpdir, dataset))
+                        shutil.copyfile(base_file, os.path.join(tmpdir, dataset))
                     else:
                         with open(
                             os.path.join(tmpdir, dataset), "w", encoding="utf-8"
@@ -545,7 +545,7 @@ class TestRules:
                 return result
 
             try:
-                shutil.copy(pcap_file, pcap_path)
+                shutil.copyfile(pcap_file, pcap_path)
             except PermissionError as e:
                 if "warnings" not in result:
                     result["warnings"] = []
