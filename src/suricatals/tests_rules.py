@@ -559,7 +559,7 @@ class TestRules:
                 )
                 self.suricmd.cleanup()
                 return result
-            except Exception as e:
+            except OSError as e:
                 if "warnings" not in result:
                     result["warnings"] = []
                 pcap_file_line = options.get("pcap_line", 0)
