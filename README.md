@@ -345,6 +345,13 @@ and if there is a `mta.pcap` then the following syntax can be used:
 The preceeding syntax will work on Unix operating system, systems using backslash as directory separator
 will have to use it instead of slash.
 
+In the screenshot below, you can see an example of usage of this feature with Neovim:
+
+![image](https://raw.githubusercontent.com/StamusNetworks/suricata-language-server/main/images/nvim-perf.png)
+
+It displays the performance metrics of the signatures when evaluated against the pcap file.
+
+
 ## Getting help
 
 You can get help by:
