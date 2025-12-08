@@ -339,7 +339,6 @@ and if there is a `mta.pcap` then the following syntax can be used:
 
 ```
 ## SLS pcap-file: tests/mta.pcap
-
 ```
 
 The preceeding syntax will work on Unix operating system, systems using backslash as directory separator
