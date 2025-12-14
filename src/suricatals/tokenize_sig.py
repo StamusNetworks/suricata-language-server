@@ -59,9 +59,11 @@ class SuricataSemanticTokenParser:
 
         options_list = self.definitions.get("options", [])
         if options_list:
-            options_pat = r"(?P<property>" + make_group(options_list) + r")(?=:)"
+            options_pat = (
+                r"(?P<property>" + make_group(options_list) + r")(?=[\s]*[:;])"
+            )
         else:
-            options_pat = r"(?P<property>\b[a-z_0-9.]+(?=:))"
+            options_pat = r"(?P<property>\b[a-z_0-9.]+(?=[\s]*[:;]))"
 
         patterns = [
             (r"(?P<comment>#.*)", "comment"),
@@ -82,7 +84,7 @@ class SuricataSemanticTokenParser:
             # Removed 'any' from here.
             (r"(?P<variable>\$[A-Za-z0-9_]+|\[.*?\])", "variable"),
             # 3. Numbers: Ports, Ranges, Integers
-            (r"(?P<number>\b\d+(:(\d+)?)?|(?<=[\s,\[]):\d+)", "number"),
+            (r"(?P<number>\b\d+\b(:(\d+)?)?|(?<=[\s,\[]):\d+)", "number"),
             # 4. Structure
             (r"(?P<direction>(->|<>|=>))", "keyword"),
             (r"(?P<operator>[;:()])", "operator"),
