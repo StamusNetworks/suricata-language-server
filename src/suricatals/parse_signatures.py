@@ -23,6 +23,7 @@ import hashlib
 import re
 
 from .lsp_helpers import Diagnosis, FileRange
+from .tokenize_sig import SuricataSemanticTokenParser
 
 
 class Signature:
@@ -189,6 +190,9 @@ class SuricataFile:
     def __init__(self, path, rules_tester, empty=False):
         self.path = path
         self.rules_tester = rules_tester
+        self.semantic_tokens_parser = SuricataSemanticTokenParser(
+            self.rules_tester.get_semantic_token_definitions()
+        )
         self.contents_split = []
         self.sigset = SignatureSet()
         self.nLines = 0
@@ -486,3 +490,9 @@ class SuricataFile:
         self.contents_split = content_update["text"].splitlines()
         self.nLines = len(self.contents_split)
         self.parse_file()
+
+    def get_semantic_tokens(self):
+        """Generate semantic tokens for the file"""
+        content = "\n".join(self.contents_split)
+        data = self.semantic_tokens_parser.parse(content)
+        return {"data": data}

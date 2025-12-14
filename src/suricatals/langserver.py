@@ -28,6 +28,7 @@ from suricatals.jsonrpc import path_from_uri, JSONRPC2Error
 from suricatals.parse_signatures import SuricataFile
 from suricatals.tests_rules import TestRules
 from suricatals.suri_cmd import SuriCmd
+from suricatals.tokenize_sig import SuricataSemanticTokenParser
 
 log = logging.getLogger(__name__)
 
@@ -42,57 +43,6 @@ def init_file(filepath, rules_tester, line_limit):
 
 
 class LangServer:
-    ACTIONS_ITEMS = [
-        {
-            "label": "alert",
-            "kind": 14,
-            "detail": "Alert action",
-            "documentation": "Trigger alert",
-        },
-        {
-            "label": "config",
-            "kind": 14,
-            "detail": "Alert action",
-            "documentation": "Configuration signature. Used mostly for conditional logging.",
-        },
-        {
-            "label": "drop",
-            "kind": 14,
-            "detail": "Alert action",
-            "documentation": "Trigger alert and drop flow",
-        },
-        {
-            "label": "pass",
-            "kind": 14,
-            "detail": "Alert action",
-            "documentation": "Stop inspecting the data",
-        },
-        {
-            "label": "reject",
-            "kind": 14,
-            "detail": "Alert action",
-            "documentation": "Trigger alert and reset session",
-        },
-        {
-            "label": "rejectsrc",
-            "kind": 14,
-            "detail": "Alert action",
-            "documentation": "Trigger alert and reset session for source IP",
-        },
-        {
-            "label": "rejectdst",
-            "kind": 14,
-            "detail": "Alert action",
-            "documentation": "Trigger alert and reset session for destination IP",
-        },
-        {
-            "label": "rejectboth",
-            "kind": 14,
-            "detail": "Alert action",
-            "documentation": "Trigger alert and reset session for both IPs",
-        },
-    ]
-
     PROGRESS_MSG = "$/progress"
 
     def __init__(self, conn, debug_log=False, settings=None):
@@ -231,6 +181,7 @@ class LangServer:
             "textDocument/didClose": self.serve_onClose,
             "textDocument/didChange": self.serve_onChange,
             "textDocument/codeAction": noop,
+            "textDocument/semanticTokens/full": self.serve_semantic_tokens,
             "initialized": self.server_initialized,
             "workspace/didChangeWatchedFiles": noop,
             "workspace/symbol": noop,
@@ -311,6 +262,14 @@ class LangServer:
             # "renameProvider": True,
             # "workspaceSymbolProvider": True,
             "textDocumentSync": self.sync_type,
+            "semanticTokensProvider": {
+                "legend": {
+                    "tokenTypes": SuricataSemanticTokenParser.TOKEN_TYPES,
+                    "tokenModifiers": SuricataSemanticTokenParser.TOKEN_MODIFIERS,
+                },
+                "full": True,
+                "range": False,
+            },
         }
         if self.notify_init:
             self.post_messages.append([3, "suricatals initialization complete"])
@@ -326,7 +285,7 @@ class LangServer:
         sig_index = params["position"]["character"]
         word_split = re.split(" +", sig_content[0:sig_index])
         if len(word_split) == 1:
-            return self.ACTIONS_ITEMS
+            return self.rules_tester.ACTIONS_ITEMS
         if len(word_split) == 2:
             return self.app_layer_list
         if edit_index == 0:
@@ -395,6 +354,17 @@ class LangServer:
                     "traceback": traceback.format_exc(),
                 },
             )
+
+    def serve_semantic_tokens(self, request):
+        # Get parameters from request
+        params = request["params"]
+        uri = params["textDocument"]["uri"]
+        path = path_from_uri(uri)
+        file_obj = self.workspace.get(path)
+        if file_obj is None:
+            return {"data": []}
+        # Add scopes to outline view
+        return file_obj.get_semantic_tokens()
 
     def get_diagnostics(self, uri):
         filepath = path_from_uri(uri)

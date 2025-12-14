@@ -28,6 +28,7 @@ import logging
 import importlib.resources
 import shlex
 from suricatals.suri_cmd import SuriCmd
+from typing import Dict, Any
 
 log = logging.getLogger(__name__)
 
@@ -39,6 +40,56 @@ class TestRules:
     USELESS_ERRNO = [40, 43, 44]
     SURICATA_SYNTAX_CHECK = "Suricata Syntax Check"
     SURICATA_ENGINE_ANALYSIS = "Suricata Engine Analysis"
+    ACTIONS_ITEMS = [
+        {
+            "label": "alert",
+            "kind": 14,
+            "detail": "Alert action",
+            "documentation": "Trigger alert",
+        },
+        {
+            "label": "config",
+            "kind": 14,
+            "detail": "Alert action",
+            "documentation": "Configuration signature. Used mostly for conditional logging.",
+        },
+        {
+            "label": "drop",
+            "kind": 14,
+            "detail": "Alert action",
+            "documentation": "Trigger alert and drop flow",
+        },
+        {
+            "label": "pass",
+            "kind": 14,
+            "detail": "Alert action",
+            "documentation": "Stop inspecting the data",
+        },
+        {
+            "label": "reject",
+            "kind": 14,
+            "detail": "Alert action",
+            "documentation": "Trigger alert and reset session",
+        },
+        {
+            "label": "rejectsrc",
+            "kind": 14,
+            "detail": "Alert action",
+            "documentation": "Trigger alert and reset session for source IP",
+        },
+        {
+            "label": "rejectdst",
+            "kind": 14,
+            "detail": "Alert action",
+            "documentation": "Trigger alert and reset session for destination IP",
+        },
+        {
+            "label": "rejectboth",
+            "kind": 14,
+            "detail": "Alert action",
+            "documentation": "Trigger alert and reset session for both IPs",
+        },
+    ]
 
     def __init__(
         self,
@@ -974,3 +1025,21 @@ class TestRules:
             app_layer_item = {"label": app_layer, "detail": app_layer, "kind": 14}
             applayers_list.append(app_layer_item)
         return applayers_list
+
+    def get_semantic_token_definitions(self) -> Dict[str, Any]:
+        # we need to get the list of keywords from suricata
+        keywords = self.build_keywords_list()
+        sticky_buffers = [
+            k["label"] for k in keywords if "Sticky Buffer" in k.get("detail", "")
+        ]
+        options = [
+            k["label"] for k in keywords if "Sticky Buffer" not in k.get("detail", "")
+        ]
+        app_layers = [k["label"] for k in self.build_app_layer_list()]
+        actions = [k["label"] for k in self.ACTIONS_ITEMS]
+        return {
+            "actions": actions,
+            "protocols": app_layers,
+            "sticky_buffers": sticky_buffers,
+            "options": options,
+        }
