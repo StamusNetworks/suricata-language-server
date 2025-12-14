@@ -289,6 +289,8 @@ class LangServer:
         sig_index = params["position"]["character"]
         word_split = re.split(" +", sig_content[0:sig_index])
         if len(word_split) == 1:
+            if self.rules_tester is None:
+                self.rules_tester = self.create_rule_tester()
             return self.rules_tester.ACTIONS_ITEMS
         if len(word_split) == 2:
             return self.app_layer_list
