@@ -163,6 +163,9 @@ class LangServer:
         def noop(_):
             return None
 
+        if not "method" in request:
+            return None
+
         # Request handler
         log.debug("REQUEST %s %s", request.get("id"), request.get("method"))
         handler = {
