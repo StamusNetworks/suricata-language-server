@@ -491,8 +491,32 @@ class SuricataFile:
         self.nLines = len(self.contents_split)
         self.parse_file()
 
-    def get_semantic_tokens(self):
+    def extract_range(self, range):
+        lines = self.contents_split
+
+        start = range["start"]
+        end = range["end"]
+
+        s_line, s_char = start["line"], start["character"]
+        e_line, e_char = end["line"], end["character"]
+        # Case 1: Range is on a single line
+        if s_line == e_line:
+            return lines[s_line][s_char:e_char]
+        # Case 2: Range spans multiple lines
+        # Part A: Suffix of the first line
+        result = [lines[s_line][s_char:]]
+        # Part B: All full lines in between
+        result.extend(lines[s_line + 1 : e_line])
+        # Part C: Prefix of the last line
+        result.append(lines[e_line][:e_char])
+        # Join with newline
+        return "\n".join(result)
+
+    def get_semantic_tokens(self, range=None):
         """Generate semantic tokens for the file"""
-        content = "\n".join(self.contents_split)
+        if range is None:
+            content = "\n".join(self.contents_split)
+        else:
+            content = self.extract_range(range)
         data = self.semantic_tokens_parser.parse(content)
         return {"data": data}

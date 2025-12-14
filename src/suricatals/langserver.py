@@ -182,6 +182,7 @@ class LangServer:
             "textDocument/didChange": self.serve_onChange,
             "textDocument/codeAction": noop,
             "textDocument/semanticTokens/full": self.serve_semantic_tokens,
+            "textDocument/semanticTokens/range": self.serve_semantic_tokens_range,
             "initialized": self.server_initialized,
             "workspace/didChangeWatchedFiles": noop,
             "workspace/symbol": noop,
@@ -268,7 +269,7 @@ class LangServer:
                     "tokenModifiers": SuricataSemanticTokenParser.TOKEN_MODIFIERS,
                 },
                 "full": True,
-                "range": False,
+                "range": True,
             },
         }
         if self.notify_init:
@@ -365,6 +366,17 @@ class LangServer:
             return {"data": []}
         # Add scopes to outline view
         return file_obj.get_semantic_tokens()
+
+    def serve_semantic_tokens_range(self, request):
+        # Get parameters from request
+        params = request["params"]
+        uri = params["textDocument"]["uri"]
+        path = path_from_uri(uri)
+        file_obj = self.workspace.get(path)
+        if file_obj is None:
+            return {"data": []}
+        # Add scopes to outline view
+        return file_obj.get_semantic_tokens(range=params["range"])
 
     def get_diagnostics(self, uri):
         filepath = path_from_uri(uri)
