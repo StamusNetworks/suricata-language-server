@@ -381,7 +381,7 @@ class LangServer:
         if file_obj is None:
             return {"data": []}
         # Add scopes to outline view
-        return file_obj.get_semantic_tokens(range=params["range"])
+        return file_obj.get_semantic_tokens(file_range=params["range"])
 
     def get_diagnostics(self, uri):
         filepath = path_from_uri(uri)

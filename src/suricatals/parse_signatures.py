@@ -491,11 +491,11 @@ class SuricataFile:
         self.nLines = len(self.contents_split)
         self.parse_file()
 
-    def extract_range(self, range):
+    def extract_range(self, file_range):
         lines = self.contents_split
 
-        start = range["start"]
-        end = range["end"]
+        start = file_range["start"]
+        end = file_range["end"]
 
         s_line, s_char = start["line"], start["character"]
         e_line, e_char = end["line"], end["character"]
@@ -512,11 +512,11 @@ class SuricataFile:
         # Join with newline
         return "\n".join(result)
 
-    def get_semantic_tokens(self, range=None):
+    def get_semantic_tokens(self, file_range=None):
         """Generate semantic tokens for the file"""
-        if range is None:
+        if file_range is None:
             content = "\n".join(self.contents_split)
         else:
-            content = self.extract_range(range)
+            content = self.extract_range(file_range)
         data = self.semantic_tokens_parser.parse(content)
         return {"data": data}
