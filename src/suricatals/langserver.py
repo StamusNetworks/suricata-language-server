@@ -265,13 +265,17 @@ class LangServer:
             # "implementationProvider": True,
             # "renameProvider": True,
             # "workspaceSymbolProvider": True,
-            "textDocumentSync": self.sync_type,
+            "textDocumentSync": {
+                "openClose": True,  # Correct standard key
+                "change": self.sync_type,  # 1 = Full Sync (Integer, not object)
+                "save": {},  # Empty dict implies { "includeText": false }
+            },
             "semanticTokensProvider": {
                 "legend": {
                     "tokenTypes": SuricataSemanticTokenParser.TOKEN_TYPES,
                     "tokenModifiers": SuricataSemanticTokenParser.TOKEN_MODIFIERS,
                 },
-                "full": True,
+                "full": {"delta": False},
                 "range": True,
             },
         }
