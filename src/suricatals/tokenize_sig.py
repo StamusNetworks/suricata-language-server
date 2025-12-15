@@ -66,7 +66,7 @@ class SuricataSemanticTokenParser:
             options_pat = r"(?P<property>\b[a-z_0-9.]+(?=[\s]*[:;]))"
 
         patterns = [
-            (r"(?P<comment>#.*)", "comment"),
+            (r"(?P<comment>(^|[\s;])#.*)", "comment"),
             # Strings must be before keywords to avoid matching internals
             (r'(?P<string>"(\\.|[^"\\])*")', "string"),
             # Keywords / Actions
