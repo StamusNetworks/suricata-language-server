@@ -499,6 +499,10 @@ class SuricataFile:
 
         s_line, s_char = start["line"], start["character"]
         e_line, e_char = end["line"], end["character"]
+        # handle range with an empty line at the end
+        if e_char == 0:
+            e_line -= 1
+            e_char = len(lines[e_line])
         # Case 1: Range is on a single line
         if s_line == e_line:
             return lines[s_line][s_char:e_char]
