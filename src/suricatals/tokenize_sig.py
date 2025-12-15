@@ -92,6 +92,14 @@ class SuricataSemanticTokenParser:
 
         return re.compile("|".join(p[0] for p in patterns))
 
+    def _utf16_len(self, s: str) -> int:
+        """
+        Returns the length of the string in UTF-16 code units.
+        This is required because LSP uses UTF-16 offsets (emojis = 2 chars).
+        """
+        # We use utf-16-le to avoid the Byte Order Mark (BOM) counting as 2 bytes
+        return len(s.encode("utf-16-le")) // 2
+
     def parse(self, text: str) -> List[int]:
         data = []
         prev_line = 0
@@ -104,13 +112,7 @@ class SuricataSemanticTokenParser:
 
                 # Default mapping
                 token_type_str = group
-
-                # Normalization
-                if group == "action":
-                    token_type_str = "keyword"
-                if group == "constant":
-                    token_type_str = "keyword"  # 'any' -> keyword
-                if group == "direction":
+                if group in ["action", "constant", "direction"]:
                     token_type_str = "keyword"
                 if group == "protocol":
                     token_type_str = "type"
@@ -120,15 +122,29 @@ class SuricataSemanticTokenParser:
                 except ValueError:
                     continue
 
-                start_col = match.start()
-                length = match.end() - match.start()
+                # This accounts for any emojis occurring BEFORE this token.
+                start_char_idx = match.start()
+                start_col_utf16 = self._utf16_len(line[:start_char_idx])
+
+                # We measure the UTF-16 length of the token text itself.
+                # If the string contains an emoji, this returns N+1 compared to Python len.
+                token_text = match.group()
+                length_utf16 = self._utf16_len(token_text)
 
                 delta_line = line_idx - prev_line
-                delta_start = start_col if delta_line > 0 else start_col - prev_start
 
-                data.extend([delta_line, delta_start, length, type_idx, 0])
+                if delta_line > 0:
+                    delta_start = start_col_utf16  # New line: absolute from 0
+                else:
+                    delta_start = (
+                        start_col_utf16 - prev_start
+                    )  # Same line: relative to prev start
+
+                data.extend([delta_line, delta_start, length_utf16, type_idx, 0])
+
                 prev_line = line_idx
-                prev_start = start_col
+                prev_start = start_col_utf16
+
         return data
 
     def get_legend(self) -> Dict[str, Any]:
