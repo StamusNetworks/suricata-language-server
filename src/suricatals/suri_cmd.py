@@ -512,4 +512,6 @@ profiling:
         output = self.run(cmd)
         if output is None:
             raise RuntimeError("Failed to get Suricata version")
+        if self.returncode is False:
+            raise RuntimeError("Suricata returned error while getting version")
         return output.strip()
