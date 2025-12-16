@@ -28,9 +28,24 @@ import logging
 import importlib.resources
 import shlex
 from suricatals.suri_cmd import SuriCmd
+from suricatals.lsp_helpers import Diagnosis, FileRange
 from typing import Dict, Any
 
 log = logging.getLogger(__name__)
+
+
+class SuricataFileException(Exception):
+    def __init__(self, message, line_number=None):
+        super().__init__(message)
+        self.line_number = line_number
+
+    def get_diagnosis(self):
+        diagnosis = Diagnosis()
+        diagnosis.message = str(self)
+        diagnosis.severity = Diagnosis.ERROR_LEVEL
+        diagnosis.source = "Suricata Language Server"
+        diagnosis.range = FileRange(self.line_number, 0, self.line_number, 1000)
+        return diagnosis
 
 
 class TestRules:
@@ -419,6 +434,10 @@ class TestRules:
                     result["pcap_line"] = line_number
                 except ValueError:
                     log.warning("Invalid pcap file path in rule buffer: %s", pcap_file)
+                    raise SuricataFileException(
+                        "Only relative pcap file path are allowed in rule buffer",
+                        line_number=line_number,
+                    )
         return result
 
     def _rules_buffer_prepare_dataset(self, rule_buffer, tmpdir):
@@ -451,7 +470,12 @@ class TestRules:
         if tmpdir is None:
             raise IOError("Unable to get temporary directory for Suricata execution")
 
-        options = self._rules_buffer_get_suricata_options(rule_buffer)
+        try:
+            options = self._rules_buffer_get_suricata_options(rule_buffer)
+        except SuricataFileException as e:
+            self.suricmd.cleanup()
+            raise e
+
         if options.get("dataset-dir"):
             undir = re.sub(r"/", "_", options["dataset-dir"])
             rule_buffer = rule_buffer.replace(options["dataset-dir"], undir)
@@ -497,7 +521,13 @@ class TestRules:
         extra_buffers=None,
         **kwargs,
     ):
-        options = self._rules_buffer_get_suricata_options(rule_buffer)
+
+        try:
+            options = self._rules_buffer_get_suricata_options(rule_buffer)
+        except SuricataFileException as e:
+            self.suricmd.cleanup()
+            raise e
+
         suri_options = options.get("options")
         if options.get("dataset-dir"):
             undir = re.sub(r"/", "_", options["dataset-dir"])

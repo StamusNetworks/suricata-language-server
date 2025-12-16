@@ -26,7 +26,7 @@ import uuid
 
 from suricatals.jsonrpc import path_from_uri, JSONRPC2Error
 from suricatals.parse_signatures import SuricataFile
-from suricatals.tests_rules import TestRules
+from suricatals.tests_rules import TestRules, SuricataFileException
 from suricatals.suri_cmd import SuriCmd
 from suricatals.tokenize_sig import SuricataSemanticTokenParser
 
@@ -356,6 +356,16 @@ class LangServer:
                 {"uri": uri, "diagnostics": diag_results},
             )
         elif diag_exp is not None:
+            if isinstance(diag_exp, SuricataFileException):
+                log.error("File error: %s", diag_exp, exc_info=True)
+                self.conn.send_notification(
+                    "textDocument/publishDiagnostics",
+                    {
+                        "uri": uri,
+                        "diagnostics": [diag_exp.get_diagnosis().to_message()],
+                    },
+                )
+                return
             self.conn.write_error(
                 -1,
                 code=-32603,
