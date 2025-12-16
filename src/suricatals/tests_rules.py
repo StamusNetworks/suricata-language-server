@@ -577,7 +577,12 @@ class TestRules:
             if suri_options:
                 suri_cmd += suri_options
 
-            self.suricmd.run(suri_cmd)
+            run_error = self.suricmd.run(suri_cmd)
+            if self.suricmd.returncode == False:
+                self.suricmd.cleanup()
+                raise SuricataFileException(
+                    f"Error during Suricata engine analysis run: {run_error}", 0
+                )
 
             engine_analysis = self.parse_engine_analysis(tmpdir)
             for signature in engine_analysis:
@@ -662,9 +667,15 @@ class TestRules:
             if suri_options:
                 suri_cmd += suri_options
 
-            self.suricmd.run(suri_cmd)
-            result["matches"] = self.parse_eve(tmpdir)
-            result["profiling"] = self.parse_profiling(tmpdir)
+            run_error = self.suricmd.run(suri_cmd)
+            if self.suricmd.returncode == True:
+                result["matches"] = self.parse_eve(tmpdir)
+                result["profiling"] = self.parse_profiling(tmpdir)
+            else:
+                self.suricmd.cleanup()
+                raise SuricataFileException(
+                    f"Error during Suricata run: {run_error}", 0
+                )
 
         self.suricmd.cleanup()
         return result
