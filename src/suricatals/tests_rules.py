@@ -403,7 +403,7 @@ class TestRules:
         if ".." in filepath.split(os.path.sep):
             raise ValueError("Parent directory references are not allowed")
 
-    def _rules_buffer_get_suricata_options(self, rule_buffer):
+    def _rules_buffer_get_suricata_options(self, rule_buffer) -> Dict[str, Any]:
         regexp = {
             "options": re.compile(r"^##\s*SLS\s+suricata-options:\s*(\S.*)$"),
             "replace": re.compile(r"^##\s*SLS\s+replace:\s*(\S.*)$"),
