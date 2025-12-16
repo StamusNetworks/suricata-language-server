@@ -432,12 +432,12 @@ class TestRules:
                     self._sanitize_file(pcap_file)
                     result["pcap"] = pcap_file
                     result["pcap_line"] = line_number
-                except ValueError:
+                except ValueError as exc:
                     log.warning("Invalid pcap file path in rule buffer: %s", pcap_file)
                     raise SuricataFileException(
                         "Only relative pcap file path are allowed in rule buffer",
                         line_number=line_number,
-                    )
+                    ) from exc
         return result
 
     def _rules_buffer_prepare_dataset(self, rule_buffer, tmpdir):
