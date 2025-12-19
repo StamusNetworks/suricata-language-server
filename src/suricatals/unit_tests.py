@@ -89,6 +89,12 @@ class TestSyntax(unittest.TestCase):
                 number_of_alerts += 1
         self.assertEqual(number_of_alerts, 2)
 
+    def test_empty_sticky(self):
+        diags = self._test_rules_file("empty_sticky.rules", 1)
+        for diag in diags:
+            self.assertEqual(diag.severity, 1)
+            self.assertTrue("sticky buffer" in diag.message)
+
 
 if __name__ == "__main__":
     unittest.main()

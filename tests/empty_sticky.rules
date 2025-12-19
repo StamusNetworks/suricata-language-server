@@ -1,0 +1,2 @@
+# signature chaining to sticky buffer and no match on first one
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ETPRO MALWARE Win32/Robit CnC Response"; flow:established,to_client; content:"500"; http_content_len; file_data; content:"500 Internal Server Error";sid:1;)
