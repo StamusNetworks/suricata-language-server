@@ -235,6 +235,7 @@ class TestRules:
                     wait_line = False
                 else:
                     ret["errors"].append(s_err["engine"])
+                    wait_line = True
             else:
                 if not wait_line:
                     if s_err["log_level"] == "Error":
