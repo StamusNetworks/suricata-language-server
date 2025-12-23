@@ -456,7 +456,7 @@ config classification: command-and-control,Malware Command and Control Activity 
             if internal_tmpdir is None:
                 raise RuntimeError("Temporary directory does not exist")
             cf.write(config_buffer)
-            cf.write("mpm-algo: ac-bs\n")
+            cf.write("mpm-algo: auto\n")
             cf.write("default-rule-path: " + internal_tmpdir + "\n")
             cf.write(
                 "reference-config-file: " + internal_tmpdir + "/reference.config\n"
