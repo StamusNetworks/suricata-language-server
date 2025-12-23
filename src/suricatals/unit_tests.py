@@ -95,6 +95,19 @@ class TestSyntax(unittest.TestCase):
             self.assertEqual(diag.severity, 1)
             self.assertTrue("sticky buffer" in diag.message)
 
+    def test_api_usage(self):
+        signature_buffer = """
+alert http any any -> any any (msg:"Test API usage"; content:"test"; sid:1;)
+        """
+        testor = LangServer(conn=None)
+        if not testor.rules_tester:
+            self.fail("Rules tester is not initialized")
+        result = testor.rules_tester.check_rule_buffer(
+            signature_buffer, engine_analysis=True
+        )
+        self.assertEqual(len(result["errors"]), 0)
+        self.assertEqual(len(result["warnings"]), 1)
+
 
 if __name__ == "__main__":
     unittest.main()
