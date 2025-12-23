@@ -72,6 +72,8 @@ class LangServer:
             "docker_image", SuriCmd.SLS_DEFAULT_DOCKER_IMAGE
         )
         self.rules_tester = None
+        if conn is None:
+            self.rules_tester = self.create_rule_tester()
         self.keywords_list = []
         self.app_layer_list = []
 
