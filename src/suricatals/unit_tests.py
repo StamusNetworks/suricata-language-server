@@ -99,7 +99,7 @@ class TestSyntax(unittest.TestCase):
         signature_buffer = """
 alert http any any -> any any (msg:"Test API usage"; content:"test"; sid:1;)
         """
-        testor = LangServer(conn=None)
+        testor = create_language_server()
         if not testor.rules_tester:
             self.fail("Rules tester is not initialized")
         result = testor.rules_tester.check_rule_buffer(

@@ -25,7 +25,9 @@ import re
 import uuid
 
 from pygls.server import JsonRPCServer
+from pygls.protocol import JsonRPCProtocol
 from pygls.uris import to_fs_path
+from cattrs import Converter
 from lsprotocol.types import (
     TEXT_DOCUMENT_COMPLETION,
     TEXT_DOCUMENT_DID_OPEN,
@@ -82,6 +84,9 @@ class SuricataLanguageServer(JsonRPCServer):
     PROGRESS_MSG = "$/progress"
 
     def __init__(self, *args, **kwargs):
+        # Initialize with proper protocol and converter
+        if not args:
+            args = (JsonRPCProtocol, lambda: Converter())
         super().__init__(*args, **kwargs)
         self.workspace_files = {}
         self.source_dirs = []
@@ -255,7 +260,7 @@ class SuricataLanguageServer(JsonRPCServer):
 
 def create_language_server(debug_log=False, settings=None):
     """Create and configure a Suricata Language Server instance."""
-    server = SuricataLanguageServer("suricata-language-server", "v1.0")
+    server = SuricataLanguageServer()
     
     # Get launch settings
     if settings is None:
