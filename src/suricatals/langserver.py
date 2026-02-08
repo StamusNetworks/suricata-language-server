@@ -41,6 +41,7 @@ from lsprotocol.types import (
     CompletionParams,
     CompletionList,
     CompletionItem,
+    CompletionOptions,
     DidOpenTextDocumentParams,
     DidSaveTextDocumentParams,
     DidCloseTextDocumentParams,
@@ -49,6 +50,8 @@ from lsprotocol.types import (
     SemanticTokens,
     SemanticTokensRangeParams,
     InitializedParams,
+    InitializeParams,
+    InitializeResult,
     Diagnostic,
     DiagnosticSeverity,
     PublishDiagnosticsParams,
@@ -56,10 +59,13 @@ from lsprotocol.types import (
     WorkDoneProgressBegin,
     WorkDoneProgressReport,
     WorkDoneProgressEnd,
-    InitializeParams,
+    SaveOptions,
+    ServerCapabilities,
     SemanticTokensLegend,
+    SemanticTokensOptions,
     SemanticTokensRegistrationOptions,
     TextDocumentSyncKind,
+    TextDocumentSyncOptions,
 )
 
 from suricatals.parse_signatures import SuricataFile
@@ -561,5 +567,28 @@ def create_language_server(debug_log=False, settings=None):
         
         if ls.notify_init:
             ls.post_messages.append([MessageType.Info, "suricatals initialization complete"])
+        
+        # Return server capabilities
+        return InitializeResult(
+            capabilities=ServerCapabilities(
+                completion_provider=CompletionOptions(
+                    resolve_provider=False,
+                    trigger_characters=["%"],
+                ),
+                text_document_sync=TextDocumentSyncOptions(
+                    open_close=True,
+                    change=TextDocumentSyncKind(ls.sync_type),
+                    save=SaveOptions(include_text=False),
+                ),
+                semantic_tokens_provider=SemanticTokensOptions(
+                    legend=SemanticTokensLegend(
+                        token_types=SuricataSemanticTokenParser.TOKEN_TYPES,
+                        token_modifiers=SuricataSemanticTokenParser.TOKEN_MODIFIERS,
+                    ),
+                    full=True,
+                    range=True,
+                ),
+            )
+        )
 
     return server
