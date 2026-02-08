@@ -1,6 +1,7 @@
 """
 Copyright(C) 2018-2021 Chris Hansen <hansec@uw.edu>
-Copyright(C) 2021-2025 Stamus Networks
+Copyright(C) 2021-2026 Stamus Networks
+Written by Eric Leblond <el@stamus-networks.com>
 
 This file is part of Suricata Language Server.
 
@@ -20,19 +21,41 @@ along with Suricata Language Server.  If not, see <http://www.gnu.org/licenses/>
 
 import logging
 import os
-import traceback
 import re
 import uuid
+from urllib.parse import unquote
+from functools import wraps
+import inspect
+from typing import Optional
 
-from suricatals.jsonrpc import path_from_uri, JSONRPC2Error
+from .__init__ import __version__
 from suricatals.parse_signatures import SuricataFile
-from suricatals.tests_rules import TestRules, SuricataFileException
+from suricatals.tests_rules import TestRules
 from suricatals.suri_cmd import SuriCmd
 from suricatals.tokenize_sig import SuricataSemanticTokenParser
+
+
+from pygls.lsp.server import LanguageServer
+from lsprotocol import types
 
 log = logging.getLogger(__name__)
 
 SURICATA_RULES_EXT_REGEX = re.compile(r"^\.rules?$", re.I)
+
+
+def path_from_uri(uri):
+    # Convert file uri to path (strip html like head part)
+    if not uri.startswith("file://"):
+        return uri
+    if os.name == "nt":
+        if uri.startswith("file:///"):
+            _, path = uri.split("file:///", 1)
+        else:  # we should have an UNC path
+            _, path = uri.split("file:", 1)
+            return path
+    else:
+        _, path = uri.split("file://", 1)
+    return os.path.normpath(unquote(path))
 
 
 def init_file(filepath, rules_tester, line_limit):
@@ -42,21 +65,33 @@ def init_file(filepath, rules_tester, line_limit):
     return file_obj, None
 
 
-class LangServer:
-    PROGRESS_MSG = "$/progress"
+def register_feature(lsp_type, options=None):
+    """
+    Decorator that temporarily saves the configuration on the method
+    so it can be read later by _register_all_features.
+    """
 
-    def __init__(self, conn, debug_log=False, settings=None):
-        self.conn = conn
+    def decorator(func):
+        # We attach these custom attributes to the method function
+        func._lsp_type = lsp_type
+        func._lsp_options = options
+        return func
+
+    return decorator
+
+
+class LangServer:
+    def __init__(self, debug_log=False, settings=None, batch_mode=False):
         self.running = True
         self.root_path = None
         self.fs = None
-        self.workspace = {}
         self.source_dirs = []
         self.excl_paths = []
         self.excl_suffixes = []
         self.post_messages = []
         self.streaming = True
         self.debug_log = debug_log
+        self.batch_mode = batch_mode
         # Get launch settings
         if settings is None:
             settings = {}
@@ -72,10 +107,36 @@ class LangServer:
             "docker_image", SuriCmd.SLS_DEFAULT_DOCKER_IMAGE
         )
         self.rules_tester = None
-        if conn is None:
+        if batch_mode:
             self.rules_tester = self.create_rule_tester()
+        else:
+            self.server = LanguageServer("Suricata Language Server", __version__)
+            self._register_all_features()
         self.keywords_list = []
         self.app_layer_list = []
+
+    def _register_all_features(self):
+        for _, method in inspect.getmembers(self, predicate=inspect.ismethod):
+            if hasattr(method, "_lsp_type"):
+                feature_type = getattr(method, "_lsp_type", "")
+                options = getattr(method, "_lsp_options", None)
+                # We use a helper function to create the wrapper.
+                # This ensures 'method' is captured by value, not by reference.
+                wrapper = self._create_wrapper(method)
+
+                self.server.feature(feature_type, options)(wrapper)
+
+    def _create_wrapper(self, bound_method):
+        """
+        Creates a wrapper function that keeps 'self' bound correctly.
+        """
+
+        @wraps(bound_method)
+        def wrapper(*args, **kwargs):
+            # bound_method already contains 'self', so we just pass the args
+            return bound_method(*args, **kwargs)
+
+        return wrapper
 
     def create_rule_tester(self):
         return TestRules(
@@ -85,240 +146,108 @@ class LangServer:
             docker_image=self.docker_image,
         )
 
-    def post_message(self, message, msg_type=1):
-        self.conn.send_notification(
-            "window/showMessage", {"type": msg_type, "message": message}
-        )
-
-    def server_initialized(self, _request):
+    @register_feature(types.INITIALIZED)
+    def server_initialized(self, params: types.InitializedParams):
         # Initialize the rules tester, this can take long in container
         # mode as it is going to trigger a fetch.
         progress_token = str(uuid.uuid4())
-        self.conn.send_notification(
-            "window/workDoneProgress/create", {"token": progress_token}
-        )
-        self.conn.send_notification(
-            self.PROGRESS_MSG,
-            {
-                "token": progress_token,
-                "value": {
-                    "kind": "begin",
-                    "title": "Suricata Container Init",
-                    "message": "Initializing Suricata container and potentially fetching image",
-                    "cancellable": False,  # Set to True if the user can cancel it
-                },
-            },
+
+        self.server.work_done_progress.create(progress_token)
+
+        self.server.work_done_progress.begin(
+            progress_token,
+            types.WorkDoneProgressBegin(
+                title="Suricata Container Init",
+                message="Initializing Suricata container and potentially fetching image",
+                cancellable=False,
+            ),
         )
 
         self.rules_tester = self.create_rule_tester()
-        self.conn.send_notification(
-            self.PROGRESS_MSG,
-            {
-                "token": progress_token,
-                "value": {
-                    "kind": "report",
-                    "percentage": 80,
-                    "message": f"Suricata v{self.rules_tester.suricata_version} container ready.",
-                },
-            },
+        self.server.work_done_progress.report(
+            progress_token,
+            types.WorkDoneProgressReport(
+                percentage=80,
+                message=f"Suricata v{self.rules_tester.suricata_version} container ready.",
+            ),
         )
 
         self.keywords_list = self.rules_tester.build_keywords_list()
-        self.conn.send_notification(
-            self.PROGRESS_MSG,
-            {
-                "token": progress_token,
-                "value": {
-                    "kind": "report",
-                    "percentage": 90,
-                    "message": "Suricata keywords fetched.",
-                },
-            },
+
+        self.server.work_done_progress.report(
+            progress_token,
+            types.WorkDoneProgressReport(
+                percentage=90, message="Suricata keywords fetched."
+            ),
         )
         self.app_layer_list = self.rules_tester.build_app_layer_list()
-        self.conn.send_notification(
-            self.PROGRESS_MSG,
-            {
-                "token": progress_token,
-                "value": {"kind": "end", "message": "Suricata Language Server ready."},
-            },
+        self.server.work_done_progress.end(
+            progress_token,
+            types.WorkDoneProgressEnd(message="Suricata Language Server ready."),
         )
 
     def run(self):
         # Run server
-        while self.running:
-            try:
-                request = self.conn.read_message()
-                self.handle(request)
-            except EOFError:
-                break
-            # pylint: disable=W0703
-            except Exception as e:
-                log.error("Unexpected error: %s", e, exc_info=True)
-                break
-            else:
-                for message in self.post_messages:
-                    self.post_message(message[1], message[0])
-                self.post_messages = []
+        self.server.start_io()
 
-    def handle(self, request):
-        def noop(_):
-            return None
-
-        if not "method" in request:
-            return None
-
-        # Request handler
-        log.debug("REQUEST %s %s", request.get("id"), request.get("method"))
-        handler = {
-            "initialize": self.serve_initialize,
-            "textDocument/documentSymbol": noop,
-            "textDocument/documentHighlight": noop,
-            "textDocument/completion": self.serve_autocomplete,
-            "textDocument/signatureHelp": noop,
-            "textDocument/definition": noop,
-            "textDocument/references": noop,
-            "textDocument/hover": noop,
-            "textDocument/implementation": noop,
-            "textDocument/rename": noop,
-            "textDocument/didOpen": self.serve_onOpen,
-            "textDocument/didSave": self.serve_onSave,
-            "textDocument/didClose": self.serve_onClose,
-            "textDocument/didChange": self.serve_onChange,
-            "textDocument/codeAction": noop,
-            "textDocument/semanticTokens/full": self.serve_semantic_tokens,
-            "textDocument/semanticTokens/range": self.serve_semantic_tokens_range,
-            "initialized": self.server_initialized,
-            "workspace/didChangeWatchedFiles": noop,
-            "workspace/symbol": noop,
-            "$/cancelRequest": noop,
-            "$/setTrace": noop,
-            "shutdown": noop,
-            "exit": self.serve_exit,
-        }.get(request["method"], self.serve_default)
-        # handler = {
-        #     "workspace/symbol": self.serve_symbols,
-        # }.get(request["method"], self.serve_default)
-        # We handle notifications differently since we can't respond
-        if "id" not in request:
-            try:
-                handler(request)
-            # pylint: disable=W0703
-            except Exception:
-                log.warning("error handling notification %s", request, exc_info=True)
-            return
-        #
-        try:
-            resp = handler(request)
-        except JSONRPC2Error as e:
-            self.conn.write_error(
-                request["id"], code=e.code, message=e.message, data=e.data
-            )
-            log.warning("RPC error handling request %s", request, exc_info=True)
-        # pylint: disable=W0703
-        except Exception as e:
-            self.conn.write_error(
-                request["id"],
-                code=-32603,
-                message=str(e),
-                data={
-                    "traceback": traceback.format_exc(),
-                },
-            )
-            log.warning("error handling request %s", request, exc_info=True)
-        else:
-            self.conn.write_response(request["id"], resp)
-
-    def serve_initialize(self, request):
-        # Setup language server
-        params = request["params"]
-        self.root_path = path_from_uri(
-            params.get("rootUri") or params.get("rootPath") or ""
-        )
-        self.source_dirs.append(self.root_path)
-        # Recursively add sub-directories
-        if len(self.source_dirs) == 1:
-            self.source_dirs = []
-            for dirName, subdirList, fileList in os.walk(self.root_path):
-                if self.excl_paths.count(dirName) > 0:
-                    while len(subdirList) > 0:
-                        del subdirList[0]
-                    continue
-                contains_source = False
-                for filename in fileList:
-                    _, ext = os.path.splitext(os.path.basename(filename))
-                    if SURICATA_RULES_EXT_REGEX.match(ext):
-                        contains_source = True
-                        break
-                if contains_source:
-                    self.source_dirs.append(dirName)
-        # Initialize workspace
-        self.workspace_init()
-        #
-        server_capabilities = {
-            "completionProvider": {
-                "resolveProvider": False,
-                "triggerCharacters": ["%"],
-            },
-            # "definitionProvider": True,
-            # "documentSymbolProvider": True,
-            # "referencesProvider": True,
-            # "hoverProvider": True,
-            # "implementationProvider": True,
-            # "renameProvider": True,
-            # "workspaceSymbolProvider": True,
-            "textDocumentSync": {
-                "openClose": True,  # Correct standard key
-                "change": self.sync_type,  # 1 = Full Sync (Integer, not object)
-                "save": {},  # Empty dict implies { "includeText": false }
-            },
-            "semanticTokensProvider": {
-                "legend": {
-                    "tokenTypes": SuricataSemanticTokenParser.TOKEN_TYPES,
-                    "tokenModifiers": SuricataSemanticTokenParser.TOKEN_MODIFIERS,
-                },
-                "full": {"delta": False},
-                "range": True,
-            },
-        }
-        if self.notify_init:
-            self.post_messages.append([3, "suricatals initialization complete"])
-        return {"capabilities": server_capabilities}
-        #     "workspaceSymbolProvider": True,
-        #     "streaming": False,
-        # }
-
-    def _initial_params_autocomplete(self, request, file_obj):
-        params = request["params"]
-        edit_index = params["position"]["line"]
-        sig_content = file_obj.contents_split[edit_index]
-        sig_index = params["position"]["character"]
+    def _initial_params_autocomplete(
+        self, params: types.CompletionParams, file_obj
+    ) -> Optional[types.CompletionList]:
+        edit_index = params.position.line
+        sig_content = file_obj.lines[edit_index]
+        sig_index = params.position.character
         word_split = re.split(" +", sig_content[0:sig_index])
         if len(word_split) == 1:
             if self.rules_tester is None:
                 self.rules_tester = self.create_rule_tester()
-            return self.rules_tester.ACTIONS_ITEMS
+            lsp_completion_items = []
+            for item in self.rules_tester.ACTIONS_ITEMS:
+                lsp_completion_items.append(
+                    types.CompletionItem(
+                        label=item["label"],
+                        kind=types.CompletionItemKind.Function,
+                        detail=item.get("detail", ""),
+                        documentation=item.get("documentation", ""),
+                        deprecated=item.get("deprecated", False),
+                    )
+                )
+            return types.CompletionList(is_incomplete=False, items=lsp_completion_items)
         if len(word_split) == 2:
-            return self.app_layer_list
+            lsp_completion_items = []
+            for item in self.app_layer_list:
+                lsp_completion_items.append(
+                    types.CompletionItem(
+                        label=item["label"],
+                        kind=types.CompletionItemKind.Property,
+                        detail=item.get("detail", ""),
+                        documentation=item.get("documentation", ""),
+                        deprecated=item.get("deprecated", False),
+                    )
+                )
+            return types.CompletionList(is_incomplete=False, items=lsp_completion_items)
         if edit_index == 0:
             return None
         elif not re.search(r"\\ *$", file_obj.contents_split[edit_index - 1]):
             return None
 
-    def serve_autocomplete(self, request):
-        params = request["params"]
-        uri = params["textDocument"]["uri"]
-        path = path_from_uri(uri)
-        file_obj = self.workspace.get(path)
+    @register_feature(
+        types.TEXT_DOCUMENT_COMPLETION,
+        options=types.CompletionOptions(trigger_characters=["."]),
+    )
+    def serve_autocomplete(
+        self, params: types.CompletionParams
+    ) -> Optional[types.CompletionList]:
+        uri = params.text_document.uri
+        file_obj = self.server.workspace.get_text_document(uri)
         if file_obj is None:
             return None
-        edit_index = params["position"]["line"]
-        sig_content = file_obj.contents_split[edit_index]
-        sig_index = params["position"]["character"]
-        log.debug(sig_content)
+        edit_index = params.position.line
+        sig_index = params.position.character
+
+        sig_content = file_obj.lines[edit_index]
         # not yet in content matching so just return nothing
         if "(" not in sig_content[0:sig_index]:
-            return self._initial_params_autocomplete(request, file_obj)
+            return self._initial_params_autocomplete(params, file_obj)
         cursor = sig_index - 1
         while cursor > 0:
             log.debug(
@@ -347,258 +276,113 @@ class LangServer:
             if item["label"].startswith(partial_keyword):
                 items_list.append(item)
         if len(items_list):
-            return items_list
+            lsp_completion_items = []
+            for item in items_list:
+                lsp_completion_items.append(
+                    types.CompletionItem(
+                        label=item["label"],
+                        kind=types.CompletionItemKind.Function,
+                        detail=item.get("detail", ""),
+                        documentation=item.get("documentation", ""),
+                        deprecated=item.get("deprecated", False),
+                    )
+                )
+            return types.CompletionList(is_incomplete=False, items=lsp_completion_items)
         return None
 
-    def send_diagnostics(self, uri):
-        diag_results, diag_exp = self.get_diagnostics(uri)
-        if diag_results is not None:
-            self.conn.send_notification(
-                "textDocument/publishDiagnostics",
-                {"uri": uri, "diagnostics": diag_results},
-            )
-        elif diag_exp is not None:
-            if isinstance(diag_exp, SuricataFileException):
-                log.error("File error: %s", diag_exp, exc_info=True)
-                self.conn.send_notification(
-                    "textDocument/publishDiagnostics",
-                    {
-                        "uri": uri,
-                        "diagnostics": [diag_exp.get_diagnosis().to_message()],
-                    },
-                )
-                return
-            self.conn.write_error(
-                -1,
-                code=-32603,
-                message=str(diag_exp),
-                data={
-                    "traceback": traceback.format_exc(),
-                },
-            )
-
-    def serve_semantic_tokens(self, request):
+    @register_feature(
+        types.TEXT_DOCUMENT_SEMANTIC_TOKENS_FULL,
+        options=types.SemanticTokensLegend(
+            token_types=SuricataSemanticTokenParser.TOKEN_TYPES,
+            token_modifiers=SuricataSemanticTokenParser.TOKEN_MODIFIERS,
+        ),
+    )
+    def serve_semantic_tokens(self, params: types.SemanticTokensParams):
         # Get parameters from request
-        params = request["params"]
-        uri = params["textDocument"]["uri"]
+        uri = params.text_document.uri
+        file_obj = self.server.workspace.get_text_document(uri)
         path = path_from_uri(uri)
-        file_obj = self.workspace.get(path)
-        if file_obj is None:
-            return {"data": []}
+        s_file = SuricataFile(path, self.rules_tester, empty=True)
+        s_file.load_from_lsp(file_obj)
         # Add scopes to outline view
-        return file_obj.get_semantic_tokens()
+        data = s_file.get_semantic_tokens()
+        return types.SemanticTokens(data=data)
 
-    def serve_semantic_tokens_range(self, request):
+    @register_feature(
+        types.TEXT_DOCUMENT_SEMANTIC_TOKENS_RANGE,
+        options=types.SemanticTokensLegend(
+            token_types=SuricataSemanticTokenParser.TOKEN_TYPES,
+            token_modifiers=SuricataSemanticTokenParser.TOKEN_MODIFIERS,
+        ),
+    )
+    def serve_semantic_tokens_range(self, params: types.SemanticTokensRangeParams):
         # Get parameters from request
-        params = request["params"]
-        uri = params["textDocument"]["uri"]
+        uri = params.text_document.uri
+        file_obj = self.server.workspace.get_text_document(uri)
         path = path_from_uri(uri)
-        file_obj = self.workspace.get(path)
-        if file_obj is None:
-            return {"data": []}
+        s_file = SuricataFile(path, self.rules_tester, empty=True)
+        s_file.load_from_lsp(file_obj)
         # Add scopes to outline view
-        return file_obj.get_semantic_tokens(file_range=params["range"])
+        data = s_file.get_semantic_tokens(file_range=params.range)
+        return types.SemanticTokens(data=data)
 
     def get_diagnostics(self, uri):
-        filepath = path_from_uri(uri)
-        file_obj = self.workspace.get(filepath)
-        if file_obj is not None and file_obj.nLines < self.max_lines:
-            try:
-                _, diags_list = file_obj.check_file(workspace=self.workspace)
-                diags = [diag.to_message() for diag in diags_list]
+        file_obj = self.server.workspace.get_text_document(uri)
+        if file_obj is not None and len(file_obj.lines) < self.max_lines:
+            s_file = SuricataFile(path_from_uri(uri), self.rules_tester, empty=True)
+            s_file.load_from_lsp(file_obj)
+            _, diags_list = s_file.check_lsp_file(file_obj)
+            diags = [diag.to_diagnostic() for diag in diags_list]
             # pylint: disable=W0703
-            except Exception as e:
-                if os.path.isfile(file_obj.path):
-                    return None, e
-            else:
-                return diags, None
+            return diags, None
         return None, None
 
-    def serve_onChange(self, request):
-        # Update workspace from file sent by editor
-        params = request["params"]
-        uri = params["textDocument"]["uri"]
-        path = path_from_uri(uri)
-        file_obj = self.workspace.get(path)
-        if file_obj is None:
-            self.post_message(
-                'Change request failed for unknown file "{0}"'.format(path)
-            )
-            log.error('Change request failed for unknown file "%s"', path)
-            return
-        else:
-            # Update file contents with changes
-            reparse_req = True
-            if self.sync_type == 1:
-                file_obj.apply_change(params["contentChanges"][0])
-            else:
-                try:
-                    reparse_req = False
-                    for change in params["contentChanges"]:
-                        reparse_flag = file_obj.apply_change(change)
-                        reparse_req = reparse_req or reparse_flag
-                # pylint: disable=W0703
-                except Exception:
-                    self.post_message(
-                        'Change request failed for file "{0}": Could not apply change'.format(
-                            path
-                        )
-                    )
-                    log.error(
-                        'Change request failed for file "%s": Could not apply change',
-                        path,
-                        exc_info=True,
-                    )
-                    return
-        # Parse newly updated file
-        if reparse_req:
-            _, err_str = self.update_workspace_file(path)
-            if err_str is not None:
-                self.post_message(
-                    'Change request failed for file "{0}": {1}'.format(path, err_str)
-                )
+    @register_feature(types.TEXT_DOCUMENT_DID_OPEN)
+    def serve_onOpen(self, params):
+        self.serve_onSave(params, did_open=True)
 
-    def serve_onOpen(self, request):
-        self.serve_onSave(request, did_open=True)
+    @register_feature(types.TEXT_DOCUMENT_DID_CLOSE)
+    def serve_onClose(self, params):
+        self.serve_onSave(params, did_close=True)
 
-    def serve_onClose(self, request):
-        self.serve_onSave(request, did_close=True)
-
-    def serve_onSave(self, request, did_open=False, did_close=False):
+    @register_feature(types.TEXT_DOCUMENT_DID_SAVE)
+    def serve_onSave(self, params, did_open=False, did_close=False):
         # Update workspace from file on disk
-        params = request["params"]
-        uri = params["textDocument"]["uri"]
+        uri = params.text_document.uri
         filepath = path_from_uri(uri)
-        # Skip update and remove objects if file is deleted
-        if did_close and (not os.path.isfile(filepath)):
-            return
         progress_token = str(uuid.uuid4())
-        self.conn.send_request(
-            "window/workDoneProgress/create", {"token": progress_token}
+        self.server.work_done_progress.begin(
+            progress_token,
+            types.WorkDoneProgressBegin(
+                title="Suricata Analysis started",
+                message="Starting analysis of file %s by Suricata" % uri,
+                cancellable=False,
+            ),
         )
-        self.conn.send_notification(
-            self.PROGRESS_MSG,
-            {
-                "token": progress_token,
-                "value": {
-                    "kind": "begin",
-                    "title": "File analysis",
-                    "message": "File analysis in progress",
-                    "cancellable": False,  # Set to True if the user can cancel it
-                },
-            },
+        diag_results, diag_exp = self.get_diagnostics(uri)
+
+        self.server.work_done_progress.end(
+            progress_token,
+            types.WorkDoneProgressEnd(message="Suricata analysis completed"),
         )
 
-        did_change, err_str = self.update_workspace_file(
-            filepath, read_file=True, allow_empty=did_open
-        )
-        self.conn.send_notification(
-            self.PROGRESS_MSG,
-            {
-                "token": progress_token,
-                "value": {"kind": "end", "message": "File analysis done"},
-            },
-        )
-
-        if err_str is not None:
-            self.post_message(
-                'Save request failed for file "{0}": {1}'.format(filepath, err_str)
-            )
+        if diag_exp is not None:
+            log.error("Error during diagnostics for file %s", filepath, exc_info=True)
             return
-        if did_change:
-            self.send_diagnostics(uri)
-
-    def update_workspace_file(self, filepath, read_file=False, allow_empty=False):
-        # Update workspace from file contents and path
-        try:
-            file_obj = self.workspace.get(filepath)
-            if read_file:
-                if file_obj is None:
-                    # Create empty file if not yet saved to disk
-                    if not os.path.isfile(filepath):
-                        file_obj = SuricataFile(filepath, self.rules_tester, empty=True)
-                        if allow_empty:
-                            self.workspace[filepath] = file_obj
-                            return False, None
-                        else:
-                            return False, "File does not exist"  # Error during load
-                    else:
-                        file_obj = SuricataFile(filepath, self.rules_tester)
-                hash_old = file_obj.hash
-                err_string = None
-                if os.path.isfile(filepath):
-                    err_string = file_obj.load_from_disk()
-                    file_obj.parse_file()
-                if err_string is not None:
-                    log.error("%s: %s", err_string, filepath)
-                    return False, err_string  # Error during file read
-                if hash_old == file_obj.hash:
-                    return False, None
-        # pylint: disable=W0703
-        except Exception:
-            log.error("Error while parsing file %s", filepath, exc_info=True)
-            return False, "Error during parsing"  # Error during parsing
-        if filepath not in self.workspace:
-            self.workspace[filepath] = file_obj
-        return True, None
-
-    def workspace_init(self):
-        # Get filenames
-        file_list = []
-        for source_dir in self.source_dirs:
-            for filename in os.listdir(source_dir):
-                _, ext = os.path.splitext(os.path.basename(filename))
-                if SURICATA_RULES_EXT_REGEX.match(ext):
-                    filepath = os.path.normpath(os.path.join(source_dir, filename))
-                    if self.excl_paths.count(filepath) > 0:
-                        continue
-                    inc_file = True
-                    for excl_suffix in self.excl_suffixes:
-                        if filepath.endswith(excl_suffix):
-                            inc_file = False
-                            break
-                    if inc_file:
-                        file_list.append(filepath)
-        # Process files
-        # don't send to analysis if too many files
-        if len(file_list) > self.max_tracked_files:
+        if diag_results is None:
+            log.error("Error during diagnostics for file %s", filepath)
             return
-        from multiprocessing import Pool
-
-        pool = Pool(processes=self.nthreads)
-        results = {}
-        if self.rules_tester == None:
-            self.rules_tester = self.create_rule_tester()
-        for filepath in file_list:
-            results[filepath] = pool.apply_async(
-                init_file, args=(filepath, self.rules_tester, self.max_lines)
+        self.server.text_document_publish_diagnostics(
+            types.PublishDiagnosticsParams(
+                uri=uri,
+                diagnostics=diag_results,
             )
-        pool.close()
-        pool.join()
-        for path, result in results.items():
-            result_obj = result.get()
-            if result_obj[0] is None:
-                self.post_messages.append(
-                    [
-                        1,
-                        'Initialization failed for file "{0}": {1}'.format(
-                            path, result_obj[1]
-                        ),
-                    ]
-                )
-                continue
-            self.workspace[path] = result_obj[0]
+        )
 
     def serve_exit(self, _):
         # Exit server
         self.workspace = {}
         self.running = False
-
-    def serve_default(self, request):
-        # Default handler (errors!)
-        raise JSONRPC2Error(
-            code=-32601, message="method {} not found".format(request["method"])
-        )
 
     def analyse_file(self, filepath, engine_analysis=True, **kwargs):
         if self.rules_tester == None:

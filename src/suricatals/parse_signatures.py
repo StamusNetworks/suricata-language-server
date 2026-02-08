@@ -1,5 +1,5 @@
 """
-Copyright(C) 2021-2025 Stamus Networks
+Copyright(C) 2021-2026 Stamus Networks
 Written by Eric Leblond <el@stamus-networks.com>
 
 This file is part of Suricata Language Server.
@@ -24,6 +24,7 @@ import re
 
 from .lsp_helpers import Diagnosis, FileRange
 from .tokenize_sig import SuricataSemanticTokenParser
+from lsprotocol import types
 
 
 class Signature:
@@ -212,16 +213,31 @@ class SuricataFile:
         copy_obj = SuricataFile(self.path, self.rules_tester)
         return copy_obj
 
+    def _load_file(self, contents):
+        self.hash = hashlib.sha256(contents.encode("utf-8")).hexdigest()
+        self.contents_split = contents.splitlines()
+        self.nLines = len(self.contents_split)
+        self.parse_file()
+
     def load_from_disk(self):
         """Read file from disk"""
         try:
             contents = ""
             with open(self.path, "r", encoding="utf-8", errors="replace") as fhandle:
                 contents = fhandle.read()
-            self.hash = hashlib.sha256(contents.encode("utf-8")).hexdigest()
-            self.contents_split = contents.splitlines()
-            self.nLines = len(self.contents_split)
-            self.parse_file()
+            self._load_file(contents)
+
+        # pylint: disable=W0703
+        except Exception:
+            return "Could not read/decode file"
+        else:
+            return None
+
+    def load_from_lsp(self, lsp_file):
+        """Load file content from lsp file object"""
+        try:
+            contents = lsp_file.source
+            self._load_file(contents)
         # pylint: disable=W0703
         except Exception:
             return "Could not read/decode file"
@@ -418,21 +434,13 @@ class SuricataFile:
                 diagnostics.append(l_diag)
         return diagnostics
 
-    def check_file(self, workspace=None, engine_analysis=True, **kwargs):
+    def build_all_diags(self, result, workspace=None, engine_analysis=True, **kwargs):
         diagnostics = []
-        result = {}
-        if not workspace:
-            workspace = {}
-        with open(self.path, "r", encoding="utf-8", errors="replace") as fhandle:
-            kwargs["file_path"] = self.path
-            result = self.rules_tester.check_rule_buffer(
-                fhandle.read(), engine_analysis, **kwargs
-            )
-            self.mpm = result.get("mpm", {}).get("buffer")
-            for sid in result.get("mpm", {}).get("sids", []):
-                signature = self.sigset.get_sig_by_sid(sid)
-                if signature is not None:
-                    signature.mpm = result.get("mpm", {}).get("sids", {}).get(sid)
+        self.mpm = result.get("mpm", {}).get("buffer")
+        for sid in result.get("mpm", {}).get("sids", []):
+            signature = self.sigset.get_sig_by_sid(sid)
+            if signature is not None:
+                signature.mpm = result.get("mpm", {}).get("sids", {}).get(sid)
         errors = self.build_errors_diagnostics(result.get("errors", []))
         diagnostics.extend(errors)
         warnings = self.build_warnings_diagnostics(result.get("warnings", []))
@@ -457,6 +465,30 @@ class SuricataFile:
             diagnostics.extend(profiling)
         self.diagnosis = diagnostics
         return result["status"], sorted(diagnostics, key=self.sort_diagnosis)
+
+    def check_lsp_file(self, lsp_file, workspace=None, engine_analysis=True, **kwargs):
+        result = {}
+        if not workspace:
+            workspace = {}
+        kwargs["file_path"] = self.path
+        buffer = lsp_file.source
+        result = self.rules_tester.check_rule_buffer(buffer, engine_analysis, **kwargs)
+        return self.build_all_diags(
+            result, workspace=workspace, engine_analysis=engine_analysis
+        )
+
+    def check_file(self, workspace=None, engine_analysis=True, **kwargs):
+        result = {}
+        if not workspace:
+            workspace = {}
+        with open(self.path, "r", encoding="utf-8", errors="replace") as fhandle:
+            kwargs["file_path"] = self.path
+            result = self.rules_tester.check_rule_buffer(
+                fhandle.read(), engine_analysis, **kwargs
+            )
+        return self.build_all_diags(
+            result, workspace=workspace, engine_analysis=engine_analysis
+        )
 
     def parse_file(self):
         """Build file Info by parsing file"""
@@ -486,8 +518,8 @@ class SuricataFile:
                     self.sigset.add_signature(i, content_line, multiline=False)
             i += 1
 
-    def apply_change(self, content_update):
-        self.contents_split = content_update["text"].splitlines()
+    def apply_change(self, content_update: types.TextDocumentContentChangeEvent):
+        self.contents_split = content_update.text.splitlines()
         self.nLines = len(self.contents_split)
         self.parse_file()
 
@@ -523,4 +555,4 @@ class SuricataFile:
         else:
             content = self.extract_range(file_range)
         data = self.semantic_tokens_parser.parse(content)
-        return {"data": data}
+        return data
