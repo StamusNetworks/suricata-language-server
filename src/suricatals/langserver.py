@@ -24,7 +24,41 @@ import traceback
 import re
 import uuid
 
-from suricatals.jsonrpc import path_from_uri, JSONRPC2Error
+from pygls.server import JsonRPCServer
+from pygls.uris import to_fs_path
+from lsprotocol.types import (
+    TEXT_DOCUMENT_COMPLETION,
+    TEXT_DOCUMENT_DID_OPEN,
+    TEXT_DOCUMENT_DID_SAVE,
+    TEXT_DOCUMENT_DID_CLOSE,
+    TEXT_DOCUMENT_DID_CHANGE,
+    TEXT_DOCUMENT_SEMANTIC_TOKENS_FULL,
+    TEXT_DOCUMENT_SEMANTIC_TOKENS_RANGE,
+    INITIALIZED,
+    CompletionParams,
+    CompletionList,
+    CompletionItem,
+    DidOpenTextDocumentParams,
+    DidSaveTextDocumentParams,
+    DidCloseTextDocumentParams,
+    DidChangeTextDocumentParams,
+    SemanticTokensParams,
+    SemanticTokens,
+    SemanticTokensRangeParams,
+    InitializedParams,
+    Diagnostic,
+    DiagnosticSeverity,
+    PublishDiagnosticsParams,
+    MessageType,
+    WorkDoneProgressBegin,
+    WorkDoneProgressReport,
+    WorkDoneProgressEnd,
+    InitializeParams,
+    SemanticTokensLegend,
+    SemanticTokensRegistrationOptions,
+    TextDocumentSyncKind,
+)
+
 from suricatals.parse_signatures import SuricataFile
 from suricatals.tests_rules import TestRules, SuricataFileException
 from suricatals.suri_cmd import SuriCmd
@@ -42,40 +76,33 @@ def init_file(filepath, rules_tester, line_limit):
     return file_obj, None
 
 
-class LangServer:
+class SuricataLanguageServer(JsonRPCServer):
+    """Suricata Language Server implementation using pygls."""
+    
     PROGRESS_MSG = "$/progress"
 
-    def __init__(self, conn, debug_log=False, settings=None):
-        self.conn = conn
-        self.running = True
-        self.root_path = None
-        self.fs = None
-        self.workspace = {}
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.workspace_files = {}
         self.source_dirs = []
         self.excl_paths = []
         self.excl_suffixes = []
         self.post_messages = []
-        self.streaming = True
-        self.debug_log = debug_log
-        # Get launch settings
-        if settings is None:
-            settings = {}
-        self.nthreads = settings.get("nthreads", 4)
-        self.notify_init = settings.get("notify_init", False)
-        self.sync_type = settings.get("sync_type", 1)
-        self.suricata_binary = settings.get("suricata_binary", "suricata")
-        self.suricata_config = settings.get("suricata_config", None)
-        self.max_lines = settings.get("max_lines", 1000)
-        self.max_tracked_files = settings.get("max_tracked_files", 100)
-        self.docker = settings.get("docker_mode", False)
-        self.docker_image = settings.get(
-            "docker_image", SuriCmd.SLS_DEFAULT_DOCKER_IMAGE
-        )
         self.rules_tester = None
-        if conn is None:
-            self.rules_tester = self.create_rule_tester()
         self.keywords_list = []
         self.app_layer_list = []
+        self.root_path = None
+        # Will be set by create_language_server
+        self.nthreads = 4
+        self.notify_init = False
+        self.sync_type = 1
+        self.suricata_binary = "suricata"
+        self.suricata_config = None
+        self.max_lines = 1000
+        self.max_tracked_files = 100
+        self.docker = False
+        self.docker_image = SuriCmd.SLS_DEFAULT_DOCKER_IMAGE
+        self.debug_log = False
 
     def create_rule_tester(self):
         return TestRules(
@@ -85,327 +112,29 @@ class LangServer:
             docker_image=self.docker_image,
         )
 
-    def post_message(self, message, msg_type=1):
-        self.conn.send_notification(
-            "window/showMessage", {"type": msg_type, "message": message}
-        )
-
-    def server_initialized(self, _request):
-        # Initialize the rules tester, this can take long in container
-        # mode as it is going to trigger a fetch.
-        progress_token = str(uuid.uuid4())
-        self.conn.send_notification(
-            "window/workDoneProgress/create", {"token": progress_token}
-        )
-        self.conn.send_notification(
-            self.PROGRESS_MSG,
-            {
-                "token": progress_token,
-                "value": {
-                    "kind": "begin",
-                    "title": "Suricata Container Init",
-                    "message": "Initializing Suricata container and potentially fetching image",
-                    "cancellable": False,  # Set to True if the user can cancel it
-                },
-            },
-        )
-
-        self.rules_tester = self.create_rule_tester()
-        self.conn.send_notification(
-            self.PROGRESS_MSG,
-            {
-                "token": progress_token,
-                "value": {
-                    "kind": "report",
-                    "percentage": 80,
-                    "message": f"Suricata v{self.rules_tester.suricata_version} container ready.",
-                },
-            },
-        )
-
-        self.keywords_list = self.rules_tester.build_keywords_list()
-        self.conn.send_notification(
-            self.PROGRESS_MSG,
-            {
-                "token": progress_token,
-                "value": {
-                    "kind": "report",
-                    "percentage": 90,
-                    "message": "Suricata keywords fetched.",
-                },
-            },
-        )
-        self.app_layer_list = self.rules_tester.build_app_layer_list()
-        self.conn.send_notification(
-            self.PROGRESS_MSG,
-            {
-                "token": progress_token,
-                "value": {"kind": "end", "message": "Suricata Language Server ready."},
-            },
-        )
-
-    def run(self):
-        # Run server
-        while self.running:
-            try:
-                request = self.conn.read_message()
-                self.handle(request)
-            except EOFError:
-                break
-            # pylint: disable=W0703
-            except Exception as e:
-                log.error("Unexpected error: %s", e, exc_info=True)
-                break
-            else:
-                for message in self.post_messages:
-                    self.post_message(message[1], message[0])
-                self.post_messages = []
-
-    def handle(self, request):
-        def noop(_):
-            return None
-
-        if not "method" in request:
-            return None
-
-        # Request handler
-        log.debug("REQUEST %s %s", request.get("id"), request.get("method"))
-        handler = {
-            "initialize": self.serve_initialize,
-            "textDocument/documentSymbol": noop,
-            "textDocument/documentHighlight": noop,
-            "textDocument/completion": self.serve_autocomplete,
-            "textDocument/signatureHelp": noop,
-            "textDocument/definition": noop,
-            "textDocument/references": noop,
-            "textDocument/hover": noop,
-            "textDocument/implementation": noop,
-            "textDocument/rename": noop,
-            "textDocument/didOpen": self.serve_onOpen,
-            "textDocument/didSave": self.serve_onSave,
-            "textDocument/didClose": self.serve_onClose,
-            "textDocument/didChange": self.serve_onChange,
-            "textDocument/codeAction": noop,
-            "textDocument/semanticTokens/full": self.serve_semantic_tokens,
-            "textDocument/semanticTokens/range": self.serve_semantic_tokens_range,
-            "initialized": self.server_initialized,
-            "workspace/didChangeWatchedFiles": noop,
-            "workspace/symbol": noop,
-            "$/cancelRequest": noop,
-            "$/setTrace": noop,
-            "shutdown": noop,
-            "exit": self.serve_exit,
-        }.get(request["method"], self.serve_default)
-        # handler = {
-        #     "workspace/symbol": self.serve_symbols,
-        # }.get(request["method"], self.serve_default)
-        # We handle notifications differently since we can't respond
-        if "id" not in request:
-            try:
-                handler(request)
-            # pylint: disable=W0703
-            except Exception:
-                log.warning("error handling notification %s", request, exc_info=True)
-            return
-        #
-        try:
-            resp = handler(request)
-        except JSONRPC2Error as e:
-            self.conn.write_error(
-                request["id"], code=e.code, message=e.message, data=e.data
-            )
-            log.warning("RPC error handling request %s", request, exc_info=True)
-        # pylint: disable=W0703
-        except Exception as e:
-            self.conn.write_error(
-                request["id"],
-                code=-32603,
-                message=str(e),
-                data={
-                    "traceback": traceback.format_exc(),
-                },
-            )
-            log.warning("error handling request %s", request, exc_info=True)
-        else:
-            self.conn.write_response(request["id"], resp)
-
-    def serve_initialize(self, request):
-        # Setup language server
-        params = request["params"]
-        self.root_path = path_from_uri(
-            params.get("rootUri") or params.get("rootPath") or ""
-        )
-        self.source_dirs.append(self.root_path)
-        # Recursively add sub-directories
-        if len(self.source_dirs) == 1:
-            self.source_dirs = []
-            for dirName, subdirList, fileList in os.walk(self.root_path):
-                if self.excl_paths.count(dirName) > 0:
-                    while len(subdirList) > 0:
-                        del subdirList[0]
-                    continue
-                contains_source = False
-                for filename in fileList:
-                    _, ext = os.path.splitext(os.path.basename(filename))
-                    if SURICATA_RULES_EXT_REGEX.match(ext):
-                        contains_source = True
-                        break
-                if contains_source:
-                    self.source_dirs.append(dirName)
-        # Initialize workspace
-        self.workspace_init()
-        #
-        server_capabilities = {
-            "completionProvider": {
-                "resolveProvider": False,
-                "triggerCharacters": ["%"],
-            },
-            # "definitionProvider": True,
-            # "documentSymbolProvider": True,
-            # "referencesProvider": True,
-            # "hoverProvider": True,
-            # "implementationProvider": True,
-            # "renameProvider": True,
-            # "workspaceSymbolProvider": True,
-            "textDocumentSync": {
-                "openClose": True,  # Correct standard key
-                "change": self.sync_type,  # 1 = Full Sync (Integer, not object)
-                "save": {},  # Empty dict implies { "includeText": false }
-            },
-            "semanticTokensProvider": {
-                "legend": {
-                    "tokenTypes": SuricataSemanticTokenParser.TOKEN_TYPES,
-                    "tokenModifiers": SuricataSemanticTokenParser.TOKEN_MODIFIERS,
-                },
-                "full": {"delta": False},
-                "range": True,
-            },
-        }
-        if self.notify_init:
-            self.post_messages.append([3, "suricatals initialization complete"])
-        return {"capabilities": server_capabilities}
-        #     "workspaceSymbolProvider": True,
-        #     "streaming": False,
-        # }
-
-    def _initial_params_autocomplete(self, request, file_obj):
-        params = request["params"]
-        edit_index = params["position"]["line"]
-        sig_content = file_obj.contents_split[edit_index]
-        sig_index = params["position"]["character"]
-        word_split = re.split(" +", sig_content[0:sig_index])
-        if len(word_split) == 1:
-            if self.rules_tester is None:
-                self.rules_tester = self.create_rule_tester()
-            return self.rules_tester.ACTIONS_ITEMS
-        if len(word_split) == 2:
-            return self.app_layer_list
-        if edit_index == 0:
-            return None
-        elif not re.search(r"\\ *$", file_obj.contents_split[edit_index - 1]):
-            return None
-
-    def serve_autocomplete(self, request):
-        params = request["params"]
-        uri = params["textDocument"]["uri"]
-        path = path_from_uri(uri)
-        file_obj = self.workspace.get(path)
-        if file_obj is None:
-            return None
-        edit_index = params["position"]["line"]
-        sig_content = file_obj.contents_split[edit_index]
-        sig_index = params["position"]["character"]
-        log.debug(sig_content)
-        # not yet in content matching so just return nothing
-        if "(" not in sig_content[0:sig_index]:
-            return self._initial_params_autocomplete(request, file_obj)
-        cursor = sig_index - 1
-        while cursor > 0:
-            log.debug(
-                "At index: %d of %d (%s)",
-                cursor,
-                len(sig_content),
-                sig_content[cursor:sig_index],
-            )
-            if not sig_content[cursor].isalnum() and not sig_content[cursor] in [
-                ".",
-                "_",
-            ]:
-                break
-            cursor -= 1
-        log.debug("Final is: %d : %d", cursor, sig_index)
-        if cursor == sig_index - 1:
-            return None
-        # this is an option edit so dont list keyword
-        if sig_content[cursor] in [":", ","]:
-            return None
-        cursor += 1
-        partial_keyword = sig_content[cursor:sig_index]
-        log.debug("Got keyword start: '%s'", partial_keyword)
-        items_list = []
-        for item in self.keywords_list:
-            if item["label"].startswith(partial_keyword):
-                items_list.append(item)
-        if len(items_list):
-            return items_list
-        return None
+    def post_message(self, message, msg_type=MessageType.Info):
+        self.show_message(message, msg_type)
 
     def send_diagnostics(self, uri):
         diag_results, diag_exp = self.get_diagnostics(uri)
         if diag_results is not None:
-            self.conn.send_notification(
-                "textDocument/publishDiagnostics",
-                {"uri": uri, "diagnostics": diag_results},
-            )
+            self.publish_diagnostics(uri, diag_results)
         elif diag_exp is not None:
             if isinstance(diag_exp, SuricataFileException):
                 log.error("File error: %s", diag_exp, exc_info=True)
-                self.conn.send_notification(
-                    "textDocument/publishDiagnostics",
-                    {
-                        "uri": uri,
-                        "diagnostics": [diag_exp.get_diagnosis().to_message()],
-                    },
-                )
+                diag = diag_exp.get_diagnosis().to_lsp_diagnostic()
+                self.publish_diagnostics(uri, [diag])
                 return
-            self.conn.write_error(
-                -1,
-                code=-32603,
-                message=str(diag_exp),
-                data={
-                    "traceback": traceback.format_exc(),
-                },
-            )
-
-    def serve_semantic_tokens(self, request):
-        # Get parameters from request
-        params = request["params"]
-        uri = params["textDocument"]["uri"]
-        path = path_from_uri(uri)
-        file_obj = self.workspace.get(path)
-        if file_obj is None:
-            return {"data": []}
-        # Add scopes to outline view
-        return file_obj.get_semantic_tokens()
-
-    def serve_semantic_tokens_range(self, request):
-        # Get parameters from request
-        params = request["params"]
-        uri = params["textDocument"]["uri"]
-        path = path_from_uri(uri)
-        file_obj = self.workspace.get(path)
-        if file_obj is None:
-            return {"data": []}
-        # Add scopes to outline view
-        return file_obj.get_semantic_tokens(file_range=params["range"])
+            # For other exceptions, log but don't publish
+            log.error("Diagnostic error: %s", diag_exp, exc_info=True)
 
     def get_diagnostics(self, uri):
-        filepath = path_from_uri(uri)
-        file_obj = self.workspace.get(filepath)
+        filepath = to_fs_path(uri)
+        file_obj = self.workspace_files.get(filepath)
         if file_obj is not None and file_obj.nLines < self.max_lines:
             try:
-                _, diags_list = file_obj.check_file(workspace=self.workspace)
-                diags = [diag.to_message() for diag in diags_list]
+                _, diags_list = file_obj.check_file(workspace=self.workspace_files)
+                diags = [diag.to_lsp_diagnostic() for diag in diags_list]
             # pylint: disable=W0703
             except Exception as e:
                 if os.path.isfile(file_obj.path):
@@ -414,111 +143,17 @@ class LangServer:
                 return diags, None
         return None, None
 
-    def serve_onChange(self, request):
-        # Update workspace from file sent by editor
-        params = request["params"]
-        uri = params["textDocument"]["uri"]
-        path = path_from_uri(uri)
-        file_obj = self.workspace.get(path)
-        if file_obj is None:
-            self.post_message(
-                'Change request failed for unknown file "{0}"'.format(path)
-            )
-            log.error('Change request failed for unknown file "%s"', path)
-            return
-        else:
-            # Update file contents with changes
-            reparse_req = True
-            if self.sync_type == 1:
-                file_obj.apply_change(params["contentChanges"][0])
-            else:
-                try:
-                    reparse_req = False
-                    for change in params["contentChanges"]:
-                        reparse_flag = file_obj.apply_change(change)
-                        reparse_req = reparse_req or reparse_flag
-                # pylint: disable=W0703
-                except Exception:
-                    self.post_message(
-                        'Change request failed for file "{0}": Could not apply change'.format(
-                            path
-                        )
-                    )
-                    log.error(
-                        'Change request failed for file "%s": Could not apply change',
-                        path,
-                        exc_info=True,
-                    )
-                    return
-        # Parse newly updated file
-        if reparse_req:
-            _, err_str = self.update_workspace_file(path)
-            if err_str is not None:
-                self.post_message(
-                    'Change request failed for file "{0}": {1}'.format(path, err_str)
-                )
-
-    def serve_onOpen(self, request):
-        self.serve_onSave(request, did_open=True)
-
-    def serve_onClose(self, request):
-        self.serve_onSave(request, did_close=True)
-
-    def serve_onSave(self, request, did_open=False, did_close=False):
-        # Update workspace from file on disk
-        params = request["params"]
-        uri = params["textDocument"]["uri"]
-        filepath = path_from_uri(uri)
-        # Skip update and remove objects if file is deleted
-        if did_close and (not os.path.isfile(filepath)):
-            return
-        progress_token = str(uuid.uuid4())
-        self.conn.send_request(
-            "window/workDoneProgress/create", {"token": progress_token}
-        )
-        self.conn.send_notification(
-            self.PROGRESS_MSG,
-            {
-                "token": progress_token,
-                "value": {
-                    "kind": "begin",
-                    "title": "File analysis",
-                    "message": "File analysis in progress",
-                    "cancellable": False,  # Set to True if the user can cancel it
-                },
-            },
-        )
-
-        did_change, err_str = self.update_workspace_file(
-            filepath, read_file=True, allow_empty=did_open
-        )
-        self.conn.send_notification(
-            self.PROGRESS_MSG,
-            {
-                "token": progress_token,
-                "value": {"kind": "end", "message": "File analysis done"},
-            },
-        )
-
-        if err_str is not None:
-            self.post_message(
-                'Save request failed for file "{0}": {1}'.format(filepath, err_str)
-            )
-            return
-        if did_change:
-            self.send_diagnostics(uri)
-
     def update_workspace_file(self, filepath, read_file=False, allow_empty=False):
         # Update workspace from file contents and path
         try:
-            file_obj = self.workspace.get(filepath)
+            file_obj = self.workspace_files.get(filepath)
             if read_file:
                 if file_obj is None:
                     # Create empty file if not yet saved to disk
                     if not os.path.isfile(filepath):
                         file_obj = SuricataFile(filepath, self.rules_tester, empty=True)
                         if allow_empty:
-                            self.workspace[filepath] = file_obj
+                            self.workspace_files[filepath] = file_obj
                             return False, None
                         else:
                             return False, "File does not exist"  # Error during load
@@ -538,8 +173,8 @@ class LangServer:
         except Exception:
             log.error("Error while parsing file %s", filepath, exc_info=True)
             return False, "Error during parsing"  # Error during parsing
-        if filepath not in self.workspace:
-            self.workspace[filepath] = file_obj
+        if filepath not in self.workspace_files:
+            self.workspace_files[filepath] = file_obj
         return True, None
 
     def workspace_init(self):
@@ -567,7 +202,7 @@ class LangServer:
 
         pool = Pool(processes=self.nthreads)
         results = {}
-        if self.rules_tester == None:
+        if self.rules_tester is None:
             self.rules_tester = self.create_rule_tester()
         for filepath in file_list:
             results[filepath] = pool.apply_async(
@@ -580,34 +215,334 @@ class LangServer:
             if result_obj[0] is None:
                 self.post_messages.append(
                     [
-                        1,
+                        MessageType.Error,
                         'Initialization failed for file "{0}": {1}'.format(
                             path, result_obj[1]
                         ),
                     ]
                 )
                 continue
-            self.workspace[path] = result_obj[0]
+            self.workspace_files[path] = result_obj[0]
 
-    def serve_exit(self, _):
-        # Exit server
-        self.workspace = {}
-        self.running = False
-
-    def serve_default(self, request):
-        # Default handler (errors!)
-        raise JSONRPC2Error(
-            code=-32601, message="method {} not found".format(request["method"])
-        )
+    def _initial_params_autocomplete(self, params, file_obj):
+        edit_index = params.position.line
+        sig_content = file_obj.contents_split[edit_index]
+        sig_index = params.position.character
+        word_split = re.split(" +", sig_content[0:sig_index])
+        if len(word_split) == 1:
+            if self.rules_tester is None:
+                self.rules_tester = self.create_rule_tester()
+            return self.rules_tester.ACTIONS_ITEMS
+        if len(word_split) == 2:
+            return self.app_layer_list
+        if edit_index == 0:
+            return None
+        elif not re.search(r"\\ *$", file_obj.contents_split[edit_index - 1]):
+            return None
 
     def analyse_file(self, filepath, engine_analysis=True, **kwargs):
-        if self.rules_tester == None:
+        if self.rules_tester is None:
             self.rules_tester = self.create_rule_tester()
         file_obj = SuricataFile(filepath, self.rules_tester)
         file_obj.load_from_disk()
         return file_obj.check_file(engine_analysis=engine_analysis, **kwargs)
 
     def rules_infos(self, rule_buffer, **kwargs):
-        if self.rules_tester == None:
+        if self.rules_tester is None:
             self.rules_tester = self.create_rule_tester()
         return self.rules_tester.rules_infos(rule_buffer, **kwargs)
+
+
+def create_language_server(debug_log=False, settings=None):
+    """Create and configure a Suricata Language Server instance."""
+    server = SuricataLanguageServer("suricata-language-server", "v1.0")
+    
+    # Get launch settings
+    if settings is None:
+        settings = {}
+    server.nthreads = settings.get("nthreads", 4)
+    server.notify_init = settings.get("notify_init", False)
+    server.sync_type = settings.get("sync_type", 1)
+    server.suricata_binary = settings.get("suricata_binary", "suricata")
+    server.suricata_config = settings.get("suricata_config", None)
+    server.max_lines = settings.get("max_lines", 1000)
+    server.max_tracked_files = settings.get("max_tracked_files", 100)
+    server.docker = settings.get("docker_mode", False)
+    server.docker_image = settings.get(
+        "docker_image", SuriCmd.SLS_DEFAULT_DOCKER_IMAGE
+    )
+    server.debug_log = debug_log
+    
+    # Register handlers
+    @server.feature(INITIALIZED)
+    async def server_initialized(ls: SuricataLanguageServer, params: InitializedParams):
+        """Initialize the rules tester after server initialization."""
+        progress_token = str(uuid.uuid4())
+        await ls.progress.create_async(progress_token)
+        ls.progress.begin(
+            progress_token,
+            WorkDoneProgressBegin(
+                title="Suricata Container Init",
+                message="Initializing Suricata container and potentially fetching image",
+                cancellable=False,
+            )
+        )
+
+        ls.rules_tester = ls.create_rule_tester()
+        ls.progress.report(
+            progress_token,
+            WorkDoneProgressReport(
+                percentage=80,
+                message=f"Suricata v{ls.rules_tester.suricata_version} container ready.",
+            )
+        )
+
+        ls.keywords_list = ls.rules_tester.build_keywords_list()
+        ls.progress.report(
+            progress_token,
+            WorkDoneProgressReport(
+                percentage=90,
+                message="Suricata keywords fetched.",
+            )
+        )
+        ls.app_layer_list = ls.rules_tester.build_app_layer_list()
+        ls.progress.end(
+            progress_token,
+            WorkDoneProgressEnd(message="Suricata Language Server ready.")
+        )
+
+    @server.feature(TEXT_DOCUMENT_COMPLETION)
+    def completions(ls: SuricataLanguageServer, params: CompletionParams):
+        """Provide completion items."""
+        uri = params.text_document.uri
+        path = to_fs_path(uri)
+        file_obj = ls.workspace_files.get(path)
+        if file_obj is None:
+            return None
+        edit_index = params.position.line
+        sig_content = file_obj.contents_split[edit_index]
+        sig_index = params.position.character
+        log.debug(sig_content)
+        # not yet in content matching so just return nothing
+        if "(" not in sig_content[0:sig_index]:
+            return ls._initial_params_autocomplete(params, file_obj)
+        cursor = sig_index - 1
+        while cursor > 0:
+            log.debug(
+                "At index: %d of %d (%s)",
+                cursor,
+                len(sig_content),
+                sig_content[cursor:sig_index],
+            )
+            if not sig_content[cursor].isalnum() and not sig_content[cursor] in [
+                ".",
+                "_",
+            ]:
+                break
+            cursor -= 1
+        log.debug("Final is: %d : %d", cursor, sig_index)
+        if cursor == sig_index - 1:
+            return None
+        # this is an option edit so dont list keyword
+        if sig_content[cursor] in [":", ","]:
+            return None
+        cursor += 1
+        partial_keyword = sig_content[cursor:sig_index]
+        log.debug("Got keyword start: '%s'", partial_keyword)
+        items_list = []
+        for item in ls.keywords_list:
+            if item["label"].startswith(partial_keyword):
+                items_list.append(CompletionItem(**item))
+        if len(items_list):
+            return items_list
+        return None
+
+    @server.feature(TEXT_DOCUMENT_DID_OPEN)
+    async def did_open(ls: SuricataLanguageServer, params: DidOpenTextDocumentParams):
+        """Handle document open."""
+        uri = params.text_document.uri
+        filepath = to_fs_path(uri)
+        
+        # Skip update and remove objects if file is deleted
+        if not os.path.isfile(filepath):
+            return
+        
+        progress_token = str(uuid.uuid4())
+        await ls.progress.create_async(progress_token)
+        ls.progress.begin(
+            progress_token,
+            WorkDoneProgressBegin(
+                title="File analysis",
+                message="File analysis in progress",
+                cancellable=False,
+            )
+        )
+
+        did_change, err_str = ls.update_workspace_file(
+            filepath, read_file=True, allow_empty=True
+        )
+        ls.progress.end(
+            progress_token,
+            WorkDoneProgressEnd(message="File analysis done")
+        )
+
+        if err_str is not None:
+            ls.post_message(
+                'Open request failed for file "{0}": {1}'.format(filepath, err_str),
+                MessageType.Error
+            )
+            return
+        if did_change:
+            ls.send_diagnostics(uri)
+
+    @server.feature(TEXT_DOCUMENT_DID_SAVE)
+    async def did_save(ls: SuricataLanguageServer, params: DidSaveTextDocumentParams):
+        """Handle document save."""
+        uri = params.text_document.uri
+        filepath = to_fs_path(uri)
+        
+        # Skip update and remove objects if file is deleted
+        if not os.path.isfile(filepath):
+            return
+        
+        progress_token = str(uuid.uuid4())
+        await ls.progress.create_async(progress_token)
+        ls.progress.begin(
+            progress_token,
+            WorkDoneProgressBegin(
+                title="File analysis",
+                message="File analysis in progress",
+                cancellable=False,
+            )
+        )
+
+        did_change, err_str = ls.update_workspace_file(
+            filepath, read_file=True, allow_empty=False
+        )
+        ls.progress.end(
+            progress_token,
+            WorkDoneProgressEnd(message="File analysis done")
+        )
+
+        if err_str is not None:
+            ls.post_message(
+                'Save request failed for file "{0}": {1}'.format(filepath, err_str),
+                MessageType.Error
+            )
+            return
+        if did_change:
+            ls.send_diagnostics(uri)
+
+    @server.feature(TEXT_DOCUMENT_DID_CLOSE)
+    def did_close(ls: SuricataLanguageServer, params: DidCloseTextDocumentParams):
+        """Handle document close."""
+        uri = params.text_document.uri
+        filepath = to_fs_path(uri)
+        # For now, we keep the file in workspace even when closed
+        # This matches the original behavior
+
+    @server.feature(TEXT_DOCUMENT_DID_CHANGE)
+    def did_change(ls: SuricataLanguageServer, params: DidChangeTextDocumentParams):
+        """Handle document change."""
+        uri = params.text_document.uri
+        path = to_fs_path(uri)
+        file_obj = ls.workspace_files.get(path)
+        if file_obj is None:
+            ls.post_message(
+                'Change request failed for unknown file "{0}"'.format(path),
+                MessageType.Error
+            )
+            log.error('Change request failed for unknown file "%s"', path)
+            return
+        else:
+            # Update file contents with changes
+            reparse_req = True
+            if ls.sync_type == 1:
+                # Full sync
+                if len(params.content_changes) > 0:
+                    file_obj.apply_change(params.content_changes[0])
+            else:
+                # Incremental sync
+                try:
+                    reparse_req = False
+                    for change in params.content_changes:
+                        reparse_flag = file_obj.apply_change(change)
+                        reparse_req = reparse_req or reparse_flag
+                # pylint: disable=W0703
+                except Exception:
+                    ls.post_message(
+                        'Change request failed for file "{0}": Could not apply change'.format(
+                            path
+                        ),
+                        MessageType.Error
+                    )
+                    log.error(
+                        'Change request failed for file "%s": Could not apply change',
+                        path,
+                        exc_info=True,
+                    )
+                    return
+        # Parse newly updated file
+        if reparse_req:
+            _, err_str = ls.update_workspace_file(path)
+            if err_str is not None:
+                ls.post_message(
+                    'Change request failed for file "{0}": {1}'.format(path, err_str),
+                    MessageType.Error
+                )
+
+    @server.feature(TEXT_DOCUMENT_SEMANTIC_TOKENS_FULL)
+    def semantic_tokens(ls: SuricataLanguageServer, params: SemanticTokensParams):
+        """Provide semantic tokens for the full document."""
+        uri = params.text_document.uri
+        path = to_fs_path(uri)
+        file_obj = ls.workspace_files.get(path)
+        if file_obj is None:
+            return SemanticTokens(data=[])
+        # Add scopes to outline view
+        tokens = file_obj.get_semantic_tokens()
+        return SemanticTokens(data=tokens.get("data", []))
+
+    @server.feature(TEXT_DOCUMENT_SEMANTIC_TOKENS_RANGE)
+    def semantic_tokens_range(ls: SuricataLanguageServer, params: SemanticTokensRangeParams):
+        """Provide semantic tokens for a range."""
+        uri = params.text_document.uri
+        path = to_fs_path(uri)
+        file_obj = ls.workspace_files.get(path)
+        if file_obj is None:
+            return SemanticTokens(data=[])
+        # Add scopes to outline view
+        tokens = file_obj.get_semantic_tokens(file_range=params.range)
+        return SemanticTokens(data=tokens.get("data", []))
+
+    @server.feature("initialize")
+    def initialize(ls: SuricataLanguageServer, params: InitializeParams):
+        """Handle initialization request."""
+        # Setup language server
+        ls.root_path = to_fs_path(
+            params.root_uri or params.root_path or ""
+        )
+        ls.source_dirs.append(ls.root_path)
+        # Recursively add sub-directories
+        if len(ls.source_dirs) == 1:
+            ls.source_dirs = []
+            for dirName, subdirList, fileList in os.walk(ls.root_path):
+                if ls.excl_paths.count(dirName) > 0:
+                    while len(subdirList) > 0:
+                        del subdirList[0]
+                    continue
+                contains_source = False
+                for filename in fileList:
+                    _, ext = os.path.splitext(os.path.basename(filename))
+                    if SURICATA_RULES_EXT_REGEX.match(ext):
+                        contains_source = True
+                        break
+                if contains_source:
+                    ls.source_dirs.append(dirName)
+        # Initialize workspace
+        ls.workspace_init()
+        
+        if ls.notify_init:
+            ls.post_messages.append([MessageType.Info, "suricatals initialization complete"])
+
+    return server

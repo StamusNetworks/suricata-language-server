@@ -18,6 +18,8 @@ You should have received a copy of the GNU General Public License
 along with Suricata Language Server.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+from lsprotocol.types import Diagnostic, DiagnosticSeverity, Position, Range
+
 
 class FileRange:
     def __init__(self, line_start, col_start, line_end, col_end):
@@ -62,6 +64,29 @@ class Diagnosis(object):
             "content": self.content,
             "sid": self.sid,
         }
+
+    def to_lsp_diagnostic(self):
+        """Convert to LSP Diagnostic type for use with pygls."""
+        if self._range is None or self._message is None:
+            return None
+        
+        # Map severity levels: 1=Error, 2=Warning, 4=Info/Hint
+        severity_map = {
+            1: DiagnosticSeverity.Error,
+            2: DiagnosticSeverity.Warning,
+            3: DiagnosticSeverity.Information,
+            4: DiagnosticSeverity.Hint,
+        }
+        
+        return Diagnostic(
+            range=Range(
+                start=Position(line=self._range.line_start, character=self._range.col_start),
+                end=Position(line=self._range.line_end, character=self._range.col_end)
+            ),
+            message=self.message,
+            severity=severity_map.get(self.severity, DiagnosticSeverity.Information),
+            source=self.source,
+        )
 
     def __repr__(self):
         return "Diagnosis(sid=%s, message=%s, range=%s)" % (

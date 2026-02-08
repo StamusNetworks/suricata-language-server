@@ -1,12 +1,12 @@
 import os
 import unittest
-from suricatals.langserver import LangServer
+from suricatals.langserver import create_language_server
 
 
 class TestSyntax(unittest.TestCase):
 
     def _test_rules_file(self, filename, expected_diags):
-        s = LangServer(conn=None, settings=None)
+        s = create_language_server(settings=None)
         _, diags = s.analyse_file(os.path.join(os.getcwd(), "tests", filename))
         if expected_diags is not None:
             self.assertEqual(len(diags), expected_diags)

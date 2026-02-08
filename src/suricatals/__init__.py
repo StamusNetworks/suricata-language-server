@@ -22,8 +22,7 @@ along with Suricata Language Server.  If not, see <http://www.gnu.org/licenses/>
 
 import sys
 import argparse
-from suricatals.langserver import LangServer
-from suricatals.jsonrpc import JSONRPC2Connection, ReadWriter
+from suricatals.langserver import create_language_server, SuricataLanguageServer
 from suricatals.suri_cmd import SuriCmd
 import json
 
@@ -105,26 +104,11 @@ def main():
         print("--no-engine-analysis must be used with --batch-file")
 
     if args.batch_file is None:
-        stdin, stdout = _binary_stdio()
-        s = LangServer(
-            conn=JSONRPC2Connection(ReadWriter(stdin, stdout)),
-            debug_log=args.debug_log,
-            settings=settings,
-        )
-        s.run()
+        server = create_language_server(debug_log=args.debug_log, settings=settings)
+        server.start_io()
     else:
-        s = LangServer(conn=None, settings=settings)
-        _, diags = s.analyse_file(args.batch_file, not args.no_engine_analysis)
+        # Batch mode for analysis
+        server = create_language_server(settings=settings)
+        _, diags = server.analyse_file(args.batch_file, not args.no_engine_analysis)
         for diag in diags:
             print(json.dumps(diag.to_message()))
-
-
-def _binary_stdio():
-    """Construct binary stdio streams (not text mode).
-    This seems to be different for Window/Unix Python2/3, so going by:
-        https://stackoverflow.com/questions/2850893/reading-binary-data-from-stdin
-    """
-
-    stdin, stdout = sys.stdin.buffer, sys.stdout.buffer
-
-    return stdin, stdout

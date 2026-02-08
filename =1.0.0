@@ -1,0 +1,23 @@
+Defaulting to user installation because normal site-packages is not writeable
+Collecting pygls
+  Downloading pygls-2.0.1-py3-none-any.whl.metadata (4.5 kB)
+Collecting attrs>=24.3.0 (from pygls)
+  Downloading attrs-25.4.0-py3-none-any.whl.metadata (10 kB)
+Collecting cattrs>=23.1.2 (from pygls)
+  Downloading cattrs-25.3.0-py3-none-any.whl.metadata (8.4 kB)
+Collecting lsprotocol==2025.0.0 (from pygls)
+  Downloading lsprotocol-2025.0.0-py3-none-any.whl.metadata (2.2 kB)
+Collecting typing-extensions>=4.14.0 (from cattrs>=23.1.2->pygls)
+  Downloading typing_extensions-4.15.0-py3-none-any.whl.metadata (3.3 kB)
+Downloading pygls-2.0.1-py3-none-any.whl (69 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 69.5/69.5 kB 17.2 MB/s eta 0:00:00
+Downloading lsprotocol-2025.0.0-py3-none-any.whl (76 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 76.2/76.2 kB 20.9 MB/s eta 0:00:00
+Downloading attrs-25.4.0-py3-none-any.whl (67 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 67.6/67.6 kB 9.1 MB/s eta 0:00:00
+Downloading cattrs-25.3.0-py3-none-any.whl (70 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 70.7/70.7 kB 14.7 MB/s eta 0:00:00
+Downloading typing_extensions-4.15.0-py3-none-any.whl (44 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 44.6/44.6 kB 13.0 MB/s eta 0:00:00
+Installing collected packages: typing-extensions, attrs, cattrs, lsprotocol, pygls
+Successfully installed attrs-25.4.0 cattrs-25.3.0 lsprotocol-2025.0.0 pygls-2.0.1 typing-extensions-4.15.0
