@@ -27,7 +27,7 @@ from suricatals.jsonrpc import JSONRPC2Connection, ReadWriter
 from suricatals.suri_cmd import SuriCmd
 import json
 
-__version__ = "1.1.0"
+__version__ = "1.4.0"
 
 
 def error_exit(error_str):
