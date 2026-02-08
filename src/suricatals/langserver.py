@@ -37,6 +37,7 @@ from lsprotocol.types import (
     TEXT_DOCUMENT_SEMANTIC_TOKENS_FULL,
     TEXT_DOCUMENT_SEMANTIC_TOKENS_RANGE,
     INITIALIZED,
+    INITIALIZE,
     CompletionParams,
     CompletionList,
     CompletionItem,
@@ -357,7 +358,18 @@ def create_language_server(debug_log=False, settings=None):
         items_list = []
         for item in ls.keywords_list:
             if item["label"].startswith(partial_keyword):
-                items_list.append(CompletionItem(**item))
+                # Convert dict to CompletionItem, handling documentation special case
+                doc = item.get("documentation")
+                if isinstance(doc, dict) and "kind" in doc:
+                    from lsprotocol.types import MarkupContent, MarkupKind
+                    doc = MarkupContent(kind=MarkupKind.Markdown, value=doc["value"])
+                items_list.append(CompletionItem(
+                    label=item["label"],
+                    kind=item.get("kind"),
+                    detail=item.get("detail"),
+                    documentation=doc,
+                    tags=item.get("tags"),
+                ))
         if len(items_list):
             return items_list
         return None
@@ -464,7 +476,7 @@ def create_language_server(debug_log=False, settings=None):
             reparse_req = True
             if ls.sync_type == 1:
                 # Full sync
-                if len(params.content_changes) > 0:
+                if params.content_changes:
                     file_obj.apply_change(params.content_changes[0])
             else:
                 # Incremental sync
@@ -520,7 +532,7 @@ def create_language_server(debug_log=False, settings=None):
         tokens = file_obj.get_semantic_tokens(file_range=params.range)
         return SemanticTokens(data=tokens.get("data", []))
 
-    @server.feature("initialize")
+    @server.feature(INITIALIZE)
     def initialize(ls: SuricataLanguageServer, params: InitializeParams):
         """Handle initialization request."""
         # Setup language server
