@@ -34,7 +34,7 @@ keywords = [
 ]
 dependencies = [
     "docker>=7.1.0",
-    "pygls>=1.0.0",
+    "pygls>=2.0.0",
 ]
 
 [project.urls]
