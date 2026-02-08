@@ -409,8 +409,8 @@ def create_language_server(debug_log=False, settings=None):
                 MessageType.Error
             )
             return
-        if did_change:
-            ls.send_diagnostics(uri)
+        # Always send diagnostics on file open, regardless of whether content changed
+        ls.send_diagnostics(uri)
 
     @server.feature(TEXT_DOCUMENT_DID_SAVE)
     async def did_save(ls: SuricataLanguageServer, params: DidSaveTextDocumentParams):
@@ -447,8 +447,8 @@ def create_language_server(debug_log=False, settings=None):
                 MessageType.Error
             )
             return
-        if did_change:
-            ls.send_diagnostics(uri)
+        # Always send diagnostics on file save, regardless of whether content changed
+        ls.send_diagnostics(uri)
 
     @server.feature(TEXT_DOCUMENT_DID_CLOSE)
     def did_close(ls: SuricataLanguageServer, params: DidCloseTextDocumentParams):
