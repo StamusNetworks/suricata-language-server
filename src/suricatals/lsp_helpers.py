@@ -18,6 +18,8 @@ You should have received a copy of the GNU General Public License
 along with Suricata Language Server.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+from lsprotocol import types
+
 
 class FileRange:
     def __init__(self, line_start, col_start, line_end, col_end):
@@ -34,6 +36,12 @@ class FileRange:
             "start": {"line": self.line_start, "character": self.col_start},
             "end": {"line": self.line_end, "character": self.col_end},
         }
+
+    def to_lsp_range(self):
+        return types.Range(
+            start=types.Position(line=self.line_start, character=self.col_start),
+            end=types.Position(line=self.line_end, character=self.col_end),
+        )
 
 
 class Diagnosis(object):
@@ -62,6 +70,26 @@ class Diagnosis(object):
             "content": self.content,
             "sid": self.sid,
         }
+
+    def to_diagnostic(self):
+        if self._range is None:
+            return None
+        if self._message is None:
+            return None
+        if self._severity == self.INFO_LEVEL:
+            severity = types.DiagnosticSeverity.Information
+        elif self._severity == self.WARNING_LEVEL:
+            severity = types.DiagnosticSeverity.Warning
+        elif self._severity == self.ERROR_LEVEL:
+            severity = types.DiagnosticSeverity.Error
+        else:
+            severity = types.DiagnosticSeverity.Error
+        return types.Diagnostic(
+            range=self._range.to_lsp_range(),
+            message=self._message,
+            source=self._source,
+            severity=severity,
+        )
 
     def __repr__(self):
         return "Diagnosis(sid=%s, message=%s, range=%s)" % (
