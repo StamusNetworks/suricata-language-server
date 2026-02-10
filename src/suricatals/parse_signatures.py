@@ -196,17 +196,8 @@ class SuricataFile:
         )
         self.contents_split = []
         self.sigset = SignatureSet()
-        self.nLines = 0
-        self.hash = None
         self.mpm = {}
         self.diagnosis = None
-        if not empty:
-            self.count_lines()
-
-    def count_lines(self):
-        with open(self.path, "r", encoding="utf-8", errors="replace") as fhandle:
-            content = fhandle.read()
-            self.nLines = len(content.splitlines())
 
     def copy(self):
         """Copy content to new file object (does not copy objects)"""
@@ -214,9 +205,7 @@ class SuricataFile:
         return copy_obj
 
     def _load_file(self, contents):
-        self.hash = hashlib.sha256(contents.encode("utf-8")).hexdigest()
         self.contents_split = contents.splitlines()
-        self.nLines = len(self.contents_split)
         self.parse_file()
 
     def load_from_disk(self):
@@ -517,11 +506,6 @@ class SuricataFile:
                 if len(content_line) > 0 and not content_line.isspace():
                     self.sigset.add_signature(i, content_line, multiline=False)
             i += 1
-
-    def apply_change(self, content_update: types.TextDocumentContentChangeEvent):
-        self.contents_split = content_update.text.splitlines()
-        self.nLines = len(self.contents_split)
-        self.parse_file()
 
     def extract_range(self, file_range):
         lines = self.contents_split
