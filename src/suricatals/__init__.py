@@ -25,8 +25,10 @@ import argparse
 from suricatals.langserver import LangServer
 from suricatals.suri_cmd import SuriCmd
 import json
+from importlib.metadata import version
 
-__version__ = "1.4.0"
+
+__version__ = version("suricata-language-server")
 
 
 def error_exit(error_str):
