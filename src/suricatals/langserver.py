@@ -197,6 +197,13 @@ class LangServer:
         # Run server
         self.server.start_io()
 
+    def get_suricata_file(self, uri) -> Optional[SuricataFile]:
+        file_obj = self.server.workspace.get_text_document(uri)
+        path = path_from_uri(uri)
+        s_file = SuricataFile(path, self.rules_tester, empty=True)
+        s_file.load_from_lsp(file_obj)
+        return s_file
+
     def _initial_params_autocomplete(
         self, params: types.CompletionParams, file_obj
     ) -> Optional[types.CompletionList]:
@@ -305,12 +312,9 @@ class LangServer:
         ),
     )
     def serve_semantic_tokens(self, params: types.SemanticTokensParams):
-        # Get parameters from request
-        uri = params.text_document.uri
-        file_obj = self.server.workspace.get_text_document(uri)
-        path = path_from_uri(uri)
-        s_file = SuricataFile(path, self.rules_tester, empty=True)
-        s_file.load_from_lsp(file_obj)
+        s_file = self.get_suricata_file(params.text_document.uri)
+        if s_file is None:
+            return types.SemanticTokens(data=[])
         # Add scopes to outline view
         data = s_file.get_semantic_tokens()
         return types.SemanticTokens(data=data)
@@ -323,12 +327,9 @@ class LangServer:
         ),
     )
     def serve_semantic_tokens_range(self, params: types.SemanticTokensRangeParams):
-        # Get parameters from request
-        uri = params.text_document.uri
-        file_obj = self.server.workspace.get_text_document(uri)
-        path = path_from_uri(uri)
-        s_file = SuricataFile(path, self.rules_tester, empty=True)
-        s_file.load_from_lsp(file_obj)
+        s_file = self.get_suricata_file(params.text_document.uri)
+        if s_file is None:
+            return types.SemanticTokens(data=[])
         # Add scopes to outline view
         data = s_file.get_semantic_tokens(file_range=params.range)
         return types.SemanticTokens(data=data)
@@ -336,8 +337,9 @@ class LangServer:
     def get_diagnostics(self, uri):
         file_obj = self.server.workspace.get_text_document(uri)
         if file_obj is not None and len(file_obj.lines) < self.max_lines:
-            s_file = SuricataFile(path_from_uri(uri), self.rules_tester, empty=True)
-            s_file.load_from_lsp(file_obj)
+            s_file = self.get_suricata_file(uri)
+            if s_file is None:
+                return None, None
             _, diags_list = s_file.check_lsp_file(file_obj)
             diags = [diag.to_diagnostic() for diag in diags_list]
             # pylint: disable=W0703
