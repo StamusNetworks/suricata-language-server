@@ -154,21 +154,34 @@ class LangServer:
 
         self.server.work_done_progress.create(progress_token)
 
+        if self.docker:
+            title = "Suricata Container Init"
+            message = "Initializing Suricata container and potentially fetching image"
+        else:
+            title = "Suricata Language Server Init"
+            message = "Initializing Suricata and fetching various lists for autocompletion and diagnostics"
+
         self.server.work_done_progress.begin(
             progress_token,
             types.WorkDoneProgressBegin(
-                title="Suricata Container Init",
-                message="Initializing Suricata container and potentially fetching image",
+                title=title,
+                message=message,
                 cancellable=False,
             ),
         )
 
         self.rules_tester = self.create_rule_tester()
+        if self.docker:
+            message = (
+                f"Suricata v{self.rules_tester.suricata_version} container initialized"
+            )
+        else:
+            message = f"Suricata v{self.rules_tester.suricata_version} available"
         self.server.work_done_progress.report(
             progress_token,
             types.WorkDoneProgressReport(
                 percentage=80,
-                message=f"Suricata v{self.rules_tester.suricata_version} container ready.",
+                message=message,
             ),
         )
 
@@ -177,13 +190,13 @@ class LangServer:
         self.server.work_done_progress.report(
             progress_token,
             types.WorkDoneProgressReport(
-                percentage=90, message="Suricata keywords fetched."
+                percentage=90, message="Suricata keywords fetched"
             ),
         )
         self.app_layer_list = self.rules_tester.build_app_layer_list()
         self.server.work_done_progress.end(
             progress_token,
-            types.WorkDoneProgressEnd(message="Suricata Language Server ready."),
+            types.WorkDoneProgressEnd(message="Suricata Language Server ready"),
         )
 
     def run(self):
