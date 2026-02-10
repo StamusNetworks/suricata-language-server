@@ -388,11 +388,6 @@ class LangServer:
             )
         )
 
-    def serve_exit(self, _):
-        # Exit server
-        self.workspace = {}
-        self.running = False
-
     def analyse_file(self, filepath, engine_analysis=True, **kwargs):
         if self.rules_tester == None:
             self.rules_tester = self.create_rule_tester()
