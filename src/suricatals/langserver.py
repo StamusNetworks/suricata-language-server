@@ -27,8 +27,8 @@ from urllib.parse import unquote
 from functools import wraps
 import inspect
 from typing import Optional
+from importlib.metadata import version
 
-from .__init__ import __version__
 from suricatals.parse_signatures import SuricataFile
 from suricatals.tests_rules import TestRules
 from suricatals.suri_cmd import SuriCmd
@@ -103,7 +103,8 @@ class LangServer:
         if batch_mode:
             self.rules_tester = self.create_rule_tester()
         else:
-            self.server = LanguageServer("Suricata Language Server", __version__)
+            p_version = version("suricata-language-server")
+            self.server = LanguageServer("Suricata Language Server", p_version)
             self._register_all_features()
         self.keywords_list = []
         self.app_layer_list = []
