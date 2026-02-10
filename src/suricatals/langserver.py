@@ -58,13 +58,6 @@ def path_from_uri(uri):
     return os.path.normpath(unquote(path))
 
 
-def init_file(filepath, rules_tester, line_limit):
-    file_obj = SuricataFile(filepath, rules_tester)
-    if file_obj.nLines < line_limit:
-        file_obj.check_file()
-    return file_obj, None
-
-
 def register_feature(lsp_type, options=None):
     """
     Decorator that temporarily saves the configuration on the method
