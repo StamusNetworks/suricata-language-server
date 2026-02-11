@@ -93,6 +93,37 @@ pre-commit run --all-files
    - Tokenizes Suricata signatures for semantic highlighting
    - Identifies keywords, actions, strings, operators, etc.
 
+6. **Worker Pool** (`src/suricatals/worker_pool.py`)
+   - Module-level worker function for parallel workspace analysis
+   - Analyzes individual rules files in separate processes
+   - Returns MPM data structure for cross-file analysis
+
+### Multiprocessing Architecture
+
+When a workspace folder is added (via `WORKSPACE_DID_CHANGE_WORKSPACE_FOLDERS`), the language server analyzes all `.rules` files to extract MPM (Multi-Pattern Matching) information for cross-file pattern collision detection.
+
+**Parallel Processing:**
+- Uses `ProcessPoolExecutor` with `nthreads` workers (default: 4)
+- Each worker process analyzes files independently
+- Worker function (`analyze_file_worker`) creates its own TestRules instance
+- Docker mode: Each worker creates its own docker client (no shared state)
+- Results aggregated via futures and stored in `workspace_mpm` dict
+
+**Key Features:**
+- Always uses parallel processing for workspace analysis
+- Expected 3-4x speedup for large rulesets (e.g., 100 files in ~2 minutes vs ~8 minutes sequential)
+- Progress reporting via multiprocessing Queue
+- Per-file timeout: 5 minutes
+- Automatic fallback to sequential processing on critical errors
+- Error-tolerant: Failed files logged but don't block other files
+
+**Architecture Details:**
+- TestRules.__getstate__/__setstate__ handles pickling by removing/recreating SuriCmd
+- Each worker process gets its own docker client via `docker.from_env()`
+- Temporary directories isolated per worker (no file conflicts)
+- Progress updates sent via Queue, main thread updates LSP progress API
+- Results: `{filepath: {"buffer": {...}, "sids": {...}}}`
+
 ### Key Data Flow
 
 1. User saves `.rules` file in editor

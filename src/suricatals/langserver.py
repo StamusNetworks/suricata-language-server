@@ -415,23 +415,19 @@ class LangServer:
             log.warning("Error scanning directory %s: %s", directory, e)
         return rules_files
 
-    def analyze_workspace_files(self, rules_files):
-        """Analyze rules files to extract MPM information."""
-        if self.rules_tester is None:
-            self.rules_tester = self.create_rule_tester()
+    def _analyze_workspace_files_sequential(self, rules_files, progress_token):
+        """
+        Sequential fallback for workspace analysis.
 
-        progress_token = str(uuid.uuid4())
-        self.server.work_done_progress.create(progress_token)
-        self.server.work_done_progress.begin(
-            progress_token,
-            types.WorkDoneProgressBegin(
-                title="Analyzing Workspace Rules",
-                message=f"Analyzing {len(rules_files)} rules files for MPM information",
-                cancellable=False,
-            ),
-        )
+        Used only as fallback when parallel processing fails critically.
 
+        Args:
+            rules_files: List of file paths to analyze
+            progress_token: UUID token for progress reporting
+        """
         analyzed_count = 0
+        error_count = 0
+
         for filepath in rules_files:
             try:
                 # Analyze file to get MPM information
@@ -455,12 +451,14 @@ class LangServer:
                         ),
                     )
             except Exception as e:
+                error_count += 1
                 log.error("Error analyzing file %s: %s", filepath, e, exc_info=True)
 
         self.server.work_done_progress.end(
             progress_token,
             types.WorkDoneProgressEnd(
                 message=f"Workspace analysis complete: {analyzed_count} files analyzed"
+                + (f", {error_count} errors" if error_count > 0 else "")
             ),
         )
 
@@ -469,9 +467,154 @@ class LangServer:
             len(data.get("sids", {})) for data in self.workspace_mpm.values()
         )
         log.info(
-            "Workspace MPM data: %d files, %d signatures",
-            len(self.workspace_mpm),
+            "Workspace MPM data: %d files analyzed, %d signatures, %d errors",
+            analyzed_count,
             total_sigs,
+            error_count,
+        )
+
+    def analyze_workspace_files(self, rules_files):
+        """Analyze rules files to extract MPM information using parallel processing."""
+        import multiprocessing
+        from concurrent.futures import ProcessPoolExecutor, as_completed, TimeoutError
+        from suricatals.worker_pool import analyze_file_worker
+
+        if self.rules_tester is None:
+            self.rules_tester = self.create_rule_tester()
+
+        # Prepare configuration dict for workers (must be picklable)
+        rules_tester_config = {
+            "suricata_binary": self.suricata_binary,
+            "suricata_config": self.suricata_config,
+            "docker": self.docker,
+            "docker_image": self.docker_image,
+        }
+
+        # Progress tracking setup
+        progress_token = str(uuid.uuid4())
+        self.server.work_done_progress.create(progress_token)
+        self.server.work_done_progress.begin(
+            progress_token,
+            types.WorkDoneProgressBegin(
+                title="Analyzing Workspace Rules",
+                message=f"Analyzing {len(rules_files)} rules files for MPM information (parallel mode)",
+                cancellable=False,
+            ),
+        )
+
+        # Create progress queue with Manager (process-safe)
+        manager = multiprocessing.Manager()
+        progress_queue = manager.Queue()
+
+        analyzed_count = 0
+        error_count = 0
+
+        try:
+            with ProcessPoolExecutor(max_workers=self.nthreads) as executor:
+                # Submit all files for processing
+                futures = {
+                    executor.submit(
+                        analyze_file_worker,
+                        filepath,
+                        rules_tester_config,
+                        progress_queue,
+                    ): filepath
+                    for filepath in rules_files
+                }
+
+                # Process results as they complete
+                for future in as_completed(futures):
+                    filepath = futures[future]
+
+                    try:
+                        # Get result with timeout (5 minutes per file)
+                        result_filepath, mpm_data, error = future.result(timeout=300)
+
+                        # Store successful results
+                        if error is None and mpm_data:
+                            self.workspace_mpm[result_filepath] = mpm_data
+                            analyzed_count += 1
+                        else:
+                            error_count += 1
+                            if error:
+                                log.error(
+                                    "Failed to analyze file %s: %s",
+                                    result_filepath,
+                                    error,
+                                )
+
+                    except TimeoutError:
+                        log.error("Timeout analyzing file %s (>5 minutes)", filepath)
+                        error_count += 1
+
+                    except Exception as e:
+                        log.error(
+                            "Unexpected error processing file %s: %s",
+                            filepath,
+                            e,
+                            exc_info=True,
+                        )
+                        error_count += 1
+
+                    # Drain progress queue (non-blocking)
+                    while not progress_queue.empty():
+                        try:
+                            msg_type, msg_filepath, _ = progress_queue.get_nowait()
+                        except Exception:
+                            break
+
+                    # Report progress periodically
+                    total_processed = analyzed_count + error_count
+                    if total_processed % 10 == 0 or total_processed == len(rules_files):
+                        self.server.work_done_progress.report(
+                            progress_token,
+                            types.WorkDoneProgressReport(
+                                percentage=int(
+                                    (total_processed / len(rules_files)) * 100
+                                ),
+                                message=f"Analyzed {analyzed_count}/{len(rules_files)} files"
+                                + (
+                                    f" ({error_count} errors)"
+                                    if error_count > 0
+                                    else ""
+                                ),
+                            ),
+                        )
+
+        except Exception as e:
+            log.error(
+                "Critical error in parallel workspace analysis: %s", e, exc_info=True
+            )
+            # Fall back to sequential processing
+            log.info("Falling back to sequential processing")
+            manager.shutdown()
+            return self._analyze_workspace_files_sequential(rules_files, progress_token)
+
+        finally:
+            # Cleanup manager resources
+            try:
+                manager.shutdown()
+            except Exception:
+                pass
+
+        # Final progress update
+        self.server.work_done_progress.end(
+            progress_token,
+            types.WorkDoneProgressEnd(
+                message=f"Workspace analysis complete: {analyzed_count} files analyzed"
+                + (f", {error_count} errors" if error_count > 0 else "")
+            ),
+        )
+
+        # Log summary of MPM data
+        total_sigs = sum(
+            len(data.get("sids", {})) for data in self.workspace_mpm.values()
+        )
+        log.info(
+            "Workspace MPM data: %d files analyzed, %d signatures, %d errors",
+            analyzed_count,
+            total_sigs,
+            error_count,
         )
 
     @register_feature(types.WORKSPACE_DID_CHANGE_WORKSPACE_FOLDERS)
