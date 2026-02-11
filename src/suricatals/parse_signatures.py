@@ -353,17 +353,29 @@ class SuricataFile:
             if pattern is None:
                 continue
             pattern_count = pattern["count"]
-            for sig_file in workspace:
-                if sig_file != self.path:
-                    file_obj = workspace.get(sig_file)
-                    if file_obj is None or file_obj.mpm is None:
-                        continue
-                    f_pattern = file_obj.mpm.get(sig.mpm["buffer"], {}).get(
-                        sig.mpm["pattern"]
-                    )
-                    if f_pattern is None:
-                        continue
-                    pattern_count += f_pattern["count"]
+            # Check workspace_mpm for pattern usage across files
+            if workspace:
+                for sig_file in workspace:
+                    if sig_file != self.path:
+                        file_mpm_data = workspace.get(sig_file)
+                        if file_mpm_data is None:
+                            continue
+                        # Access the buffer data from workspace_mpm structure
+                        # workspace_mpm[filepath] = {"buffer": {...}, "sids": {...}}
+                        if isinstance(file_mpm_data, dict):
+                            file_mpm = file_mpm_data.get("buffer")
+                        else:
+                            # Support old format where file_obj.mpm was passed
+                            file_mpm = getattr(file_mpm_data, "mpm", None)
+
+                        if file_mpm is None:
+                            continue
+                        f_pattern = file_mpm.get(sig.mpm["buffer"], {}).get(
+                            sig.mpm["pattern"]
+                        )
+                        if f_pattern is None:
+                            continue
+                        pattern_count += f_pattern["count"]
             l_diag = Diagnosis()
             if pattern_count > 1:
                 l_diag.message = (

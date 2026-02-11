@@ -108,6 +108,8 @@ class LangServer:
             self._register_all_features()
         self.keywords_list = []
         self.app_layer_list = []
+        # Workspace MPM data: {file_path: {"buffer": {...}, "sids": {...}}}
+        self.workspace_mpm = {}
 
     def _register_all_features(self):
         for _, method in inspect.getmembers(self, predicate=inspect.ismethod):
@@ -340,7 +342,20 @@ class LangServer:
             s_file = self.get_suricata_file(uri)
             if s_file is None:
                 return None, None
-            _, diags_list = s_file.check_lsp_file(file_obj)
+            # Pass workspace_mpm for cross-file MPM analysis
+            _, diags_list = s_file.check_lsp_file(
+                file_obj, workspace=self.workspace_mpm
+            )
+
+            # Update workspace_mpm with the analyzed file's MPM data
+            filepath = path_from_uri(uri)
+            if s_file.mpm:
+                self.workspace_mpm[filepath] = {"buffer": s_file.mpm, "sids": {}}
+                # Store per-signature MPM info
+                for sig in s_file.sigset.signatures:
+                    if sig.mpm:
+                        self.workspace_mpm[filepath]["sids"][sig.sid] = sig.mpm
+
             diags = [diag.to_diagnostic() for diag in diags_list]
             # pylint: disable=W0703
             return diags, None
@@ -388,12 +403,117 @@ class LangServer:
             )
         )
 
+    def find_rules_files(self, directory):
+        """Recursively find all .rules files in a directory."""
+        rules_files = []
+        try:
+            for root, _, files in os.walk(directory):
+                for file in files:
+                    if SURICATA_RULES_EXT_REGEX.match(os.path.splitext(file)[1]):
+                        rules_files.append(os.path.join(root, file))
+        except (OSError, PermissionError) as e:
+            log.warning("Error scanning directory %s: %s", directory, e)
+        return rules_files
+
+    def analyze_workspace_files(self, rules_files):
+        """Analyze rules files to extract MPM information."""
+        if self.rules_tester is None:
+            self.rules_tester = self.create_rule_tester()
+
+        progress_token = str(uuid.uuid4())
+        self.server.work_done_progress.create(progress_token)
+        self.server.work_done_progress.begin(
+            progress_token,
+            types.WorkDoneProgressBegin(
+                title="Analyzing Workspace Rules",
+                message=f"Analyzing {len(rules_files)} rules files for MPM information",
+                cancellable=False,
+            ),
+        )
+
+        analyzed_count = 0
+        for filepath in rules_files:
+            try:
+                # Analyze file to get MPM information
+                s_file, _, _ = self.analyse_file(filepath, engine_analysis=True)
+
+                # Store MPM data for this file
+                if s_file and hasattr(s_file, "mpm") and s_file.mpm:
+                    self.workspace_mpm[filepath] = {"buffer": s_file.mpm, "sids": {}}
+                    # Store per-signature MPM info
+                    for sig in s_file.sigset.signatures:
+                        if sig.mpm:
+                            self.workspace_mpm[filepath]["sids"][sig.sid] = sig.mpm
+
+                analyzed_count += 1
+                if analyzed_count % 10 == 0 or analyzed_count == len(rules_files):
+                    self.server.work_done_progress.report(
+                        progress_token,
+                        types.WorkDoneProgressReport(
+                            percentage=int((analyzed_count / len(rules_files)) * 100),
+                            message=f"Analyzed {analyzed_count}/{len(rules_files)} files",
+                        ),
+                    )
+            except Exception as e:
+                log.error("Error analyzing file %s: %s", filepath, e, exc_info=True)
+
+        self.server.work_done_progress.end(
+            progress_token,
+            types.WorkDoneProgressEnd(
+                message=f"Workspace analysis complete: {analyzed_count} files analyzed"
+            ),
+        )
+
+        # Log summary of MPM data
+        total_sigs = sum(
+            len(data.get("sids", {})) for data in self.workspace_mpm.values()
+        )
+        log.info(
+            "Workspace MPM data: %d files, %d signatures",
+            len(self.workspace_mpm),
+            total_sigs,
+        )
+
+    @register_feature(types.WORKSPACE_DID_CHANGE_WORKSPACE_FOLDERS)
+    def serve_workspace_did_change_workspace_folders(self, params):
+        # Update workspace folders
+        for folder in params.event.added:
+            path = path_from_uri(folder.uri)
+            if os.path.isdir(path):
+                self.source_dirs.append(path)
+                # Find and analyze all .rules files in the added folder
+                rules_files = self.find_rules_files(path)
+                if rules_files:
+                    log.info(
+                        "Found %d rules files in added folder %s, analyzing for MPM data",
+                        len(rules_files),
+                        path,
+                    )
+                    self.analyze_workspace_files(rules_files)
+
+        for folder in params.event.removed:
+            path = path_from_uri(folder.uri)
+            if path in self.source_dirs:
+                self.source_dirs.remove(path)
+                # Remove MPM data for files in removed folder
+                files_to_remove = [
+                    fp for fp in self.workspace_mpm.keys() if fp.startswith(path)
+                ]
+                for fp in files_to_remove:
+                    del self.workspace_mpm[fp]
+                if files_to_remove:
+                    log.info(
+                        "Removed MPM data for %d files from removed folder",
+                        len(files_to_remove),
+                    )
+
     def analyse_file(self, filepath, engine_analysis=True, **kwargs):
         if self.rules_tester == None:
             self.rules_tester = self.create_rule_tester()
         file_obj = SuricataFile(filepath, self.rules_tester)
         file_obj.load_from_disk()
-        return file_obj.check_file(engine_analysis=engine_analysis, **kwargs)
+        status, diags = file_obj.check_file(engine_analysis=engine_analysis, **kwargs)
+        return file_obj, status, diags
 
     def rules_infos(self, rule_buffer, **kwargs):
         if self.rules_tester == None:
