@@ -28,6 +28,7 @@ from functools import wraps
 import inspect
 from typing import Optional
 from importlib.metadata import version
+import queue
 
 from suricatals.parse_signatures import SuricataFile
 from suricatals.tests_rules import TestRules
@@ -66,8 +67,8 @@ def register_feature(lsp_type, options=None):
 
     def decorator(func):
         # We attach these custom attributes to the method function
-        func._lsp_type = lsp_type
-        func._lsp_options = options
+        func.lsp_type = lsp_type
+        func.lsp_options = options
         return func
 
     return decorator
@@ -113,9 +114,9 @@ class LangServer:
 
     def _register_all_features(self):
         for _, method in inspect.getmembers(self, predicate=inspect.ismethod):
-            if hasattr(method, "_lsp_type"):
-                feature_type = getattr(method, "_lsp_type", "")
-                options = getattr(method, "_lsp_options", None)
+            if hasattr(method, "lsp_type"):
+                feature_type = getattr(method, "lsp_type", "")
+                options = getattr(method, "lsp_options", None)
                 # We use a helper function to create the wrapper.
                 # This ensures 'method' is captured by value, not by reference.
                 wrapper = self._create_wrapper(method)
@@ -143,7 +144,7 @@ class LangServer:
         )
 
     @register_feature(types.INITIALIZED)
-    def server_initialized(self, params: types.InitializedParams):
+    def server_initialized(self, _params: types.InitializedParams):
         # Initialize the rules tester, this can take long in container
         # mode as it is going to trigger a fetch.
         progress_token = str(uuid.uuid4())
@@ -202,7 +203,7 @@ class LangServer:
     def get_suricata_file(self, uri) -> Optional[SuricataFile]:
         file_obj = self.server.workspace.get_text_document(uri)
         path = path_from_uri(uri)
-        s_file = SuricataFile(path, self.rules_tester, empty=True)
+        s_file = SuricataFile(path, self.rules_tester)
         s_file.load_from_lsp(file_obj)
         return s_file
 
@@ -363,14 +364,14 @@ class LangServer:
 
     @register_feature(types.TEXT_DOCUMENT_DID_OPEN)
     def serve_onOpen(self, params):
-        self.serve_onSave(params, did_open=True)
+        self.serve_onSave(params)
 
     @register_feature(types.TEXT_DOCUMENT_DID_CLOSE)
     def serve_onClose(self, params):
-        self.serve_onSave(params, did_close=True)
+        self.serve_onSave(params)
 
     @register_feature(types.TEXT_DOCUMENT_DID_SAVE)
-    def serve_onSave(self, params, did_open=False, did_close=False):
+    def serve_onSave(self, params):
         # Update workspace from file on disk
         uri = params.text_document.uri
         filepath = path_from_uri(uri)
@@ -450,6 +451,7 @@ class LangServer:
                             message=f"Analyzed {analyzed_count}/{len(rules_files)} files",
                         ),
                     )
+            # pylint: disable=W0703
             except Exception as e:
                 error_count += 1
                 log.error("Error analyzing file %s: %s", filepath, e, exc_info=True)
@@ -476,7 +478,7 @@ class LangServer:
     def analyze_workspace_files(self, rules_files):
         """Analyze rules files to extract MPM information using parallel processing."""
         import multiprocessing
-        from concurrent.futures import ProcessPoolExecutor, as_completed, TimeoutError
+        from concurrent.futures import ProcessPoolExecutor, as_completed
         from suricatals.worker_pool import analyze_file_worker
 
         if self.rules_tester is None:
@@ -547,6 +549,7 @@ class LangServer:
                         log.error("Timeout analyzing file %s (>5 minutes)", filepath)
                         error_count += 1
 
+                    # pylint: disable=W0703
                     except Exception as e:
                         log.error(
                             "Unexpected error processing file %s: %s",
@@ -559,8 +562,8 @@ class LangServer:
                     # Drain progress queue (non-blocking)
                     while not progress_queue.empty():
                         try:
-                            msg_type, msg_filepath, _ = progress_queue.get_nowait()
-                        except Exception:
+                            _, _, _ = progress_queue.get_nowait()
+                        except queue.Full:
                             break
 
                     # Report progress periodically
@@ -581,6 +584,7 @@ class LangServer:
                             ),
                         )
 
+        # pylint: disable=W0703
         except Exception as e:
             log.error(
                 "Critical error in parallel workspace analysis: %s", e, exc_info=True
@@ -594,6 +598,7 @@ class LangServer:
             # Cleanup manager resources
             try:
                 manager.shutdown()
+            # pylint: disable=W0703
             except Exception:
                 pass
 

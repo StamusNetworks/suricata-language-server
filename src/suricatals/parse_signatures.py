@@ -18,13 +18,10 @@ You should have received a copy of the GNU General Public License
 along with Suricata Language Server.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import hashlib
-
 import re
 
 from .lsp_helpers import Diagnosis, FileRange
 from .tokenize_sig import SuricataSemanticTokenParser
-from lsprotocol import types
 
 
 class Signature:
@@ -188,7 +185,7 @@ class SuricataFile:
     IS_COMMENT = re.compile(r"[ \t]*#")
     GET_MULTILINES = re.compile(r"\\ *$")
 
-    def __init__(self, path, rules_tester, empty=False):
+    def __init__(self, path, rules_tester):
         self.path = path
         self.rules_tester = rules_tester
         self.semantic_tokens_parser = SuricataSemanticTokenParser(
@@ -435,7 +432,7 @@ class SuricataFile:
                 diagnostics.append(l_diag)
         return diagnostics
 
-    def build_all_diags(self, result, workspace=None, engine_analysis=True, **kwargs):
+    def build_all_diags(self, result, workspace=None, engine_analysis=True):
         diagnostics = []
         self.mpm = result.get("mpm", {}).get("buffer")
         for sid in result.get("mpm", {}).get("sids", []):

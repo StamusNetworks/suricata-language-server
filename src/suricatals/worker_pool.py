@@ -20,6 +20,7 @@ along with Suricata Language Server.  If not, see <http://www.gnu.org/licenses/>
 
 import logging
 import multiprocessing
+import queue
 from typing import Dict, Optional, Tuple, Any
 
 from suricatals.parse_signatures import SuricataFile
@@ -71,7 +72,7 @@ def analyze_file_worker(
         s_file.load_from_disk()
 
         # Run analysis with engine analysis enabled
-        status, diags = s_file.check_file(engine_analysis=True)
+        _, _ = s_file.check_file(engine_analysis=True)
 
         # Extract MPM data if available
         mpm_data = None
@@ -85,13 +86,14 @@ def analyze_file_worker(
         # Send progress update (non-blocking)
         try:
             progress_queue.put_nowait(("completed", filepath, 1))
-        except Exception:
+        except queue.Full:
             # If queue is full or fails, skip progress update
             # Not critical for correctness, only user feedback
             pass
 
         return (filepath, mpm_data, None)
 
+    # pylint: disable=W0703
     except Exception as e:
         # Log error in worker process
         log.error("Error analyzing file %s: %s", filepath, e, exc_info=True)
@@ -99,7 +101,7 @@ def analyze_file_worker(
         # Send error notification via progress queue
         try:
             progress_queue.put_nowait(("error", filepath, str(e)))
-        except Exception:
+        except queue.Full:
             # If queue fails, error will still be returned in tuple
             pass
 
