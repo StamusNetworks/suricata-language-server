@@ -37,6 +37,12 @@ dependencies = [
     "pygls>=2.0.0",
 ]
 
+[project.optional-dependencies]
+dev = [
+    "black>=24.0.0",
+    "pytest>=7.0.0",
+]
+
 [project.urls]
 Homepage = "https://www.stamus-networks.com/suricata-language-server"
 Issues = "https://github.com/StamusNetworks/suricata-language-server/issues"
