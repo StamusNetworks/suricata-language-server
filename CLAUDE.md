@@ -57,6 +57,9 @@ suricata-language-server --debug-log
 # Format code with Black
 black src/
 
+# Check code with pylint
+pylint --disable=C,R src/suricatals
+
 # Run pre-commit checks manually
 pre-commit run --all-files
 ```
