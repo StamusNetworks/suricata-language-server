@@ -113,6 +113,6 @@ def main():
         s.run()
     else:
         s = LangServer(settings=settings, batch_mode=True)
-        _, diags = s.analyse_file(args.batch_file, not args.no_engine_analysis)
+        _, _, diags = s.analyse_file(args.batch_file, not args.no_engine_analysis)
         for diag in diags:
             print(json.dumps(diag.to_message()))
