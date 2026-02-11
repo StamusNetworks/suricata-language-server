@@ -6,8 +6,8 @@ from suricatals.langserver import LangServer
 class TestSyntax(unittest.TestCase):
 
     def _test_rules_file(self, filename, expected_diags):
-        s = LangServer(conn=None, settings=None)
-        _, diags = s.analyse_file(os.path.join(os.getcwd(), "tests", filename))
+        s = LangServer(batch_mode=True, settings=None)
+        _, _, diags = s.analyse_file(os.path.join(os.getcwd(), "tests", filename))
         if expected_diags is not None:
             self.assertEqual(len(diags), expected_diags)
         return diags
@@ -99,7 +99,7 @@ class TestSyntax(unittest.TestCase):
         signature_buffer = """
 alert http any any -> any any (msg:"Test API usage"; content:"test"; sid:1;)
         """
-        testor = LangServer(conn=None)
+        testor = LangServer(batch_mode=True)
         if not testor.rules_tester:
             self.fail("Rules tester is not initialized")
         result = testor.rules_tester.check_rule_buffer(
