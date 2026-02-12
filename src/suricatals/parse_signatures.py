@@ -519,11 +519,11 @@ class SuricataFile:
     def extract_range(self, file_range):
         lines = self.contents_split
 
-        start = file_range["start"]
-        end = file_range["end"]
+        start = file_range.start
+        end = file_range.end
 
-        s_line, s_char = start["line"], start["character"]
-        e_line, e_char = end["line"], end["character"]
+        s_line, s_char = start.line, start.character
+        e_line, e_char = end.line, end.character
         # handle range with an empty line at the end
         if e_char == 0:
             e_line -= 1
