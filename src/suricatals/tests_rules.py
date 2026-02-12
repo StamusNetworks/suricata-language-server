@@ -1035,6 +1035,7 @@ class TestRules:
                     "documentation": documentation,
                 }
                 if "content modifier" in keyword_array[3]:
+                    keyword_item["kind"] = 10  # Property instead of Keyword
                     keyword_item["tags"] = [1]
                     keyword_item["deprecated"] = True
                     keyword_item["detail"] = "Content Modifier (deprecated)"

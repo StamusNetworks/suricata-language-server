@@ -222,7 +222,7 @@ class LangServer:
                 lsp_completion_items.append(
                     types.CompletionItem(
                         label=item["label"],
-                        kind=types.CompletionItemKind.Function,
+                        kind=types.CompletionItemKind(item.get("kind", 3)),
                         detail=item.get("detail", ""),
                         documentation=item.get("documentation", ""),
                         deprecated=item.get("deprecated", False),
@@ -235,7 +235,7 @@ class LangServer:
                 lsp_completion_items.append(
                     types.CompletionItem(
                         label=item["label"],
-                        kind=types.CompletionItemKind.Property,
+                        kind=types.CompletionItemKind(item.get("kind", 10)),
                         detail=item.get("detail", ""),
                         documentation=item.get("documentation", ""),
                         deprecated=item.get("deprecated", False),
@@ -298,7 +298,7 @@ class LangServer:
                 lsp_completion_items.append(
                     types.CompletionItem(
                         label=item["label"],
-                        kind=types.CompletionItemKind.Function,
+                        kind=types.CompletionItemKind(item.get("kind", 3)),
                         detail=item.get("detail", ""),
                         documentation=item.get("documentation", ""),
                         deprecated=item.get("deprecated", False),
