@@ -196,6 +196,23 @@ class LangServer:
             types.WorkDoneProgressEnd(message="Suricata Language Server ready"),
         )
 
+        # Analyze existing workspace folders for MPM data
+        if self.server.workspace.folders:
+            all_rules_files = []
+            for folder in self.server.workspace.folders.values():
+                path = path_from_uri(folder.uri)
+                if os.path.isdir(path):
+                    self.source_dirs.append(path)
+                    rules_files = self.find_rules_files(path)
+                    all_rules_files.extend(rules_files)
+
+            if all_rules_files:
+                log.info(
+                    "Found %d rules files in workspace, starting MPM analysis",
+                    len(all_rules_files),
+                )
+                self.analyze_workspace_files(all_rules_files)
+
     def run(self):
         # Run server
         self.server.start_io()
