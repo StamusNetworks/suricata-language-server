@@ -151,7 +151,7 @@ class TestRules:
         return "6.0.0"
 
     def json_compat_version(self):
-        (major, minor, fix) = self.suricata_version.split(".")
+        major, minor, fix = self.suricata_version.split(".")
         if int(major) < 6:
             return True
         elif int(major) == 6 and int(minor) == 0 and int(fix) < 4:
@@ -369,7 +369,7 @@ class TestRules:
         return ret
 
     def parse_suricata_error(self, error):
-        (major, _, _) = self.suricata_version.split(".")
+        major, _, _ = self.suricata_version.split(".")
         if int(major) < 7:
             return self.parse_suricata_error_before_7(error)
         else:
