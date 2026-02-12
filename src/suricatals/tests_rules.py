@@ -1036,7 +1036,8 @@ class TestRules:
                 }
                 if "content modifier" in keyword_array[3]:
                     keyword_item["tags"] = [1]
-                    keyword_item["detail"] = "Content Modifier"
+                    keyword_item["deprecated"] = True
+                    keyword_item["detail"] = "Content Modifier (deprecated)"
                 keywords_list.append(keyword_item)
             except IndexError:
                 pass
