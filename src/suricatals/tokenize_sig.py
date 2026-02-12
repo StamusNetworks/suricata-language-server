@@ -39,6 +39,7 @@ class SuricataSemanticTokenParser:
 
     def __init__(self, definitions: Dict[str, List[str]]):
         self.definitions = definitions
+        self.deprecated_keywords = set(definitions.get("deprecated_keywords", []))
         self.master_regex = self._compile_master_regex()
 
     def _compile_master_regex(self) -> re.Pattern:
@@ -140,7 +141,16 @@ class SuricataSemanticTokenParser:
                         start_col_utf16 - prev_start
                     )  # Same line: relative to prev start
 
-                data.extend([delta_line, delta_start, length_utf16, type_idx, 0])
+                # Check if this token is deprecated
+                modifier_bits = 0
+                if group == "property" and token_text in self.deprecated_keywords:
+                    modifier_bits = (
+                        1 << 2
+                    )  # "deprecated" is at index 2 in TOKEN_MODIFIERS
+
+                data.extend(
+                    [delta_line, delta_start, length_utf16, type_idx, modifier_bits]
+                )
 
                 prev_line = line_idx
                 prev_start = start_col_utf16

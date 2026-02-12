@@ -1079,6 +1079,9 @@ class TestRules:
         options = [
             k["label"] for k in keywords if "Sticky Buffer" not in k.get("detail", "")
         ]
+        deprecated_keywords = [
+            k["label"] for k in keywords if k.get("deprecated", False)
+        ]
         app_layers = [k["label"] for k in self.build_app_layer_list()]
         actions = [k["label"] for k in self.ACTIONS_ITEMS]
         return {
@@ -1086,4 +1089,5 @@ class TestRules:
             "protocols": app_layers,
             "sticky_buffers": sticky_buffers,
             "options": options,
+            "deprecated_keywords": deprecated_keywords,
         }
