@@ -22,7 +22,7 @@ import logging
 import queue
 from typing import Dict, Optional, Tuple, Any
 
-from suricatals.parse_signatures import SuricataFile
+from suricatals.signature_parser import SuricataFile
 from suricatals.signature_validator import TestRules
 
 log = logging.getLogger(__name__)
