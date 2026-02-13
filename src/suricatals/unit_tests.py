@@ -75,7 +75,17 @@ class TestSyntax(unittest.TestCase):
             self.assertEqual(diag.severity, 4)
 
     def test_datajson(self):
-        diags = self._test_rules_file("datajson.rules", 3)
+        # Get Suricata version to determine expected diagnostic count
+        s = LangServer(batch_mode=True, settings=None)
+        version_str = (
+            s.rules_tester.get_suricata_version() if s.rules_tester else "7.0.0"
+        )
+        major_version = int(version_str.split(".")[0])
+
+        # Suricata < 8 returns 3 diagnostics, >= 8 returns 5
+        expected_diags = 3 if major_version < 8 else 5
+
+        diags = self._test_rules_file("datajson.rules", expected_diags)
         for diag in diags:
             self.assertEqual(diag.severity, 4)
 
