@@ -20,8 +20,58 @@ along with Suricata Language Server.  If not, see <http://www.gnu.org/licenses/>
 
 import re
 
-from .lsp_helpers import Diagnosis, FileRange
+from lsprotocol import types
 from .tokenize_sig import SuricataSemanticTokenParser
+
+
+class DiagnosticBuilder:
+    """Helper class to build LSP diagnostics with a convenient interface."""
+
+    # Use Hint (4) for INFO_LEVEL to maintain backward compatibility
+    INFO_LEVEL = types.DiagnosticSeverity.Hint
+    WARNING_LEVEL = types.DiagnosticSeverity.Warning
+    ERROR_LEVEL = types.DiagnosticSeverity.Error
+
+    def __init__(self):
+        self.range = None
+        self.message = None
+        self.severity = types.DiagnosticSeverity.Error
+        self.source = "Suricata Language Server"
+        self.sid = 0
+        self.content = ""
+
+    def to_message(self):
+        """Convert to dict for batch mode."""
+        if self.range is None or self.message is None:
+            return None
+        return {
+            "range": {
+                "start": {
+                    "line": self.range.start.line,
+                    "character": self.range.start.character,
+                },
+                "end": {
+                    "line": self.range.end.line,
+                    "character": self.range.end.character,
+                },
+            },
+            "message": self.message,
+            "source": self.source,
+            "severity": self.severity.value,
+            "content": self.content,
+            "sid": self.sid,
+        }
+
+    def to_diagnostic(self):
+        """Convert to LSP Diagnostic."""
+        if self.range is None or self.message is None:
+            return None
+        return types.Diagnostic(
+            range=self.range,
+            message=self.message,
+            source=self.source,
+            severity=self.severity,
+        )
 
 
 class Signature:
@@ -65,7 +115,10 @@ class Signature:
                 line_end = line_start
                 range_start = line.index(keyword)
                 range_end = range_start + len(keyword)
-                fr = FileRange(line_start, range_start, line_end, range_end)
+                fr = types.Range(
+                    start=types.Position(line=line_start, character=range_start),
+                    end=types.Position(line=line_end, character=range_end),
+                )
                 break
             i += 1
         return fr
@@ -74,7 +127,10 @@ class Signature:
         fr = None
         if mode == "all":
             last_char = len(self.raw_content[-1].rstrip())
-            fr = FileRange(self.line, 0, self.line_end, last_char)
+            fr = types.Range(
+                start=types.Position(line=self.line, character=0),
+                end=types.Position(line=self.line_end, character=last_char),
+            )
         elif mode == "sid":
             fr = self._get_diag_range_by_keyword(keyword="sid:")
         elif mode == "msg":
@@ -92,7 +148,10 @@ class Signature:
                     line_end = line_start
                     range_start = match.start()
                     range_end = match.end()
-                    fr = FileRange(line_start, range_start, line_end, range_end)
+                    fr = types.Range(
+                        start=types.Position(line=line_start, character=range_start),
+                        end=types.Position(line=line_end, character=range_end),
+                    )
                     found = True
                     break
                 i += 1
@@ -112,10 +171,10 @@ class Signature:
         if self.SIG_END.search(self.raw_content[-1]) is None:
             sig_range = self.get_diag_range(mode="all")
             if sig_range:
-                end_diag = Diagnosis()
+                end_diag = DiagnosticBuilder()
                 end_diag.range = sig_range
                 end_diag.message = "Missing closing parenthesis: incomplete signature"
-                end_diag.severity = Diagnosis.WARNING_LEVEL
+                end_diag.severity = DiagnosticBuilder.WARNING_LEVEL
                 end_diag.source = "SLS syntax check"
                 end_diag.sid = (self.sid,)
                 end_diag.content = self.content
@@ -237,10 +296,10 @@ class SuricataFile:
         diagnostics = []
         for error in errors:
             if "line" in error:
-                l_diag = Diagnosis()
+                l_diag = DiagnosticBuilder()
                 l_diag.message = error["message"]
                 l_diag.source = error["source"]
-                l_diag.severity = Diagnosis.ERROR_LEVEL
+                l_diag.severity = DiagnosticBuilder.ERROR_LEVEL
                 signature = self.sigset.get_sig_by_line(error["line"])
                 if signature:
                     signature.has_error = True
@@ -249,7 +308,10 @@ class SuricataFile:
                     l_diag.content = signature.content
                     l_diag.sid = signature.sid
                 else:
-                    e_range = FileRange(error["line"], 0, error["line"], 1000)
+                    e_range = types.Range(
+                        start=types.Position(line=error["line"], character=0),
+                        end=types.Position(line=error["line"], character=1000),
+                    )
                     l_diag.range = e_range
                     l_diag.content = error.get("content", "")
                     l_diag.sid = error.get("sid", "UNKNOWN")
@@ -262,10 +324,10 @@ class SuricataFile:
         for warning in warnings:
             line = None
             signature = None
-            l_diag = Diagnosis()
+            l_diag = DiagnosticBuilder()
             l_diag.message = warning["message"]
             l_diag.source = warning["source"]
-            l_diag.severity = Diagnosis.WARNING_LEVEL
+            l_diag.severity = DiagnosticBuilder.WARNING_LEVEL
             if "line" in warning:
                 line = warning["line"]
                 signature = self.sigset.get_sig_by_line(line)
@@ -287,7 +349,10 @@ class SuricataFile:
                 l_diag.content = signature.content
                 l_diag.sid = signature.sid
             else:
-                w_range = FileRange(line, 0, line, 1000)
+                w_range = types.Range(
+                    start=types.Position(line=line, character=0),
+                    end=types.Position(line=line, character=1000),
+                )
                 l_diag.range = w_range
                 l_diag.content = warning.get("content", "")
                 l_diag.sid = warning.get("sid", "UNKNOWN")
@@ -300,10 +365,10 @@ class SuricataFile:
         for info in engine_results:
             line = None
             signature = None
-            l_diag = Diagnosis()
+            l_diag = DiagnosticBuilder()
             l_diag.message = info["message"]
             l_diag.source = info["source"]
-            l_diag.severity = Diagnosis.INFO_LEVEL
+            l_diag.severity = DiagnosticBuilder.INFO_LEVEL
             if "line" in info:
                 line = info["line"]
             elif "content" in info:
@@ -312,7 +377,10 @@ class SuricataFile:
                     line = signature.line
             if line is None:
                 continue
-            sig_range = FileRange(line, 0, line, 1)
+            sig_range = types.Range(
+                start=types.Position(line=line, character=0),
+                end=types.Position(line=line, character=1),
+            )
             if signature is not None:
                 if 'Fast Pattern "' in info["message"]:
                     if signature.mpm is not None:
@@ -336,10 +404,10 @@ class SuricataFile:
             if sig.mpm is None:
                 if sig.sid and sig.has_error is False:
                     message = "No Fast Pattern used, if possible add one content match to improve performance."
-                    l_diag = Diagnosis()
+                    l_diag = DiagnosticBuilder()
                     l_diag.message = message
                     l_diag.source = "Suricata MPM Analysis"
-                    l_diag.severity = Diagnosis.INFO_LEVEL
+                    l_diag.severity = DiagnosticBuilder.INFO_LEVEL
                     l_diag.range = sig.get_diag_range(mode="msg")
                     l_diag.sid = sig.sid
                     l_diag.content = sig.content
@@ -373,7 +441,7 @@ class SuricataFile:
                         if f_pattern is None:
                             continue
                         pattern_count += f_pattern["count"]
-            l_diag = Diagnosis()
+            l_diag = DiagnosticBuilder()
             if pattern_count > 1:
                 l_diag.message = (
                     "Fast Pattern '%s' on '%s' buffer is used in %d different signatures, "
@@ -390,7 +458,7 @@ class SuricataFile:
                 )
                 l_diag.source = "Suricata MPM Analysis"
             sig_range = sig.get_diag_range(mode="pattern", pattern=sig.mpm["pattern"])
-            l_diag.severity = Diagnosis.INFO_LEVEL
+            l_diag.severity = DiagnosticBuilder.INFO_LEVEL
             l_diag.range = sig.get_diag_range(
                 mode="pattern", pattern=sig.mpm["pattern"]
             )
@@ -402,10 +470,10 @@ class SuricataFile:
     def build_pcap_diagnostics(self, pcap_results):
         diagnostics = []
         for sid, count in pcap_results.items():
-            l_diag = Diagnosis()
+            l_diag = DiagnosticBuilder()
             l_diag.message = f"Alerts: {count}"
             l_diag.source = "Suricata Pcap Analysis"
-            l_diag.severity = Diagnosis.INFO_LEVEL
+            l_diag.severity = DiagnosticBuilder.INFO_LEVEL
             signature = self.sigset.get_sig_by_sid(sid)
             if signature:
                 sig_range = signature.get_diag_range(mode="msg")
@@ -419,10 +487,10 @@ class SuricataFile:
     def build_profiling_diagnostics(self, profiling_results):
         diagnostics = []
         for res in profiling_results:
-            l_diag = Diagnosis()
+            l_diag = DiagnosticBuilder()
             l_diag.message = f"Checks: {res['checks']}. Ticks: total {res['ticks_total']}, max {res['ticks_max']}, avg {res['ticks_avg']}"
             l_diag.source = "Suricata Pcap Profiling"
-            l_diag.severity = Diagnosis.INFO_LEVEL
+            l_diag.severity = DiagnosticBuilder.INFO_LEVEL
             signature = self.sigset.get_sig_by_sid(res["signature_id"])
             if signature:
                 sig_range = signature.get_diag_range(mode="msg")
