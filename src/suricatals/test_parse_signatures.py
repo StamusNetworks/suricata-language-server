@@ -435,6 +435,10 @@ class TestSignatureSet:
 class TestSuricataFile:
     """Tests for SuricataFile class"""
 
+    def __init__(self):
+        """Initialize SuricataFile tests"""
+        self.mock_tester = None
+
     @pytest.fixture(autouse=True)
     def setup(self):
         """Set up mock rules_tester for tests"""
@@ -458,7 +462,7 @@ class TestSuricataFile:
         suri_file = SuricataFile("/path/to/test.rules", self.mock_tester)
         contents = """alert tcp any any -> any any (msg:"Test1"; sid:1000;)
 alert tcp any any -> any any (msg:"Test2"; sid:2000;)"""
-        suri_file._load_file(contents)
+        suri_file.load_from_buffer(contents)
 
         assert len(suri_file.sigset.signatures) == 2
         assert suri_file.sigset.get_sig_by_sid(1000).line == 0
@@ -470,7 +474,7 @@ alert tcp any any -> any any (msg:"Test2"; sid:2000;)"""
         contents = """alert tcp any any -> any any \\
 (msg:"Test"; \\
 sid:1000;)"""
-        suri_file._load_file(contents)
+        suri_file.load_from_buffer(contents)
 
         assert len(suri_file.sigset.signatures) == 1
         sig = suri_file.sigset.get_sig_by_sid(1000)
@@ -486,7 +490,7 @@ sid:1000;)"""
 alert tcp any any -> any any (msg:"Test1"; sid:1000;)
   # Another comment with leading spaces
 alert tcp any any -> any any (msg:"Test2"; sid:2000;)"""
-        suri_file._load_file(contents)
+        suri_file.load_from_buffer(contents)
 
         assert len(suri_file.sigset.signatures) == 2
         # Comments should not create signatures
@@ -502,7 +506,7 @@ alert tcp any any -> any any \\
 (msg:"Multi"; sid:2000;)
 # Another comment
 alert tcp any any -> any any (msg:"Another"; sid:3000;)"""
-        suri_file._load_file(contents)
+        suri_file.load_from_buffer(contents)
 
         assert len(suri_file.sigset.signatures) == 3
         assert suri_file.sigset.get_sig_by_sid(1000) is not None
@@ -513,7 +517,7 @@ alert tcp any any -> any any (msg:"Another"; sid:3000;)"""
         """Test extracting content from a single line"""
         suri_file = SuricataFile("/path/to/test.rules", self.mock_tester)
         contents = 'alert tcp any any -> any any (msg:"Test"; sid:1000;)'
-        suri_file._load_file(contents)
+        suri_file.load_from_buffer(contents)
 
         file_range = types.Range(
             start=types.Position(line=0, character=6),
@@ -528,7 +532,7 @@ alert tcp any any -> any any (msg:"Another"; sid:3000;)"""
         contents = """line one
 line two
 line three"""
-        suri_file._load_file(contents)
+        suri_file.load_from_buffer(contents)
 
         file_range = types.Range(
             start=types.Position(line=0, character=5),
@@ -543,7 +547,7 @@ line three"""
         contents = """line one
 line two
 line three"""
-        suri_file._load_file(contents)
+        suri_file.load_from_buffer(contents)
 
         file_range = types.Range(
             start=types.Position(line=0, character=0),
@@ -556,7 +560,7 @@ line three"""
         """Test building error diagnostics when signature is found"""
         suri_file = SuricataFile("/path/to/test.rules", self.mock_tester)
         contents = 'alert tcp any any -> any any (msg:"Test"; sid:1000;)'
-        suri_file._load_file(contents)
+        suri_file.load_from_buffer(contents)
 
         errors = [
             {
@@ -577,7 +581,7 @@ line three"""
         """Test building error diagnostics when signature not found"""
         suri_file = SuricataFile("/path/to/test.rules", self.mock_tester)
         contents = ""
-        suri_file._load_file(contents)
+        suri_file.load_from_buffer(contents)
 
         errors = [
             {
@@ -599,7 +603,7 @@ line three"""
         """Test building warning diagnostics using line number"""
         suri_file = SuricataFile("/path/to/test.rules", self.mock_tester)
         contents = 'alert tcp any any -> any any (msg:"Test"; sid:1000;)'
-        suri_file._load_file(contents)
+        suri_file.load_from_buffer(contents)
 
         warnings = [
             {
@@ -618,7 +622,7 @@ line three"""
         """Test building warning diagnostics using content"""
         suri_file = SuricataFile("/path/to/test.rules", self.mock_tester)
         content = 'alert tcp any any -> any any (msg:"Test"; sid:1000;)'
-        suri_file._load_file(content)
+        suri_file.load_from_buffer(content)
 
         warnings = [
             {
@@ -637,7 +641,7 @@ line three"""
         """Test building warning diagnostics using SID"""
         suri_file = SuricataFile("/path/to/test.rules", self.mock_tester)
         contents = 'alert tcp any any -> any any (msg:"Test"; sid:1000;)'
-        suri_file._load_file(contents)
+        suri_file.load_from_buffer(contents)
 
         warnings = [
             {
@@ -679,7 +683,7 @@ line three"""
         suri_file = SuricataFile("/path/to/test.rules", self.mock_tester)
         contents = """alert tcp any any -> any any (msg:"Test1"; sid:1000;)
 alert tcp any any -> any any (msg:"Test2"; sid:2000;)"""
-        suri_file._load_file(contents)
+        suri_file.load_from_buffer(contents)
 
         pcap_results = {1000: 5, 2000: 3}
 
@@ -698,7 +702,7 @@ alert tcp any any -> any any (msg:"Test2"; sid:2000;)"""
         """Test building profiling diagnostics"""
         suri_file = SuricataFile("/path/to/test.rules", self.mock_tester)
         contents = 'alert tcp any any -> any any (msg:"Test"; sid:1000;)'
-        suri_file._load_file(contents)
+        suri_file.load_from_buffer(contents)
 
         profiling_results = [
             {
