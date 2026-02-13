@@ -21,7 +21,7 @@ along with Suricata Language Server.  If not, see <http://www.gnu.org/licenses/>
 import re
 
 from lsprotocol import types
-from .tokenize_sig import SuricataSemanticTokenParser
+from .signature_tokenizer import SuricataSemanticTokenParser
 
 
 class DiagnosticBuilder:
