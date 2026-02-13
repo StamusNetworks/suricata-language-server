@@ -80,7 +80,7 @@ pre-commit run --all-files
    - Manages temporary directories for Suricata config/rules during validation
    - Generates dynamic Suricata YAML configs with embedded reference/classification configs
 
-3. **TestRules** (`src/suricatals/tests_rules.py`)
+3. **TestRules** (`src/suricatals/signature_validator.py`)
    - Executes Suricata syntax checks and engine analysis
    - Parses Suricata JSON output (errors, warnings, engine analysis)
    - Builds keyword and app-layer protocol lists for auto-completion
@@ -228,14 +228,15 @@ Test execution requires Suricata to be installed or use `--container` mode.
 
 ```
 src/suricatals/
-├── __init__.py          # Entry point (main() function)
-├── langserver.py        # LSP server implementation
-├── suri_cmd.py          # Suricata command execution abstraction
-├── tests_rules.py       # Signature validation logic
-├── parse_signatures.py  # Signature parsing and file representation
-├── tokenize_sig.py      # Semantic tokenization
-├── lsp_helpers.py       # LSP protocol helpers (Diagnosis, FileRange)
-├── unit_tests.py        # Unit tests
+├── __init__.py              # Entry point (main() function)
+├── langserver.py            # LSP server implementation
+├── suri_cmd.py              # Suricata command execution abstraction
+├── signature_validator.py   # Signature validation logic
+├── parse_signatures.py      # Signature parsing and file representation
+├── tokenize_sig.py          # Semantic tokenization
+├── lsp_helpers.py           # LSP protocol helpers (Diagnosis, FileRange)
+├── test_syntax.py           # Syntax validation tests
+├── test_parse_signatures.py # Signature parsing tests
 └── data/
     └── suricata-keywords.json  # Cached keyword metadata
 ```
