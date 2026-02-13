@@ -357,6 +357,16 @@ class SuricataFile:
         else:
             return None
 
+    def load_from_buffer(self, buffer):
+        """Load file content from a string buffer"""
+        try:
+            self._load_file(buffer)
+        # pylint: disable=W0703
+        except Exception:
+            return "Could not read/decode buffer"
+        else:
+            return None
+
     def sort_diagnosis(self, key):
         """Sort key function for diagnostics (by severity, descending).
 
