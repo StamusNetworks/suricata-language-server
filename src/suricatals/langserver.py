@@ -1,6 +1,6 @@
 """
 Copyright(C) 2018-2021 Chris Hansen <hansec@uw.edu>
-Copyright(C) 2021-2026 Stamus Networks
+Copyright(C) 2021-2026 Stamus Networks SAS
 Written by Eric Leblond <el@stamus-networks.com>
 
 This file is part of Suricata Language Server.

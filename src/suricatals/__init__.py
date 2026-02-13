@@ -1,6 +1,6 @@
 """
 Copyright(C) 2018-2021 Chris Hansen <hansec@uw.edu>
-Copyright(C) 2021-2025 Stamus Networks
+Copyright(C) 2021-2025 Stamus Networks SAS
 Written by Chris Hansen <hansec@uw.edu>
 Written by Eric Leblond <eld@stamus-networks.com>
 

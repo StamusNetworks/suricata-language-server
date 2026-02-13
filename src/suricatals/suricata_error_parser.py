@@ -1,5 +1,5 @@
 """
-Copyright(C) 2026 Stamus Networks
+Copyright(C) 2026 Stamus Networks SAS
 Written by Eric Leblond <el@stamus-networks.com>
 
 This file is part of Suricata Language Server.
