@@ -86,7 +86,7 @@ pre-commit run --all-files
    - Builds keyword and app-layer protocol lists for auto-completion
    - Handles special SLS directives embedded in rule files (see below)
 
-4. **SuricataFile** (`src/suricatals/parse_signatures.py`)
+4. **SuricataFile** (`src/suricatals/signature_parser.py`)
    - Represents a Suricata rules file
    - Parses individual signatures (including multiline rules)
    - Manages signature metadata (sid, rev, content patterns)
@@ -232,7 +232,7 @@ src/suricatals/
 ├── langserver.py            # LSP server implementation
 ├── suri_cmd.py              # Suricata command execution abstraction
 ├── signature_validator.py   # Signature validation logic
-├── parse_signatures.py      # Signature parsing and file representation
+├── signature_parser.py      # Signature parsing and file representation
 ├── tokenize_sig.py          # Semantic tokenization
 ├── lsp_helpers.py           # LSP protocol helpers (Diagnosis, FileRange)
 ├── test_syntax.py           # Syntax validation tests
