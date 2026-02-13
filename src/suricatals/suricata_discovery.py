@@ -26,53 +26,57 @@ from typing import Dict, Any
 class SuricataDiscovery:
     """Discover Suricata capabilities (keywords, protocols, actions)."""
 
+    # Constants for common strings
+    ALERT_ACTION_DETAIL = "Alert action"
+    STICKY_BUFFER_DETAIL = "Sticky Buffer"
+
     ACTIONS_ITEMS = [
         {
             "label": "alert",
             "kind": 14,
-            "detail": "Alert action",
+            "detail": ALERT_ACTION_DETAIL,
             "documentation": "Trigger alert",
         },
         {
             "label": "config",
             "kind": 14,
-            "detail": "Alert action",
+            "detail": ALERT_ACTION_DETAIL,
             "documentation": "Configuration signature. Used mostly for conditional logging.",
         },
         {
             "label": "drop",
             "kind": 14,
-            "detail": "Alert action",
+            "detail": ALERT_ACTION_DETAIL,
             "documentation": "Trigger alert and drop flow",
         },
         {
             "label": "pass",
             "kind": 14,
-            "detail": "Alert action",
+            "detail": ALERT_ACTION_DETAIL,
             "documentation": "Stop inspecting the data",
         },
         {
             "label": "reject",
             "kind": 14,
-            "detail": "Alert action",
+            "detail": ALERT_ACTION_DETAIL,
             "documentation": "Trigger alert and reset session",
         },
         {
             "label": "rejectsrc",
             "kind": 14,
-            "detail": "Alert action",
+            "detail": ALERT_ACTION_DETAIL,
             "documentation": "Trigger alert and reset session for source IP",
         },
         {
             "label": "rejectdst",
             "kind": 14,
-            "detail": "Alert action",
+            "detail": ALERT_ACTION_DETAIL,
             "documentation": "Trigger alert and reset session for destination IP",
         },
         {
             "label": "rejectboth",
             "kind": 14,
-            "detail": "Alert action",
+            "detail": ALERT_ACTION_DETAIL,
             "documentation": "Trigger alert and reset session for both IPs",
         },
     ]
@@ -124,7 +128,7 @@ class SuricataDiscovery:
             try:
                 detail = "No option"
                 if "sticky" in keyword_array[3]:
-                    detail = "Sticky Buffer"
+                    detail = self.STICKY_BUFFER_DETAIL
                 elif keyword_array[3] == "none":
                     detail = "No option"
                 else:
@@ -195,10 +199,14 @@ class SuricataDiscovery:
         # we need to get the list of keywords from suricata
         keywords = self.build_keywords_list()
         sticky_buffers = [
-            k["label"] for k in keywords if "Sticky Buffer" in k.get("detail", "")
+            k["label"]
+            for k in keywords
+            if self.STICKY_BUFFER_DETAIL in k.get("detail", "")
         ]
         options = [
-            k["label"] for k in keywords if "Sticky Buffer" not in k.get("detail", "")
+            k["label"]
+            for k in keywords
+            if self.STICKY_BUFFER_DETAIL not in k.get("detail", "")
         ]
         deprecated_keywords = [
             k["label"] for k in keywords if k.get("deprecated", False)
