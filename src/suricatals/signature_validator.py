@@ -24,7 +24,7 @@ import json
 import re
 import logging
 import shlex
-from suricatals.suri_cmd import SuriCmd
+from suricatals.suricata_command import SuriCmd
 from suricatals.suricata_error_parser import SuricataErrorParser, SuricataFileException
 from suricatals.suricata_engine_analyzer import SuricataEngineAnalyzer
 from suricatals.suricata_discovery import SuricataDiscovery

@@ -74,7 +74,7 @@ pre-commit run --all-files
    - Coordinates between LSP protocol handlers and Suricata validation
    - Handles initialization, text document events, completion, and semantic tokens
 
-2. **SuriCmd** (`src/suricatals/suri_cmd.py`)
+2. **SuriCmd** (`src/suricatals/suricata_command.py`)
    - Abstraction layer for running Suricata commands
    - Supports both local binary execution and Docker container mode
    - Manages temporary directories for Suricata config/rules during validation
@@ -230,7 +230,7 @@ Test execution requires Suricata to be installed or use `--container` mode.
 src/suricatals/
 ├── __init__.py              # Entry point (main() function)
 ├── langserver.py            # LSP server implementation
-├── suri_cmd.py              # Suricata command execution abstraction
+├── suricata_command.py      # Suricata command execution abstraction
 ├── signature_validator.py   # Signature validation logic
 ├── signature_parser.py      # Signature parsing and file representation
 ├── tokenize_sig.py          # Semantic tokenization

@@ -32,7 +32,7 @@ import queue
 
 from suricatals.signature_parser import SuricataFile
 from suricatals.signature_validator import TestRules
-from suricatals.suri_cmd import SuriCmd
+from suricatals.suricata_command import SuriCmd
 from suricatals.tokenize_sig import SuricataSemanticTokenParser
 
 

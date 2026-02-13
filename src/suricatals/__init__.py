@@ -23,7 +23,7 @@ along with Suricata Language Server.  If not, see <http://www.gnu.org/licenses/>
 import sys
 import argparse
 from suricatals.langserver import LangServer
-from suricatals.suri_cmd import SuriCmd
+from suricatals.suricata_command import SuriCmd
 import json
 from importlib.metadata import version
 
