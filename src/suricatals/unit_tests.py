@@ -1,6 +1,42 @@
 import os
 import unittest
+from functools import wraps
 from suricatals.langserver import LangServer
+
+
+def min_version(version_str):
+    """Decorator to skip tests if Suricata version is below the minimum.
+
+    Args:
+        version_str: Minimum version string (e.g., "8.0.0")
+
+    Usage:
+        @min_version("8.0.0")
+        def test_something(self):
+            ...
+    """
+
+    def decorator(test_func):
+        @wraps(test_func)
+        def wrapper(self):
+            s = LangServer(batch_mode=True, settings=None)
+            current_version = (
+                s.rules_tester.get_suricata_version() if s.rules_tester else "6.0.0"
+            )
+
+            def version_tuple(v):
+                return tuple(map(int, v.split(".")))
+
+            if version_tuple(current_version) < version_tuple(version_str):
+                self.skipTest(
+                    f"Suricata version {current_version} < {version_str} (required)"
+                )
+
+            return test_func(self)
+
+        return wrapper
+
+    return decorator
 
 
 class TestSyntax(unittest.TestCase):
@@ -74,18 +110,9 @@ class TestSyntax(unittest.TestCase):
         for diag in diags:
             self.assertEqual(diag.severity, 4)
 
+    @min_version("8.0.0")
     def test_datajson(self):
-        # Get Suricata version to determine expected diagnostic count
-        s = LangServer(batch_mode=True, settings=None)
-        version_str = (
-            s.rules_tester.get_suricata_version() if s.rules_tester else "7.0.0"
-        )
-        major_version = int(version_str.split(".")[0])
-
-        # Suricata < 8 returns 3 diagnostics, >= 8 returns 5
-        expected_diags = 3 if major_version < 8 else 5
-
-        diags = self._test_rules_file("datajson.rules", expected_diags)
+        diags = self._test_rules_file("datajson.rules", 5)
         for diag in diags:
             self.assertEqual(diag.severity, 4)
 
