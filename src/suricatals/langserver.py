@@ -494,6 +494,96 @@ class LangServer:
             error_count,
         )
 
+    def _setup_workspace_analysis(self, rules_files):
+        """Setup progress tracking and return progress token."""
+        progress_token = str(uuid.uuid4())
+        self.server.work_done_progress.create(progress_token)
+        self.server.work_done_progress.begin(
+            progress_token,
+            types.WorkDoneProgressBegin(
+                title="Analyzing Workspace Rules",
+                message=f"Analyzing {len(rules_files)} rules files for MPM information (parallel mode)",
+                cancellable=False,
+            ),
+        )
+        return progress_token
+
+    def _process_future_result(self, future, filepath):
+        """
+        Process a single future result from workspace analysis.
+
+        Returns:
+            tuple: (analyzed_success: bool, had_error: bool)
+        """
+        try:
+            # Get result with timeout (5 minutes per file)
+            result_filepath, mpm_data, error = future.result(timeout=300)
+
+            # Store successful results
+            if error is None and mpm_data:
+                self.workspace_mpm[result_filepath] = mpm_data
+                return True, False
+
+            if error:
+                log.error("Failed to analyze file %s: %s", result_filepath, error)
+            return False, True
+
+        except TimeoutError:
+            log.error("Timeout analyzing file %s (>5 minutes)", filepath)
+            return False, True
+        # pylint: disable=W0703
+        except Exception as e:
+            log.error(
+                "Unexpected error processing file %s: %s",
+                filepath,
+                e,
+                exc_info=True,
+            )
+            return False, True
+
+    def _drain_progress_queue(self, progress_queue):
+        """Drain progress queue non-blocking."""
+        while not progress_queue.empty():
+            try:
+                progress_queue.get_nowait()
+            except queue.Empty:
+                break
+
+    def _report_analysis_progress(
+        self, progress_token, analyzed_count, error_count, total_files
+    ):
+        """Report workspace analysis progress periodically."""
+        total_processed = analyzed_count + error_count
+        if total_processed % 10 == 0 or total_processed == total_files:
+            error_msg = f" ({error_count} errors)" if error_count > 0 else ""
+            self.server.work_done_progress.report(
+                progress_token,
+                types.WorkDoneProgressReport(
+                    percentage=int((total_processed / total_files) * 100),
+                    message=f"Analyzed {analyzed_count}/{total_files} files{error_msg}",
+                ),
+            )
+
+    def _finalize_workspace_analysis(self, progress_token, analyzed_count, error_count):
+        """Finalize workspace analysis with progress update and logging."""
+        error_msg = f", {error_count} errors" if error_count > 0 else ""
+        self.server.work_done_progress.end(
+            progress_token,
+            types.WorkDoneProgressEnd(
+                message=f"Workspace analysis complete: {analyzed_count} files analyzed{error_msg}"
+            ),
+        )
+
+        total_sigs = sum(
+            len(data.get("sids", {})) for data in self.workspace_mpm.values()
+        )
+        log.info(
+            "Workspace MPM data: %d files analyzed, %d signatures, %d errors",
+            analyzed_count,
+            total_sigs,
+            error_count,
+        )
+
     def analyze_workspace_files(self, rules_files):
         """Analyze rules files to extract MPM information using parallel processing."""
         import multiprocessing
@@ -511,19 +601,7 @@ class LangServer:
             "docker_image": self.docker_image,
         }
 
-        # Progress tracking setup
-        progress_token = str(uuid.uuid4())
-        self.server.work_done_progress.create(progress_token)
-        self.server.work_done_progress.begin(
-            progress_token,
-            types.WorkDoneProgressBegin(
-                title="Analyzing Workspace Rules",
-                message=f"Analyzing {len(rules_files)} rules files for MPM information (parallel mode)",
-                cancellable=False,
-            ),
-        )
-
-        # Create progress queue with Manager (process-safe)
+        progress_token = self._setup_workspace_analysis(rules_files)
         manager = multiprocessing.Manager()
         progress_queue = manager.Queue()
 
@@ -546,100 +624,34 @@ class LangServer:
                 # Process results as they complete
                 for future in as_completed(futures):
                     filepath = futures[future]
+                    success, had_error = self._process_future_result(future, filepath)
 
-                    try:
-                        # Get result with timeout (5 minutes per file)
-                        result_filepath, mpm_data, error = future.result(timeout=300)
-
-                        # Store successful results
-                        if error is None and mpm_data:
-                            self.workspace_mpm[result_filepath] = mpm_data
-                            analyzed_count += 1
-                        else:
-                            error_count += 1
-                            if error:
-                                log.error(
-                                    "Failed to analyze file %s: %s",
-                                    result_filepath,
-                                    error,
-                                )
-
-                    except TimeoutError:
-                        log.error("Timeout analyzing file %s (>5 minutes)", filepath)
+                    if success:
+                        analyzed_count += 1
+                    if had_error:
                         error_count += 1
 
-                    # pylint: disable=W0703
-                    except Exception as e:
-                        log.error(
-                            "Unexpected error processing file %s: %s",
-                            filepath,
-                            e,
-                            exc_info=True,
-                        )
-                        error_count += 1
-
-                    # Drain progress queue (non-blocking)
-                    while not progress_queue.empty():
-                        try:
-                            _, _, _ = progress_queue.get_nowait()
-                        except queue.Full:
-                            break
-
-                    # Report progress periodically
-                    total_processed = analyzed_count + error_count
-                    if total_processed % 10 == 0 or total_processed == len(rules_files):
-                        self.server.work_done_progress.report(
-                            progress_token,
-                            types.WorkDoneProgressReport(
-                                percentage=int(
-                                    (total_processed / len(rules_files)) * 100
-                                ),
-                                message=f"Analyzed {analyzed_count}/{len(rules_files)} files"
-                                + (
-                                    f" ({error_count} errors)"
-                                    if error_count > 0
-                                    else ""
-                                ),
-                            ),
-                        )
+                    self._drain_progress_queue(progress_queue)
+                    self._report_analysis_progress(
+                        progress_token, analyzed_count, error_count, len(rules_files)
+                    )
 
         # pylint: disable=W0703
         except Exception as e:
             log.error(
                 "Critical error in parallel workspace analysis: %s", e, exc_info=True
             )
-            # Fall back to sequential processing
             log.info("Falling back to sequential processing")
             manager.shutdown()
             return self._analyze_workspace_files_sequential(rules_files, progress_token)
-
         finally:
-            # Cleanup manager resources
             try:
                 manager.shutdown()
             # pylint: disable=W0703
             except Exception:
                 pass
 
-        # Final progress update
-        self.server.work_done_progress.end(
-            progress_token,
-            types.WorkDoneProgressEnd(
-                message=f"Workspace analysis complete: {analyzed_count} files analyzed"
-                + (f", {error_count} errors" if error_count > 0 else "")
-            ),
-        )
-
-        # Log summary of MPM data
-        total_sigs = sum(
-            len(data.get("sids", {})) for data in self.workspace_mpm.values()
-        )
-        log.info(
-            "Workspace MPM data: %d files analyzed, %d signatures, %d errors",
-            analyzed_count,
-            total_sigs,
-            error_count,
-        )
+        self._finalize_workspace_analysis(progress_token, analyzed_count, error_count)
 
     @register_feature(types.WORKSPACE_DID_CHANGE_WORKSPACE_FOLDERS)
     def serve_workspace_did_change_workspace_folders(self, params):
