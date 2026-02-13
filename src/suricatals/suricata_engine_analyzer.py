@@ -104,90 +104,152 @@ class SuricataEngineAnalyzer:
         analysis = []
         with open(json_path, "r", encoding="utf-8") as analysis_file:
             for line in analysis_file:
-                signature_info = {}
                 try:
                     signature_info = json.loads(line)
                 except JSONDecodeError:
-                    pass
-                signature_msg = {"content": signature_info["raw"]}
-                if "type" in signature_info:
-                    if "info" not in signature_msg:
-                        signature_msg["info"] = []
-                    type_msg = f'Rule type is "{signature_info["type"]}"'
-                    signature_msg["info"].append(type_msg)
-                if "id" in signature_info:
-                    signature_msg["sid"] = signature_info["id"]
-                if "flags" in signature_info:
-                    if (
-                        "toserver" in signature_info["flags"]
-                        and "toclient" in signature_info["flags"]
-                    ):
-                        if "warnings" not in signature_msg:
-                            signature_msg["warnings"] = []
-                        signature_msg["warnings"].append(
-                            "Rule inspect server and client side, consider adding a flow keyword"
-                        )
-                if "warnings" in signature_info:
-                    if "warnings" not in signature_msg:
-                        signature_msg["warnings"] = []
-                    signature_msg["warnings"].extend(signature_info.get("warnings", []))
-                if "notes" in signature_info:
-                    if "info" not in signature_msg:
-                        signature_msg["info"] = []
-                    signature_msg["info"].extend(signature_info.get("notes", []))
-                if "engines" in signature_info:
-                    app_proto = None
-                    multiple_app_proto = False
-                    got_raw_match = False
-                    got_content = False
-                    got_pcre = False
-                    for engine in signature_info["engines"]:
-                        if "app_proto" in engine:
-                            if app_proto is None:
-                                app_proto = engine.get("app_proto")
-                            else:
-                                if app_proto != engine.get("app_proto"):
-                                    if app_proto not in [
-                                        "http",
-                                        "http2",
-                                        "dns",
-                                        "doh2",
-                                    ] or engine.get("app_proto") not in [
-                                        "http",
-                                        "http2",
-                                        "dns",
-                                        "doh2",
-                                    ]:
-                                        multiple_app_proto = True
+                    continue
 
-                        else:
-                            got_raw_match = True
-                        for match in engine.get("matches", []):
-                            if match["name"] == "content":
-                                got_content = True
-                            elif match["name"] == "pcre":
-                                got_pcre = True
-                    if got_pcre and not got_content:
-                        if "warnings" not in signature_msg:
-                            signature_msg["warnings"] = []
-                        signature_msg["warnings"].append(
-                            "Rule with pcre without content match (possible performance issue)"
-                        )
-                    if app_proto is not None and got_raw_match:
-                        if "warnings" not in signature_msg:
-                            signature_msg["warnings"] = []
-                        signature_msg["warnings"].append(
-                            'Application layer "%s" combined with raw match, '
-                            "consider using a match on application buffer" % (app_proto)
-                        )
-                    if multiple_app_proto:
-                        if "warnings" not in signature_msg:
-                            signature_msg["warnings"] = []
-                        signature_msg["warnings"].append(
-                            "Multiple application layers in same signature"
-                        )
+                signature_msg = self._build_signature_message(signature_info)
                 analysis.append(signature_msg)
         return analysis
+
+    def _build_signature_message(self, signature_info):
+        """Build signature message dict from parsed JSON.
+
+        Args:
+            signature_info: Parsed JSON signature data
+
+        Returns:
+            Dict with signature analysis data
+        """
+        signature_msg = {"content": signature_info["raw"]}
+
+        self._add_type_info(signature_msg, signature_info)
+        self._add_sid(signature_msg, signature_info)
+        self._check_bidirectional_flow(signature_msg, signature_info)
+        self._add_warnings_and_notes(signature_msg, signature_info)
+        self._analyze_engines(signature_msg, signature_info)
+
+        return signature_msg
+
+    def _add_type_info(self, signature_msg, signature_info):
+        """Add rule type to info list."""
+        if "type" in signature_info:
+            self._ensure_list(signature_msg, "info")
+            type_msg = f'Rule type is "{signature_info["type"]}"'
+            signature_msg["info"].append(type_msg)
+
+    def _add_sid(self, signature_msg, signature_info):
+        """Add signature ID to message."""
+        if "id" in signature_info:
+            signature_msg["sid"] = signature_info["id"]
+
+    def _check_bidirectional_flow(self, signature_msg, signature_info):
+        """Check for bidirectional flow without flow keyword."""
+        flags = signature_info.get("flags", [])
+        if "toserver" in flags and "toclient" in flags:
+            self._add_warning(
+                signature_msg,
+                "Rule inspect server and client side, consider adding a flow keyword",
+            )
+
+    def _add_warnings_and_notes(self, signature_msg, signature_info):
+        """Add warnings and notes from signature info."""
+        if "warnings" in signature_info:
+            self._ensure_list(signature_msg, "warnings")
+            signature_msg["warnings"].extend(signature_info["warnings"])
+
+        if "notes" in signature_info:
+            self._ensure_list(signature_msg, "info")
+            signature_msg["info"].extend(signature_info["notes"])
+
+    def _analyze_engines(self, signature_msg, signature_info):
+        """Analyze engines and generate warnings for performance issues."""
+        if "engines" not in signature_info:
+            return
+
+        engine_analysis = self._collect_engine_data(signature_info["engines"])
+        self._generate_engine_warnings(signature_msg, engine_analysis)
+
+    def _collect_engine_data(self, engines):
+        """Collect data from all engines for analysis.
+
+        Returns:
+            Dict with app_proto, multiple_app_proto, got_raw_match, got_content, got_pcre
+        """
+        app_proto = None
+        multiple_app_proto = False
+        got_raw_match = False
+        got_content = False
+        got_pcre = False
+
+        for engine in engines:
+            if "app_proto" in engine:
+                new_proto = engine["app_proto"]
+                if app_proto is None:
+                    app_proto = new_proto
+                elif app_proto != new_proto:
+                    if not self._are_compatible_protocols(app_proto, new_proto):
+                        multiple_app_proto = True
+            else:
+                got_raw_match = True
+
+            # Check matches
+            for match in engine.get("matches", []):
+                match_name = match["name"]
+                if match_name == "content":
+                    got_content = True
+                elif match_name == "pcre":
+                    got_pcre = True
+
+        return {
+            "app_proto": app_proto,
+            "multiple_app_proto": multiple_app_proto,
+            "got_raw_match": got_raw_match,
+            "got_content": got_content,
+            "got_pcre": got_pcre,
+        }
+
+    def _are_compatible_protocols(self, proto1, proto2):
+        """Check if two protocols are compatible (e.g., http/http2, dns/doh2)."""
+        compatible_groups = [
+            {"http", "http2"},
+            {"dns", "doh2"},
+        ]
+        for group in compatible_groups:
+            if proto1 in group and proto2 in group:
+                return True
+        return False
+
+    def _generate_engine_warnings(self, signature_msg, engine_analysis):
+        """Generate warnings based on engine analysis data."""
+        if engine_analysis["got_pcre"] and not engine_analysis["got_content"]:
+            self._add_warning(
+                signature_msg,
+                "Rule with pcre without content match (possible performance issue)",
+            )
+
+        if engine_analysis["app_proto"] and engine_analysis["got_raw_match"]:
+            self._add_warning(
+                signature_msg,
+                f'Application layer "{engine_analysis["app_proto"]}" combined with raw match, '
+                "consider using a match on application buffer",
+            )
+
+        if engine_analysis["multiple_app_proto"]:
+            self._add_warning(
+                signature_msg, "Multiple application layers in same signature"
+            )
+
+    def _ensure_list(self, signature_msg, key):
+        """Ensure a key exists as a list in signature_msg."""
+        if key not in signature_msg:
+            signature_msg[key] = []
+
+    def _add_warning(self, signature_msg, warning):
+        """Add a warning to signature message."""
+        self._ensure_list(signature_msg, "warnings")
+        signature_msg["warnings"].append(warning)
 
     def parse_mpm_data(self, log_dir):
         """Parse Multi-Pattern Matching data from rules.json.
