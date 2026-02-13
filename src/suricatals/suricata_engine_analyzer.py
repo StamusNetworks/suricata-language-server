@@ -37,7 +37,11 @@ class SuricataEngineAnalyzer:
         self.suricata_version = suricata_version
 
     def json_compat_version(self):
-        """Check if Suricata version supports JSON format for engine analysis."""
+        """Check if Suricata version supports JSON format for engine analysis.
+
+        Returns:
+            bool: True if JSON format is supported, False otherwise
+        """
         major, minor, fix = self.suricata_version.split(".")
         if int(major) < 6:
             return True

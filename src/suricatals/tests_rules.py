@@ -58,6 +58,7 @@ class TestRules:
         self.discovery = SuricataDiscovery(self.suricmd)
 
     def create_suricmd(self):
+        """Create and configure SuriCmd instance based on settings."""
         self.suricmd = SuriCmd(self.suricata_binary, self.suricata_config)
         if self.docker:
             self.suricmd.set_docker_mode(docker_image=self.docker_image)
@@ -108,6 +109,11 @@ class TestRules:
         return self.discovery.get_semantic_token_definitions()
 
     def get_suricata_version(self):
+        """Get Suricata version string from binary.
+
+        Returns:
+            str: Version string (e.g., "7.0.0"), or "6.0.0" if unable to determine
+        """
         outdata = self.suricmd.get_version()
         if outdata is None:
             return "6.0.0"
@@ -211,6 +217,18 @@ class TestRules:
                             f.write("")
 
     def rules_infos(self, rule_buffer):
+        """Get detailed information about rules using Suricata engine analysis.
+
+        Args:
+            rule_buffer: String containing Suricata rule(s)
+
+        Returns:
+            dict: Dictionary mapping signature IDs to rule analysis data
+
+        Raises:
+            IOError: If temporary directory cannot be created
+            SuricataFileException: If rule buffer contains invalid directives
+        """
         self.suricmd.prepare()
         tmpdir = self.suricmd.get_tmpdir()
         if tmpdir is None:
@@ -267,6 +285,24 @@ class TestRules:
         extra_buffers=None,
         **kwargs,
     ):
+        """Test and analyze a buffer of Suricata rules.
+
+        Args:
+            rule_buffer: String containing Suricata rule(s)
+            engine_analysis: Whether to run engine analysis (default: True)
+            config_buffer: Optional custom Suricata configuration
+            related_files: Optional dict of related files to include
+            reference_config: Optional reference.config content
+            classification_config: Optional classification.config content
+            extra_buffers: Optional list of extra rule buffers to include
+            **kwargs: Additional options passed to configuration
+
+        Returns:
+            dict: Result with 'status', 'errors', 'warnings', 'info', and 'analysis' keys
+
+        Raises:
+            SuricataFileException: If rule buffer contains invalid directives
+        """
 
         try:
             options = self._rules_buffer_get_suricata_options(rule_buffer)
@@ -427,6 +463,17 @@ class TestRules:
         return result
 
     def parse_eve(self, tmpdir):
+        """Parse EVE JSON output to extract alert matches.
+
+        Args:
+            tmpdir: Directory containing eve.json file
+
+        Returns:
+            dict: Mapping of signature IDs to match counts
+
+        Raises:
+            FileNotFoundError: If eve.json file is not found
+        """
         eve_json_path = os.path.join(tmpdir, "eve.json")
         matches = {}
         try:
@@ -448,6 +495,14 @@ class TestRules:
         return matches
 
     def parse_profiling(self, tmpdir):
+        """Parse rule profiling data from rule_perf.json.
+
+        Args:
+            tmpdir: Directory containing rule_perf.json file
+
+        Returns:
+            dict or list: Profiling data for rules, or empty dict if not found
+        """
         json_path = os.path.join(tmpdir, "rule_perf.json")
         profiling = {}
         try:
@@ -471,6 +526,26 @@ class TestRules:
         extra_buffers=None,
         **kwargs,
     ):
+        """Check and validate a rule buffer, returning structured diagnostics.
+
+        This is the main API method for rule validation, converting raw Suricata
+        output into structured error/warning/info lists suitable for LSP clients.
+
+        Args:
+            rule_buffer: String containing Suricata rule(s)
+            engine_analysis: Whether to run engine analysis (default: True)
+            config_buffer: Optional custom Suricata configuration
+            related_files: Optional dict of related files to include
+            extra_buffers: Optional list of extra rule buffers to include
+            **kwargs: Additional options passed to configuration
+
+        Returns:
+            dict: Result with 'errors', 'warnings', and 'info' lists containing
+                  structured diagnostic information
+
+        Raises:
+            SuricataFileException: If rule buffer contains invalid directives
+        """
         related_files = related_files or {}
         prov_result = self.rule_buffer(
             rule_buffer,
