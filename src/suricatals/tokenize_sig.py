@@ -102,6 +102,16 @@ class SuricataSemanticTokenParser:
         return len(s.encode("utf-16-le")) // 2
 
     def parse(self, text: str) -> List[int]:
+        """Parse Suricata rule text and generate semantic tokens.
+
+        Returns LSP semantic tokens format (relative delta encoding).
+
+        Args:
+            text: Suricata rule text to tokenize
+
+        Returns:
+            List[int]: Flattened array of [deltaLine, deltaStart, length, typeIdx, modifierBits]
+        """
         data = []
         prev_line = 0
         prev_start = 0
@@ -158,4 +168,9 @@ class SuricataSemanticTokenParser:
         return data
 
     def get_legend(self) -> Dict[str, Any]:
+        """Get semantic tokens legend for LSP initialization.
+
+        Returns:
+            Dict: Legend with tokenTypes and tokenModifiers arrays
+        """
         return {"tokenTypes": self.TOKEN_TYPES, "tokenModifiers": self.TOKEN_MODIFIERS}

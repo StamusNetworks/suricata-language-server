@@ -29,11 +29,21 @@ class SuricataFileException(Exception):
     """Exception raised for Suricata file processing errors."""
 
     def __init__(self, message, line_number=None):
+        """Initialize exception with message and optional line number.
+
+        Args:
+            message: Error message describing the problem
+            line_number: Optional line number where error occurred
+        """
         super().__init__(message)
         self.line_number = line_number
 
     def get_diagnosis(self):
-        """Convert exception to LSP Diagnostic object."""
+        """Convert exception to LSP Diagnostic object.
+
+        Returns:
+            types.Diagnostic: LSP diagnostic with error severity
+        """
         return types.Diagnostic(
             range=types.Range(
                 start=types.Position(line=self.line_number, character=0),

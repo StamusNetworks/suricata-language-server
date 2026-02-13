@@ -298,6 +298,12 @@ config classification: command-and-control,Malware Command and Control Activity 
     def set_docker_mode(
         self, docker_image=SLS_DEFAULT_DOCKER_IMAGE, image_version="latest"
     ):
+        """Enable Docker mode for running Suricata in containers.
+
+        Args:
+            docker_image: Docker image name (default: jasonish/suricata)
+            image_version: Docker image tag (default: "latest")
+        """
         self.docker = True
         self.docker_image = docker_image
         self.image_version = image_version
@@ -305,9 +311,22 @@ config classification: command-and-control,Malware Command and Control Activity 
         self.docker_client = docker.from_env()
 
     def set_docker_version_for_run(self, image_version="latest"):
+        """Temporarily override Docker image version for next run only.
+
+        Args:
+            image_version: Docker image tag to use for next run
+        """
         self.image_version_run = image_version
 
     def build_cmd(self, cmd):
+        """Build complete Suricata command with common options.
+
+        Args:
+            cmd: List of command arguments
+
+        Returns:
+            list: Complete command with log dir, config, rules, and data-dir options
+        """
         if self.tmpdir is None:
             return cmd
         tmpdir = self.get_internal_tmpdir()
@@ -321,12 +340,28 @@ config classification: command-and-control,Malware Command and Control Activity 
         return suri_cmd
 
     def prepare(self):
+        """Create temporary directory for Suricata execution.
+
+        Returns:
+            self: For method chaining
+
+        Raises:
+            RuntimeError: If temporary directory creation fails
+        """
         self.tmpdir = tempfile.mkdtemp(prefix="sls_")
         if self.tmpdir is None:
             raise RuntimeError("Failed to create temporary directory")
         return self
 
     def get_tmpdir(self) -> str:
+        """Get temporary directory path, creating it if necessary.
+
+        Returns:
+            str: Absolute path to temporary directory
+
+        Raises:
+            RuntimeError: If temporary directory cannot be created
+        """
         if self.tmpdir is None:
             self.prepare()
         if self.tmpdir is None:
@@ -334,6 +369,16 @@ config classification: command-and-control,Malware Command and Control Activity 
         return self.tmpdir
 
     def get_internal_tmpdir(self):
+        """Get internal temporary directory path for use in commands.
+
+        In Docker mode, returns container path (/tmp/), otherwise returns host path.
+
+        Returns:
+            str: Path to use in Suricata commands
+
+        Raises:
+            RuntimeError: If temporary directory is not created
+        """
         if self.tmpdir is None:
             raise RuntimeError("Temporary directory is not created")
         if self.docker:
@@ -342,6 +387,11 @@ config classification: command-and-control,Malware Command and Control Activity 
             return self.tmpdir
 
     def cleanup(self):
+        """Remove temporary directory and reset state.
+
+        Returns:
+            self: For method chaining
+        """
         if self.tmpdir:
             shutil.rmtree(self.tmpdir)
         self.tmpdir = None
@@ -416,6 +466,14 @@ config classification: command-and-control,Malware Command and Control Activity 
                 return None
 
     def run(self, cmd):
+        """Execute Suricata command either locally or in Docker container.
+
+        Args:
+            cmd: List of Suricata command arguments
+
+        Returns:
+            str: Command output (stdout on success, stderr on failure)
+        """
         suri_cmd = self.build_cmd(cmd)
         if self.docker:
             return self._run_docker(suri_cmd)
@@ -431,6 +489,19 @@ config classification: command-and-control,Malware Command and Control Activity 
         classification_config=None,
         extra_conf=None,
     ):
+        """Generate Suricata configuration files in temporary directory.
+
+        Creates suricata.yaml, reference.config, classification.config, and any
+        related files needed for rule validation.
+
+        Args:
+            tmpdir: Directory to write configuration files
+            config_buffer: Optional custom Suricata YAML configuration
+            related_files: Optional dict mapping filenames to content
+            reference_config: Optional reference.config content
+            classification_config: Optional classification.config content
+            extra_conf: Optional dict of extra YAML configuration to merge
+        """
         if not reference_config:
             reference_config = self.REFERENCE_CONFIG
         reference_file = os.path.join(tmpdir, "reference.config")
@@ -508,6 +579,14 @@ profiling:
         return config_file
 
     def get_version(self):
+        """Get Suricata version string by running suricata -V.
+
+        Returns:
+            str: Raw version output from Suricata
+
+        Raises:
+            RuntimeError: If version retrieval fails or Suricata returns error
+        """
         cmd = ["-V"]
         output = self.run(cmd)
         if output is None:

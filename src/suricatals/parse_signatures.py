@@ -98,6 +98,12 @@ class Signature:
         self.has_error = False
 
     def append_content(self, content, line):
+        """Append a continuation line to a multiline signature.
+
+        Args:
+            content: Line content to append
+            line: Line number in file
+        """
         self.content += content.rstrip("\\")
         self.raw_content.append(content)
         self.line_end = line
@@ -124,6 +130,15 @@ class Signature:
         return fr
 
     def get_diag_range(self, mode="all", pattern=""):
+        """Get LSP Range for diagnostic highlighting.
+
+        Args:
+            mode: Range mode - "all" (entire signature), "sid", "msg", or "pattern"
+            pattern: Content pattern to highlight when mode="pattern"
+
+        Returns:
+            types.Range: LSP Range object for highlighting, or None if not found
+        """
         fr = None
         if mode == "all":
             last_char = len(self.raw_content[-1].rstrip())
@@ -160,12 +175,22 @@ class Signature:
         return fr
 
     def get_content_keyword_count(self):
+        """Count the number of content keywords in signature.
+
+        Returns:
+            int: Number of content: keywords found
+        """
         count = 0
         for line in self.raw_content:
             count += len(self.SIG_CONTENT.findall(line))
         return count
 
     def sls_syntax_check(self):
+        """Perform basic syntax checks on signature.
+
+        Returns:
+            list: List of DiagnosticBuilder objects for any issues found
+        """
         diagnosis = []
         # check for incomplete signature
         if self.SIG_END.search(self.raw_content[-1]) is None:
@@ -206,6 +231,18 @@ class SignatureSet:
         self.signatures = []
 
     def add_signature(self, line, content, multiline=False):
+        """Add a new signature to the set.
+
+        Tracks signature by line, content, and sid. Detects revision conflicts.
+
+        Args:
+            line: Line number where signature starts
+            content: Signature content (first line if multiline)
+            multiline: Whether this is a multiline signature
+
+        Returns:
+            Signature: The created signature object
+        """
         signature = Signature(line, content, multiline=multiline)
         self.signatures.append(signature)
         self.content_map[content] = signature
@@ -222,6 +259,13 @@ class SignatureSet:
         return signature
 
     def add_content_to_signature(self, sig_line, line, content):
+        """Append continuation line to existing multiline signature.
+
+        Args:
+            sig_line: Line number where signature started
+            line: Current line number
+            content: Line content to append
+        """
         signature = self.get_sig_by_line(sig_line)
         if signature is None:
             return
@@ -231,12 +275,36 @@ class SignatureSet:
             self.sid_map[signature.sid] = signature
 
     def get_sig_by_line(self, line):
+        """Get signature that starts at given line number.
+
+        Args:
+            line: Line number
+
+        Returns:
+            Signature: Signature object or None if not found
+        """
         return self.line_map.get(line)
 
     def get_sig_by_content(self, content):
+        """Get signature by content string.
+
+        Args:
+            content: Signature content to search for
+
+        Returns:
+            Signature: Signature object or None if not found
+        """
         return self.content_map.get(content)
 
     def get_sig_by_sid(self, sid):
+        """Get signature by signature ID.
+
+        Args:
+            sid: Signature ID number
+
+        Returns:
+            Signature: Signature object or None if not found
+        """
         return self.sid_map.get(sid)
 
 
@@ -290,9 +358,25 @@ class SuricataFile:
             return None
 
     def sort_diagnosis(self, key):
+        """Sort key function for diagnostics (by severity, descending).
+
+        Args:
+            key: DiagnosticBuilder object
+
+        Returns:
+            int: Negative severity for descending sort
+        """
         return -key.severity
 
     def build_errors_diagnostics(self, errors):
+        """Convert Suricata errors to LSP diagnostics.
+
+        Args:
+            errors: List of error dicts from Suricata
+
+        Returns:
+            list: List of DiagnosticBuilder objects
+        """
         diagnostics = []
         for error in errors:
             if "line" in error:
@@ -320,6 +404,14 @@ class SuricataFile:
         return diagnostics
 
     def build_warnings_diagnostics(self, warnings):
+        """Convert Suricata warnings to LSP diagnostics.
+
+        Args:
+            warnings: List of warning dicts from Suricata
+
+        Returns:
+            list: List of DiagnosticBuilder objects
+        """
         diagnostics = []
         for warning in warnings:
             line = None
@@ -533,6 +625,17 @@ class SuricataFile:
         return result["status"], sorted(diagnostics, key=self.sort_diagnosis)
 
     def check_lsp_file(self, lsp_file, workspace=None, engine_analysis=True, **kwargs):
+        """Check LSP file object using Suricata and return diagnostics.
+
+        Args:
+            lsp_file: LSP file object with source attribute
+            workspace: Optional workspace context for MPM analysis
+            engine_analysis: Whether to run engine analysis (default: True)
+            **kwargs: Additional options passed to rules_tester
+
+        Returns:
+            tuple: (status, diagnostics) where status is bool and diagnostics is list
+        """
         result = {}
         if not workspace:
             workspace = {}
@@ -544,6 +647,16 @@ class SuricataFile:
         )
 
     def check_file(self, workspace=None, engine_analysis=True, **kwargs):
+        """Check file from disk using Suricata and return diagnostics.
+
+        Args:
+            workspace: Optional workspace context for MPM analysis
+            engine_analysis: Whether to run engine analysis (default: True)
+            **kwargs: Additional options passed to rules_tester
+
+        Returns:
+            tuple: (status, diagnostics) where status is bool and diagnostics is list
+        """
         result = {}
         if not workspace:
             workspace = {}
@@ -585,6 +698,14 @@ class SuricataFile:
             i += 1
 
     def extract_range(self, file_range):
+        """Extract text content from file within given LSP range.
+
+        Args:
+            file_range: LSP Range object with start and end positions
+
+        Returns:
+            str: Extracted text content
+        """
         lines = self.contents_split
 
         start = file_range.start
