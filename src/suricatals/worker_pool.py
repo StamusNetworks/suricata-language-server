@@ -19,7 +19,6 @@ along with Suricata Language Server.  If not, see <http://www.gnu.org/licenses/>
 """
 
 import logging
-import multiprocessing
 import queue
 from typing import Dict, Optional, Tuple, Any
 
@@ -32,7 +31,7 @@ log = logging.getLogger(__name__)
 def analyze_file_worker(
     filepath: str,
     rules_tester_config: Dict[str, Any],
-    progress_queue: multiprocessing.Queue,
+    progress_queue: Any,
 ) -> Tuple[str, Optional[Dict], Optional[Exception]]:
     """
     Worker function to analyze a single rules file in a separate process.
