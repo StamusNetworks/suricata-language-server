@@ -380,15 +380,15 @@ class LangServer:
         return None, None
 
     @register_feature(types.TEXT_DOCUMENT_DID_OPEN)
-    def serve_onOpen(self, params):
-        self.serve_onSave(params)
+    def serve_on_open(self, params):
+        self.serve_on_save(params)
 
     @register_feature(types.TEXT_DOCUMENT_DID_CLOSE)
-    def serve_onClose(self, params):
-        self.serve_onSave(params)
+    def serve_on_close(self, params):
+        self.serve_on_save(params)
 
     @register_feature(types.TEXT_DOCUMENT_DID_SAVE)
-    def serve_onSave(self, params):
+    def serve_on_save(self, params):
         # Update workspace from file on disk
         uri = params.text_document.uri
         filepath = path_from_uri(uri)
@@ -429,7 +429,9 @@ class LangServer:
                 for file in files:
                     if SURICATA_RULES_EXT_REGEX.match(os.path.splitext(file)[1]):
                         rules_files.append(os.path.join(root, file))
-        except (OSError, PermissionError) as e:
+        except PermissionError as e:
+            log.warning("Permission denied scanning directory %s: %s", directory, e)
+        except OSError as e:
             log.warning("Error scanning directory %s: %s", directory, e)
         return rules_files
 
