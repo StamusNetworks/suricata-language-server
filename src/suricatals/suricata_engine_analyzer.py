@@ -260,103 +260,190 @@ class SuricataEngineAnalyzer:
         Returns:
             Dict with 'buffer' and 'sids' keys containing MPM analysis
         """
-        mpm_data = []
-        mpm_analysis = {"buffer": {}, "sids": {}}
+        mpm_data = self._collect_mpm_data(log_dir)
+        if mpm_data is None:
+            return {"buffer": {}, "sids": {}}
+
+        return self._aggregate_mpm_data(mpm_data)
+
+    def _collect_mpm_data(self, log_dir):
+        """Collect MPM data from all rules in rules.json.
+
+        Returns:
+            List of MPM data dicts, or None if file not found or invalid JSON
+        """
+        json_path = os.path.join(log_dir, "rules.json")
         try:
-            with open(
-                os.path.join(log_dir, "rules.json"), "r", encoding="utf-8"
-            ) as rules_json:
-                for line in rules_json:
-                    # some suricata version have an invalid JSON formatted message
-                    try:
-                        rule_analysis = json.loads(line)
-                    except json.JSONDecodeError:
-                        return None
-                    if "mpm" in rule_analysis:
-                        rule_analysis["mpm"]["id"] = rule_analysis["id"]
-                        rule_analysis["mpm"]["gid"] = rule_analysis["gid"]
-                        mpm_data.append(rule_analysis["mpm"])
-                    else:
-                        if "engines" in rule_analysis:
-                            fp_buffer = None
-                            fp_pattern = None
-                            for engine in rule_analysis.get("engines", []):
-                                if engine["is_mpm"]:
-                                    fp_buffer = engine["name"]
-                                    for match in engine.get("matches", []):
-                                        if match.get("name") == "content":
-                                            if match.get("content", {}).get(
-                                                "is_mpm", False
-                                            ):
-                                                fp_pattern = match["content"]["pattern"]
-                                                break
-                                    if fp_pattern:
-                                        break
-                            if fp_buffer and fp_pattern:
-                                mpm_data.append(
-                                    {
-                                        "id": rule_analysis["id"],
-                                        "gid": rule_analysis["gid"],
-                                        "buffer": fp_buffer,
-                                        "pattern": fp_pattern,
-                                    }
-                                )
-                            continue
-                        if "lists" in rule_analysis:
-                            fp_buffer = None
-                            fp_pattern = None
-                            for key in rule_analysis["lists"]:
-                                fp_buffer = key
-                                for match in rule_analysis["lists"][key].get(
-                                    "matches", []
-                                ):
-                                    if match.get("name") == "content":
-                                        if match.get("content", {}).get(
-                                            "is_mpm", False
-                                        ):
-                                            fp_pattern = match["content"]["pattern"]
-                                            break
-                                if fp_pattern:
-                                    break
-                            if fp_buffer and fp_pattern:
-                                mpm_data.append(
-                                    {
-                                        "id": rule_analysis["id"],
-                                        "gid": rule_analysis["gid"],
-                                        "buffer": fp_buffer,
-                                        "pattern": fp_pattern,
-                                    }
-                                )
-                            continue
+            with open(json_path, "r", encoding="utf-8") as rules_json:
+                return self._parse_rules_json(rules_json)
         except FileNotFoundError:
-            return mpm_analysis
-        # target to have
-        # { 'http.host': { 'grosminet': { 'count': 34, sigs: [{'id': 2, 'gid':1}]} } }
-        for sig in mpm_data:
-            if "content" in sig:
-                sig_pattern = sig["content"]["pattern"]
-            else:
-                sig_pattern = sig["pattern"]
-            if sig["buffer"] in mpm_analysis["buffer"]:
-                if sig_pattern in mpm_analysis["buffer"][sig["buffer"]]:
-                    mpm_analysis["buffer"][sig["buffer"]][sig_pattern]["count"] += 1
-                    mpm_analysis["buffer"][sig["buffer"]][sig_pattern]["sigs"].append(
-                        {"id": sig["id"], "gid": sig["gid"]}
-                    )
-                else:
-                    mpm_analysis["buffer"][sig["buffer"]][sig_pattern] = {
-                        "count": 1,
-                        "sigs": [{"id": sig["id"], "gid": sig["gid"]}],
-                    }
-            else:
-                mpm_analysis["buffer"][sig["buffer"]] = {
-                    sig_pattern: {
-                        "count": 1,
-                        "sigs": [{"id": sig["id"], "gid": sig["gid"]}],
-                    }
+            return []
+
+    def _parse_rules_json(self, rules_json):
+        """Parse rules.json file and extract MPM data from each rule.
+
+        Returns:
+            List of MPM data dicts, or None on JSON decode error
+        """
+        mpm_data = []
+        for line in rules_json:
+            try:
+                rule_analysis = json.loads(line)
+            except json.JSONDecodeError:
+                # Some Suricata versions have invalid JSON messages
+                return None
+
+            mpm_entry = self._extract_mpm_from_rule(rule_analysis)
+            if mpm_entry:
+                mpm_data.append(mpm_entry)
+
+        return mpm_data
+
+    def _extract_mpm_from_rule(self, rule_analysis):
+        """Extract MPM data from a single rule analysis.
+
+        Args:
+            rule_analysis: Parsed JSON rule analysis dict
+
+        Returns:
+            MPM data dict with id, gid, buffer, pattern, or None
+        """
+        # Direct MPM field (older format)
+        if "mpm" in rule_analysis:
+            mpm = rule_analysis["mpm"]
+            mpm["id"] = rule_analysis["id"]
+            mpm["gid"] = rule_analysis["gid"]
+            return mpm
+
+        # Extract from engines
+        if "engines" in rule_analysis:
+            result = self._find_fast_pattern_in_engines(rule_analysis["engines"])
+            if result:
+                return {
+                    "id": rule_analysis["id"],
+                    "gid": rule_analysis["gid"],
+                    "buffer": result["buffer"],
+                    "pattern": result["pattern"],
                 }
-            mpm_analysis["sids"][sig["id"]] = {
-                "buffer": sig["buffer"],
+
+        # Extract from lists
+        if "lists" in rule_analysis:
+            result = self._find_fast_pattern_in_lists(rule_analysis["lists"])
+            if result:
+                return {
+                    "id": rule_analysis["id"],
+                    "gid": rule_analysis["gid"],
+                    "buffer": result["buffer"],
+                    "pattern": result["pattern"],
+                }
+
+        return None
+
+    def _find_fast_pattern_in_engines(self, engines):
+        """Find fast pattern (MPM) buffer and pattern in engines list.
+
+        Returns:
+            Dict with 'buffer' and 'pattern' keys, or None if not found
+        """
+        for engine in engines:
+            if not engine.get("is_mpm"):
+                continue
+
+            fp_pattern = self._find_mpm_content_pattern(engine.get("matches", []))
+            if fp_pattern:
+                return {"buffer": engine["name"], "pattern": fp_pattern}
+
+        return None
+
+    def _find_fast_pattern_in_lists(self, lists):
+        """Find fast pattern (MPM) buffer and pattern in lists dict.
+
+        Returns:
+            Dict with 'buffer' and 'pattern' keys, or None if not found
+        """
+        for buffer_name, buffer_data in lists.items():
+            fp_pattern = self._find_mpm_content_pattern(buffer_data.get("matches", []))
+            if fp_pattern:
+                return {"buffer": buffer_name, "pattern": fp_pattern}
+
+        return None
+
+    def _find_mpm_content_pattern(self, matches):
+        """Find the MPM content pattern in a list of matches.
+
+        Args:
+            matches: List of match dicts
+
+        Returns:
+            Pattern string, or None if not found
+        """
+        for match in matches:
+            if match.get("name") == "content":
+                content = match.get("content", {})
+                if content.get("is_mpm"):
+                    return content["pattern"]
+        return None
+
+    def _aggregate_mpm_data(self, mpm_data):
+        """Aggregate MPM data into final analysis structure.
+
+        Target structure:
+        {
+            'buffer': {
+                'http.host': {
+                    'pattern1': {'count': 2, 'sigs': [{'id': 1, 'gid': 1}, ...]},
+                    ...
+                }
+            },
+            'sids': {
+                1: {'buffer': 'http.host', 'pattern': 'pattern1'},
+                ...
+            }
+        }
+
+        Args:
+            mpm_data: List of MPM data dicts
+
+        Returns:
+            Dict with 'buffer' and 'sids' keys
+        """
+        mpm_analysis = {"buffer": {}, "sids": {}}
+
+        for sig in mpm_data:
+            sig_pattern = self._get_pattern_from_sig(sig)
+            sig_buffer = sig["buffer"]
+            sig_id = sig["id"]
+            sig_gid = sig["gid"]
+
+            # Add to buffer analysis
+            self._add_to_buffer_analysis(
+                mpm_analysis["buffer"], sig_buffer, sig_pattern, sig_id, sig_gid
+            )
+
+            # Add to sids index
+            mpm_analysis["sids"][sig_id] = {
+                "buffer": sig_buffer,
                 "pattern": sig_pattern,
             }
+
         return mpm_analysis
+
+    def _get_pattern_from_sig(self, sig):
+        """Extract pattern from signature data (handles both old and new formats)."""
+        if "content" in sig:
+            return sig["content"]["pattern"]
+        return sig["pattern"]
+
+    def _add_to_buffer_analysis(
+        self, buffer_analysis, buffer_name, pattern, sig_id, sig_gid
+    ):
+        """Add a signature to the buffer analysis structure."""
+        sig_entry = {"id": sig_id, "gid": sig_gid}
+
+        if buffer_name not in buffer_analysis:
+            buffer_analysis[buffer_name] = {pattern: {"count": 1, "sigs": [sig_entry]}}
+        elif pattern not in buffer_analysis[buffer_name]:
+            buffer_analysis[buffer_name][pattern] = {"count": 1, "sigs": [sig_entry]}
+        else:
+            buffer_analysis[buffer_name][pattern]["count"] += 1
+            buffer_analysis[buffer_name][pattern]["sigs"].append(sig_entry)
