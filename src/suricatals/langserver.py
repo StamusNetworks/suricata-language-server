@@ -435,6 +435,27 @@ class LangServer:
             log.warning("Error scanning directory %s: %s", directory, e)
         return rules_files
 
+    def _store_file_mpm_data(self, filepath, s_file):
+        """
+        Store MPM data for an analyzed file.
+
+        Args:
+            filepath: Path to the rules file
+            s_file: SuricataFile object with analysis results
+
+        Returns:
+            bool: True if MPM data was stored, False otherwise
+        """
+        if not (s_file and hasattr(s_file, "mpm") and s_file.mpm):
+            return False
+
+        self.workspace_mpm[filepath] = {"buffer": s_file.mpm, "sids": {}}
+        # Store per-signature MPM info
+        for sig in s_file.sigset.signatures:
+            if sig.mpm:
+                self.workspace_mpm[filepath]["sids"][sig.sid] = sig.mpm
+        return True
+
     def _analyze_workspace_files_sequential(self, rules_files, progress_token):
         """
         Sequential fallback for workspace analysis.
@@ -450,49 +471,18 @@ class LangServer:
 
         for filepath in rules_files:
             try:
-                # Analyze file to get MPM information
                 s_file, _, _ = self.analyse_file(filepath, engine_analysis=True)
-
-                # Store MPM data for this file
-                if s_file and hasattr(s_file, "mpm") and s_file.mpm:
-                    self.workspace_mpm[filepath] = {"buffer": s_file.mpm, "sids": {}}
-                    # Store per-signature MPM info
-                    for sig in s_file.sigset.signatures:
-                        if sig.mpm:
-                            self.workspace_mpm[filepath]["sids"][sig.sid] = sig.mpm
-
+                self._store_file_mpm_data(filepath, s_file)
                 analyzed_count += 1
-                if analyzed_count % 10 == 0 or analyzed_count == len(rules_files):
-                    self.server.work_done_progress.report(
-                        progress_token,
-                        types.WorkDoneProgressReport(
-                            percentage=int((analyzed_count / len(rules_files)) * 100),
-                            message=f"Analyzed {analyzed_count}/{len(rules_files)} files",
-                        ),
-                    )
+                self._report_analysis_progress(
+                    progress_token, analyzed_count, error_count, len(rules_files)
+                )
             # pylint: disable=W0703
             except Exception as e:
                 error_count += 1
                 log.error("Error analyzing file %s: %s", filepath, e, exc_info=True)
 
-        self.server.work_done_progress.end(
-            progress_token,
-            types.WorkDoneProgressEnd(
-                message=f"Workspace analysis complete: {analyzed_count} files analyzed"
-                + (f", {error_count} errors" if error_count > 0 else "")
-            ),
-        )
-
-        # Log summary of MPM data
-        total_sigs = sum(
-            len(data.get("sids", {})) for data in self.workspace_mpm.values()
-        )
-        log.info(
-            "Workspace MPM data: %d files analyzed, %d signatures, %d errors",
-            analyzed_count,
-            total_sigs,
-            error_count,
-        )
+        self._finalize_workspace_analysis(progress_token, analyzed_count, error_count)
 
     def _setup_workspace_analysis(self, rules_files):
         """Setup progress tracking and return progress token."""
