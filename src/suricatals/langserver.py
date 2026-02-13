@@ -684,7 +684,7 @@ class LangServer:
         status, diags = file_obj.check_file(engine_analysis=engine_analysis, **kwargs)
         return file_obj, status, diags
 
-    def rules_infos(self, rule_buffer, **kwargs):
+    def rules_infos(self, rule_buffer):
         if self.rules_tester == None:
             self.rules_tester = self.create_rule_tester()
-        return self.rules_tester.rules_infos(rule_buffer, **kwargs)
+        return self.rules_tester.rules_infos(rule_buffer)
