@@ -22,7 +22,7 @@ from json.decoder import JSONDecodeError
 import io
 import json
 import re
-from suricatals.lsp_helpers import Diagnosis, FileRange
+from lsprotocol import types
 
 
 class SuricataFileException(Exception):
@@ -33,13 +33,16 @@ class SuricataFileException(Exception):
         self.line_number = line_number
 
     def get_diagnosis(self):
-        """Convert exception to LSP Diagnosis object."""
-        diagnosis = Diagnosis()
-        diagnosis.message = str(self)
-        diagnosis.severity = Diagnosis.ERROR_LEVEL
-        diagnosis.source = "Suricata Language Server"
-        diagnosis.range = FileRange(self.line_number, 0, self.line_number, 1000)
-        return diagnosis
+        """Convert exception to LSP Diagnostic object."""
+        return types.Diagnostic(
+            range=types.Range(
+                start=types.Position(line=self.line_number, character=0),
+                end=types.Position(line=self.line_number, character=1000),
+            ),
+            message=str(self),
+            severity=types.DiagnosticSeverity.Error,
+            source="Suricata Language Server",
+        )
 
 
 class SuricataErrorParser:

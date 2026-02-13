@@ -39,9 +39,9 @@ class TestSyntax(unittest.TestCase):
             self.assertEqual(diag.severity, 4)
             if "Rule type" in diag.message:
                 continue
-            if diag.range.line_start in [0, 1]:
+            if diag.range.start.line in [0, 1]:
                 self.assertTrue("is used in" in diag.message)
-            if diag.range.line_start == 2:
+            if diag.range.start.line == 2:
                 self.assertTrue(diag.message.startswith("Fast Pattern"))
                 self.assertFalse("is used in" in diag.message)
 
