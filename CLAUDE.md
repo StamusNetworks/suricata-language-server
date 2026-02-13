@@ -92,7 +92,7 @@ pre-commit run --all-files
    - Manages signature metadata (sid, rev, content patterns)
    - Converts Suricata diagnostics to LSP diagnostic format
 
-5. **SuricataSemanticTokenParser** (`src/suricatals/tokenize_sig.py`)
+5. **SuricataSemanticTokenParser** (`src/suricatals/signature_tokenizer.py`)
    - Tokenizes Suricata signatures for semantic highlighting
    - Identifies keywords, actions, strings, operators, etc.
 
@@ -233,7 +233,7 @@ src/suricatals/
 ├── suricata_command.py      # Suricata command execution abstraction
 ├── signature_validator.py   # Signature validation logic
 ├── signature_parser.py      # Signature parsing and file representation
-├── tokenize_sig.py          # Semantic tokenization
+├── signature_tokenizer.py   # Semantic tokenization
 ├── lsp_helpers.py           # LSP protocol helpers (Diagnosis, FileRange)
 ├── test_syntax.py           # Syntax validation tests
 ├── test_parse_signatures.py # Signature parsing tests
