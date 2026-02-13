@@ -29,6 +29,7 @@ from suricatals.suricata_error_parser import SuricataErrorParser, SuricataFileEx
 from suricatals.suricata_engine_analyzer import SuricataEngineAnalyzer
 from suricatals.suricata_discovery import SuricataDiscovery
 from typing import Dict, Any
+from json import JSONDecodeError
 
 log = logging.getLogger(__name__)
 
@@ -209,7 +210,7 @@ class TestRules:
                         ) as f:
                             f.write("")
 
-    def rules_infos(self, rule_buffer, **kwargs):
+    def rules_infos(self, rule_buffer):
         self.suricmd.prepare()
         tmpdir = self.suricmd.get_tmpdir()
         if tmpdir is None:
