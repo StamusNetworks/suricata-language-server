@@ -29,6 +29,7 @@ import inspect
 from typing import Optional
 from importlib.metadata import version
 import queue
+from threading import Timer
 
 from suricatals.signature_parser import SuricataFile
 from suricatals.signature_validator import TestRules
@@ -101,6 +102,8 @@ class LangServer:
         self.docker_image = settings.get(
             "docker_image", SuriCmd.SLS_DEFAULT_DOCKER_IMAGE
         )
+        self.idle_timeout = settings.get("idle_timeout", 3.0)
+        self.idle_timers = {}  # Track idle timers per document URI
         self.rules_tester = None
         if batch_mode:
             self.rules_tester = self.create_rule_tester()
@@ -431,18 +434,90 @@ class LangServer:
         if refreshed_count > 0:
             log.info("Refreshed diagnostics for %d open file(s)", refreshed_count)
 
+    def _cancel_idle_timer(self, uri):
+        """Cancel the idle timer for a document if it exists."""
+        if uri in self.idle_timers:
+            self.idle_timers[uri].cancel()
+            del self.idle_timers[uri]
+            log.debug("Cancelled idle timer for %s", uri)
+
+    def _schedule_idle_analysis(self, uri):
+        """Schedule analysis to run after idle timeout period."""
+        if self.idle_timeout <= 0:
+            return  # Feature disabled
+
+        # Cancel existing timer
+        self._cancel_idle_timer(uri)
+
+        # Schedule new timer
+        timer = Timer(self.idle_timeout, self._run_idle_analysis, args=[uri])
+        timer.daemon = True
+        self.idle_timers[uri] = timer
+        timer.start()
+        log.debug(
+            "Scheduled idle analysis for %s in %.1f seconds", uri, self.idle_timeout
+        )
+
+    def _run_idle_analysis(self, uri):
+        """Run analysis after idle period has elapsed."""
+        log.info("Running idle analysis for %s", uri)
+
+        # Remove timer from tracking
+        if uri in self.idle_timers:
+            del self.idle_timers[uri]
+
+        # Run diagnostics
+        diag_results, diag_exp = self.get_diagnostics(uri)
+
+        if diag_exp is not None:
+            log.error("Error during idle analysis for %s", uri, exc_info=True)
+            return
+
+        if diag_results is None:
+            log.error("Error during idle analysis for %s", uri)
+            return
+
+        # Publish diagnostics
+        self.server.text_document_publish_diagnostics(
+            types.PublishDiagnosticsParams(
+                uri=uri,
+                diagnostics=diag_results,
+            )
+        )
+        log.debug(
+            "Idle analysis complete for %s: %d diagnostic(s)", uri, len(diag_results)
+        )
+
+    @register_feature(types.TEXT_DOCUMENT_DID_CHANGE)
+    def serve_on_change(self, params):
+        """Handle text document changes and schedule idle analysis."""
+        uri = params.text_document.uri
+
+        # Only process .rules files
+        if not uri.endswith(".rules"):
+            return
+
+        # Schedule analysis after idle period
+        self._schedule_idle_analysis(uri)
+
     @register_feature(types.TEXT_DOCUMENT_DID_OPEN)
     def serve_on_open(self, params):
         self.serve_on_save(params)
 
     @register_feature(types.TEXT_DOCUMENT_DID_CLOSE)
     def serve_on_close(self, params):
+        # Cancel any pending idle analysis
+        uri = params.text_document.uri
+        self._cancel_idle_timer(uri)
         self.serve_on_save(params)
 
     @register_feature(types.TEXT_DOCUMENT_DID_SAVE)
     def serve_on_save(self, params):
-        # Update workspace from file on disk
+        # Cancel any pending idle analysis (we're doing immediate analysis)
         uri = params.text_document.uri
+        self._cancel_idle_timer(uri)
+
+        # Update workspace from file on disk
         filepath = path_from_uri(uri)
         progress_token = str(uuid.uuid4())
         self.server.work_done_progress.begin(
