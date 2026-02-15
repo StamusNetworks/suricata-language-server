@@ -376,6 +376,61 @@ class LangServer:
             return diags, None
         return None, None
 
+    def _refresh_open_file_diagnostics(self):
+        """Refresh diagnostics for all open .rules files in workspace.
+
+        Called after workspace analysis to update SID conflict warnings
+        in currently open files.
+        """
+        # Get all open text documents
+        open_docs = self.server.workspace.text_documents
+
+        if not open_docs:
+            return
+
+        refreshed_count = 0
+        for uri in open_docs.keys():
+            # Only refresh .rules files
+            if not uri.endswith(".rules"):
+                continue
+
+            filepath = path_from_uri(uri)
+
+            # Only refresh files that are in workspace folders
+            is_in_workspace = False
+            for source_dir in self.source_dirs:
+                if filepath.startswith(source_dir):
+                    is_in_workspace = True
+                    break
+
+            if not is_in_workspace:
+                continue
+
+            # Re-check the file and publish updated diagnostics
+            try:
+                diag_results, diag_exp = self.get_diagnostics(uri)
+
+                if diag_exp is not None:
+                    log.warning("Error refreshing diagnostics for %s", filepath)
+                    continue
+
+                if diag_results is not None:
+                    self.server.text_document_publish_diagnostics(
+                        types.PublishDiagnosticsParams(
+                            uri=uri,
+                            diagnostics=diag_results,
+                        )
+                    )
+                    refreshed_count += 1
+                    log.debug("Refreshed diagnostics for open file: %s", filepath)
+
+            # pylint: disable=W0703
+            except Exception as e:
+                log.error("Error refreshing diagnostics for %s: %s", filepath, e)
+
+        if refreshed_count > 0:
+            log.info("Refreshed diagnostics for %d open file(s)", refreshed_count)
+
     @register_feature(types.TEXT_DOCUMENT_DID_OPEN)
     def serve_on_open(self, params):
         self.serve_on_save(params)
@@ -561,6 +616,9 @@ class LangServer:
             error_count,
         )
 
+        # Refresh diagnostics for open files in the workspace
+        self._refresh_open_file_diagnostics()
+
     def analyze_workspace_files(self, rules_files):
         """Analyze rules files to extract MPM information using parallel processing."""
         import multiprocessing
@@ -658,6 +716,8 @@ class LangServer:
                         "Removed MPM data for %d files from removed folder",
                         removed_count,
                     )
+                    # Refresh diagnostics for open files (conflicts may be resolved)
+                    self._refresh_open_file_diagnostics()
 
     def analyse_file(self, filepath, engine_analysis=True, **kwargs):
         if self.rules_tester == None:
