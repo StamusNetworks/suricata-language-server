@@ -77,10 +77,11 @@ def analyze_file_worker(
         mpm_data = None
         if s_file.mpm:
             mpm_data = {"buffer": s_file.mpm, "sids": {}}
-            # Store per-signature MPM info
+            # Store per-signature MPM info (for all SIDs, not just those with MPM)
             for sig in s_file.sigset.signatures:
-                if sig.mpm:
-                    mpm_data["sids"][sig.sid] = sig.mpm
+                if sig.sid != 0:  # Skip signatures without SID
+                    # Store MPM data if available, otherwise store empty dict
+                    mpm_data["sids"][sig.sid] = sig.mpm if sig.mpm else {}
 
         # Send progress update (non-blocking)
         try:

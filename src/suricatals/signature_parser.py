@@ -602,6 +602,64 @@ class SuricataFile:
                 diagnostics.append(l_diag)
         return diagnostics
 
+    def build_sid_conflict_diagnostics(self, sid_conflicts):
+        """Build diagnostics for SID conflicts across workspace files.
+
+        Args:
+            sid_conflicts: Dict mapping SID -> list of filepaths where it appears
+
+        Returns:
+            List of DiagnosticBuilder objects for conflicting SIDs
+        """
+        diagnostics = []
+        for sid, filepaths in sid_conflicts.items():
+            signature = self.sigset.get_sig_by_sid(sid)
+            if signature:
+                l_diag = DiagnosticBuilder()
+                # Format file list for display
+                file_list = ", ".join([fp.split("/")[-1] for fp in filepaths[:3]])
+                if len(filepaths) > 3:
+                    file_list += f" and {len(filepaths) - 3} more"
+
+                l_diag.message = (
+                    f"SID {sid} conflicts with signature(s) in: {file_list}"
+                )
+                l_diag.source = "Suricata Language Server"
+                l_diag.severity = DiagnosticBuilder.WARNING_LEVEL
+                sig_range = signature.get_diag_range(mode="sid")
+                l_diag.range = sig_range
+                l_diag.content = signature.content
+                l_diag.sid = signature.sid
+                diagnostics.append(l_diag)
+
+        return diagnostics
+
+    def _compute_sid_conflicts(self, workspace):
+        """Compute SID conflicts between current file and workspace files.
+
+        Args:
+            workspace: Dict from MpmCache.get_workspace_view() with structure:
+                       {filepath: {"buffer": {...}, "sids": {sid: mpm_info, ...}}, ...}
+
+        Returns:
+            Dict mapping conflicting SID -> list of filepaths where it appears
+        """
+        conflicts = {}
+
+        # Build a map of current file's SIDs
+        current_sids = {sig.sid for sig in self.sigset.signatures if sig.sid != 0}
+
+        # Check each workspace file for SID conflicts
+        for filepath, file_data in workspace.items():
+            workspace_sids = file_data.get("sids", {})
+            for sid in workspace_sids.keys():
+                if sid in current_sids:
+                    if sid not in conflicts:
+                        conflicts[sid] = []
+                    conflicts[sid].append(filepath)
+
+        return conflicts
+
     def build_all_diags(self, result, workspace=None, engine_analysis=True):
         diagnostics = []
         self.mpm = result.get("mpm", {}).get("buffer")
@@ -631,6 +689,14 @@ class SuricataFile:
         if "profiling" in result:
             profiling = self.build_profiling_diagnostics(result.get("profiling", {}))
             diagnostics.extend(profiling)
+
+        # Check for SID conflicts across workspace files
+        if workspace:
+            sid_conflicts = self._compute_sid_conflicts(workspace)
+            if sid_conflicts:
+                conflict_diags = self.build_sid_conflict_diagnostics(sid_conflicts)
+                diagnostics.extend(conflict_diags)
+
         self.diagnosis = diagnostics
         return result["status"], sorted(diagnostics, key=self.sort_diagnosis)
 
