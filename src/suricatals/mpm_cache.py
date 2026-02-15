@@ -116,11 +116,14 @@ class MpmCache:
 
         mpm_data = {"buffer": s_file.mpm, "sids": {}}
 
-        # Extract per-signature MPM info
+        # Extract per-signature info (all SIDs for conflict detection, not just those with MPM)
         if hasattr(s_file, "sigset") and hasattr(s_file.sigset, "signatures"):
             for sig in s_file.sigset.signatures:
-                if hasattr(sig, "mpm") and sig.mpm and hasattr(sig, "sid"):
-                    mpm_data["sids"][sig.sid] = sig.mpm
+                if hasattr(sig, "sid") and sig.sid != 0:
+                    # Store MPM data if available, otherwise store empty dict
+                    mpm_data["sids"][sig.sid] = (
+                        sig.mpm if hasattr(sig, "mpm") and sig.mpm else {}
+                    )
 
         return self.add_file(filepath, mpm_data)
 
@@ -244,6 +247,40 @@ class MpmCache:
                         count += pattern_info["count"]
 
         return count
+
+    def get_sid_conflicts(
+        self, current_file_sids: Dict[int, Any], exclude_file: Optional[str] = None
+    ) -> Dict[int, List[str]]:
+        """
+        Find SID conflicts between current file and workspace files.
+
+        Args:
+            current_file_sids: Dict mapping SID -> signature info for current file
+            exclude_file: Optional filepath to exclude from conflict detection
+
+        Returns:
+            Dict mapping conflicting SID -> list of filepaths where it appears
+            Only includes SIDs that appear in both current file and other workspace files
+        """
+        conflicts = {}
+        with self._lock:
+            for sid in current_file_sids.keys():
+                if sid == 0:  # Skip signatures without SID
+                    continue
+
+                conflicting_files = []
+                for filepath, data in self._data.items():
+                    if exclude_file and filepath == exclude_file:
+                        continue
+
+                    sids_data = data.get("sids", {})
+                    if sid in sids_data:
+                        conflicting_files.append(filepath)
+
+                if conflicting_files:
+                    conflicts[sid] = conflicting_files
+
+        return conflicts
 
     def clear(self):
         """Clear all MPM data from cache."""
