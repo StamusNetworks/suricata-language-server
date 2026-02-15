@@ -15,7 +15,7 @@ import os
 import glob
 
 # Add src to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 
 from suricatals.mpm_cache import MpmCache
 from suricatals.signature_parser import SuricataFile
@@ -114,7 +114,9 @@ def main():
     print("=" * 70)
 
     # Setup
-    workspace_dir = os.path.join(os.path.dirname(__file__), "workspace_conflict_test")
+    workspace_dir = os.path.join(
+        os.path.dirname(__file__), "tests", "workspace_conflict_test"
+    )
     cache = MpmCache()
     rules_tester = TestRules()
 

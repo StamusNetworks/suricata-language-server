@@ -14,7 +14,7 @@ import sys
 import os
 
 # Add src to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 
 from unittest.mock import MagicMock, Mock
 from lsprotocol import types
@@ -38,7 +38,9 @@ def test_refresh_diagnostics_on_workspace_update():
     lang_server.rules_tester = TestRules()
 
     # Set workspace dir
-    workspace_dir = os.path.join(os.path.dirname(__file__), "workspace_conflict_test")
+    workspace_dir = os.path.join(
+        os.path.dirname(__file__), "tests", "workspace_conflict_test"
+    )
     lang_server.source_dirs.append(workspace_dir)
 
     # Mock the pygls server and workspace

@@ -5,7 +5,7 @@ import sys
 import os
 
 # Add src to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 
 from suricatals.mpm_cache import MpmCache
 from suricatals.signature_parser import SuricataFile
@@ -23,7 +23,9 @@ def test_sid_conflicts():
     rules_tester = TestRules()
 
     # Load first file
-    file1_path = os.path.join(os.path.dirname(__file__), "conflict-file1.rules")
+    file1_path = os.path.join(
+        os.path.dirname(__file__), "tests", "conflict-file1.rules"
+    )
     file1 = SuricataFile(file1_path, rules_tester)
     file1.load_from_disk()
     file1.parse_file()
@@ -38,7 +40,9 @@ def test_sid_conflicts():
     print(f"Added {file1_path} with SIDs: {list(mpm_data1['sids'].keys())}")
 
     # Load second file
-    file2_path = os.path.join(os.path.dirname(__file__), "conflict-file2.rules")
+    file2_path = os.path.join(
+        os.path.dirname(__file__), "tests", "conflict-file2.rules"
+    )
     file2 = SuricataFile(file2_path, rules_tester)
     file2.load_from_disk()
     file2.parse_file()

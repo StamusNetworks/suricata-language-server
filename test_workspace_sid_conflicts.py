@@ -5,7 +5,7 @@ import sys
 import os
 
 # Add src to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 
 from suricatals.mpm_cache import MpmCache
 from suricatals.signature_parser import SuricataFile
@@ -27,7 +27,9 @@ def test_workspace_integration():
 
     # Simulate workspace analysis - analyze file1
     print("\n--- Phase 1: Workspace Analysis (Initial Scan) ---")
-    file1_path = os.path.join(os.path.dirname(__file__), "conflict-file1.rules")
+    file1_path = os.path.join(
+        os.path.dirname(__file__), "tests", "conflict-file1.rules"
+    )
     print(f"Analyzing: {file1_path}")
 
     file1 = SuricataFile(file1_path, rules_tester)
@@ -46,7 +48,9 @@ def test_workspace_integration():
 
     # Simulate opening/editing file2 in editor
     print("\n--- Phase 2: File Check (User Opens/Edits File) ---")
-    file2_path = os.path.join(os.path.dirname(__file__), "conflict-file2.rules")
+    file2_path = os.path.join(
+        os.path.dirname(__file__), "tests", "conflict-file2.rules"
+    )
     print(f"Checking: {file2_path}")
 
     file2 = SuricataFile(file2_path, rules_tester)

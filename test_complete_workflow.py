@@ -17,7 +17,7 @@ import sys
 import os
 
 # Add src to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 
 
 def main():
@@ -32,7 +32,9 @@ def main():
     print("=" * 80)
 
     # Setup
-    workspace_dir = os.path.join(os.path.dirname(__file__), "workspace_conflict_test")
+    workspace_dir = os.path.join(
+        os.path.dirname(__file__), "tests", "workspace_conflict_test"
+    )
     file1_path = os.path.join(workspace_dir, "emerging-threats.rules")
     file2_path = os.path.join(workspace_dir, "local-custom.rules")
 
