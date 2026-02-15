@@ -1,0 +1,6 @@
+# Simulated Emerging Threats rules
+alert tcp any any -> any 80 (msg:"ET MALWARE Bad Actor Command and Control"; flow:established,to_server; content:"GET"; http_method; content:"/bot/"; http_uri; sid:2025001; rev:1;)
+alert tcp any any -> any 443 (msg:"ET TROJAN Suspicious SSL Certificate"; flow:established; ssl_state:client_hello; content:"|16 03|"; depth:2; sid:2025002; rev:1;)
+alert tcp any any -> any any (msg:"ET SCAN Nmap Service Detection"; flags:S; threshold:type both,track by_src,count 10,seconds 60; sid:2025003; rev:2;)
+alert http any any -> any any (msg:"ET WEB_SERVER SQL Injection Attempt"; flow:established,to_server; content:"UNION"; nocase; http_uri; pcre:"/select.*from/i"; sid:1000001; rev:1;)
+alert dns any any -> any any (msg:"ET DNS Query to Known Malicious Domain"; dns_query; content:"evil.com"; nocase; sid:2025005; rev:1;)
