@@ -34,6 +34,7 @@ from suricatals.signature_parser import SuricataFile
 from suricatals.signature_validator import TestRules
 from suricatals.suricata_command import SuriCmd
 from suricatals.signature_tokenizer import SuricataSemanticTokenParser
+from suricatals.mpm_cache import MpmCache
 
 
 from pygls.lsp.server import LanguageServer
@@ -109,8 +110,8 @@ class LangServer:
             self._register_all_features()
         self.keywords_list = []
         self.app_layer_list = []
-        # Workspace MPM data: {file_path: {"buffer": {...}, "sids": {...}}}
-        self.workspace_mpm = {}
+        # Workspace MPM data cache for cross-file pattern collision detection
+        self.workspace_mpm = MpmCache()
 
     def _register_all_features(self):
         for _, method in inspect.getmembers(self, predicate=inspect.ismethod):
@@ -361,18 +362,14 @@ class LangServer:
             if s_file is None:
                 return None, None
             # Pass workspace_mpm for cross-file MPM analysis
+            filepath = path_from_uri(uri)
             _, diags_list = s_file.check_lsp_file(
-                file_obj, workspace=self.workspace_mpm
+                file_obj,
+                workspace=self.workspace_mpm.get_workspace_view(exclude_file=filepath),
             )
 
             # Update workspace_mpm with the analyzed file's MPM data
-            filepath = path_from_uri(uri)
-            if s_file.mpm:
-                self.workspace_mpm[filepath] = {"buffer": s_file.mpm, "sids": {}}
-                # Store per-signature MPM info
-                for sig in s_file.sigset.signatures:
-                    if sig.mpm:
-                        self.workspace_mpm[filepath]["sids"][sig.sid] = sig.mpm
+            self.workspace_mpm.add_file_from_suricata_file(filepath, s_file)
 
             diags = [diag.to_diagnostic() for diag in diags_list]
             # pylint: disable=W0703
@@ -446,15 +443,7 @@ class LangServer:
         Returns:
             bool: True if MPM data was stored, False otherwise
         """
-        if not (s_file and hasattr(s_file, "mpm") and s_file.mpm):
-            return False
-
-        self.workspace_mpm[filepath] = {"buffer": s_file.mpm, "sids": {}}
-        # Store per-signature MPM info
-        for sig in s_file.sigset.signatures:
-            if sig.mpm:
-                self.workspace_mpm[filepath]["sids"][sig.sid] = sig.mpm
-        return True
+        return self.workspace_mpm.add_file_from_suricata_file(filepath, s_file)
 
     def _analyze_workspace_files_sequential(self, rules_files, progress_token):
         """
@@ -511,7 +500,7 @@ class LangServer:
 
             # Store successful results
             if error is None and mpm_data:
-                self.workspace_mpm[result_filepath] = mpm_data
+                self.workspace_mpm.add_file(result_filepath, mpm_data)
                 return True, False
 
             if error:
@@ -564,13 +553,11 @@ class LangServer:
             ),
         )
 
-        total_sigs = sum(
-            len(data.get("sids", {})) for data in self.workspace_mpm.values()
-        )
+        stats = self.workspace_mpm.get_statistics()
         log.info(
             "Workspace MPM data: %d files analyzed, %d signatures, %d errors",
             analyzed_count,
-            total_sigs,
+            stats["total_sids"],
             error_count,
         )
 
@@ -665,15 +652,11 @@ class LangServer:
             if path in self.source_dirs:
                 self.source_dirs.remove(path)
                 # Remove MPM data for files in removed folder
-                files_to_remove = [
-                    fp for fp in self.workspace_mpm.keys() if fp.startswith(path)
-                ]
-                for fp in files_to_remove:
-                    del self.workspace_mpm[fp]
-                if files_to_remove:
+                removed_count = self.workspace_mpm.remove_by_prefix(path)
+                if removed_count > 0:
                     log.info(
                         "Removed MPM data for %d files from removed folder",
-                        len(files_to_remove),
+                        removed_count,
                     )
 
     def analyse_file(self, filepath, engine_analysis=True, **kwargs):
