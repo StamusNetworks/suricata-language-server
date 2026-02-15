@@ -435,9 +435,7 @@ class TestSignatureSet:
 class TestSuricataFile:
     """Tests for SuricataFile class"""
 
-    def __init__(self):
-        """Initialize SuricataFile tests"""
-        self.mock_tester = None
+    mock_tester = None
 
     @pytest.fixture(autouse=True)
     def setup(self):
