@@ -88,6 +88,12 @@ def main():
         default=False,
         help="Disable suricata engine analysis (used with --batch-file only)",
     )
+    parser.add_argument(
+        "--idle-timeout",
+        default=3.0,
+        type=float,
+        help="Seconds of inactivity before auto-analyzing open buffer (default: 3.0, 0 to disable)",
+    )
     args = parser.parse_args()
     if args.version:
         print("{0}".format(__version__))
@@ -100,6 +106,7 @@ def main():
         "docker_image": args.image,
         "max_lines": args.max_lines,
         "max_tracked_files": args.max_tracked_files,
+        "idle_timeout": args.idle_timeout,
     }
     #
     if not args.batch_file and args.no_engine_analysis:
