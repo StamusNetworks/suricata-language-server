@@ -307,6 +307,16 @@ class SignatureSet:
         """
         return self.sid_map.get(sid)
 
+    def get_max_sid(self):
+        """Get the maximum SID in this signature set.
+
+        Returns:
+            int: Maximum SID value, or 0 if no SIDs found
+        """
+        if not self.sid_map:
+            return 0
+        return max(self.sid_map.keys())
+
 
 class SuricataFile:
     IS_COMMENT = re.compile(r"[ \t]*#")
@@ -814,3 +824,25 @@ class SuricataFile:
             content = self.extract_range(file_range)
         data = self.semantic_tokens_parser.parse(content)
         return data
+
+    def get_next_available_sid(self, workspace=None):
+        """Calculate the next available SID based on current file and workspace.
+
+        Args:
+            workspace: Optional workspace dict from MpmCache.get_workspace_view()
+
+        Returns:
+            int: Next available SID (max SID + 1), or 1000000 if no SIDs found
+        """
+        max_sid = self.sigset.get_max_sid()
+
+        # Check workspace for higher SIDs
+        if workspace:
+            for _filepath, data in workspace.items():
+                sids = data.get("sids", {})
+                for sid in sids.keys():
+                    if sid > max_sid:
+                        max_sid = sid
+
+        # Return next available SID, or 1000000 if no SIDs found
+        return max_sid + 1 if max_sid > 0 else 1000000
