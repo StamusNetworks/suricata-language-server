@@ -3,4 +3,4 @@ alert tcp any any -> $HOME_NET 22 (msg:"LOCAL SSH Brute Force Attempt"; flow:to_
 alert tcp any any -> $HOME_NET 3389 (msg:"LOCAL RDP Connection from Internet"; flow:to_server; flags:S; sid:1000002; rev:1;)
 alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"LOCAL Suspicious User-Agent"; flow:established,to_server; content:"User-Agent|3a 20|curl"; http_header; sid:1000003; rev:1;)
 alert tcp any any -> any 443 (msg:"LOCAL TLS Version 1.0 Detected"; flow:established; ssl_version:tls1.0; sid:2025002; rev:1;)
-alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"LOCAL Data Exfiltration Large Upload"; flow:established,to_server; threshold:type threshold,track by_src,count 1,seconds 60; dsize:>1000000; sid:1000005; rev:1;)
+alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"LOCAL Data Exfiltration Large Upload"; flow:established,to_server; threshold:type threshold,track by_src,count 1,seconds 60; sid:1000005; rev:1;)
