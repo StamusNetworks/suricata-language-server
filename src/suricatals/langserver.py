@@ -232,6 +232,8 @@ class LangServer:
         self.server.start_io()
 
     def get_suricata_file(self, uri) -> Optional[SuricataFile]:
+        if self.rules_tester == None:
+            self.rules_tester = self.create_rule_tester()
         file_obj = self.server.workspace.get_text_document(uri)
         path = path_from_uri(uri)
         s_file = SuricataFile(path, self.rules_tester)
