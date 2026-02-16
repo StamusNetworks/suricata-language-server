@@ -54,7 +54,7 @@ suricata-language-server --debug-log
 
 ### Code Quality
 ```bash
-# Format code with Black
+# Format code with Black is mandatory for all contributions
 black src/
 
 # Check code with pylint
