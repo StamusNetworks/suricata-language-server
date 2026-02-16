@@ -27,8 +27,15 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install pytest
+        pip install pytest pytest-cov
         pip install .
     - name: Run tests
       run: |
-        python -m pytest src/suricatals/
+        python -m pytest --cov=./ --cov-report=xml src/suricatals/
+    - name: Upload Coverage to PR
+      if: matrix.python-version == '3.13'
+      uses: orgoro/coverage@v3.2
+      with:
+        path: coverage.xml
+        token: ${{ secrets.GITHUB_TOKEN }}
+        threshold: 75 # Optional: Fails the check if coverage is below 75%
