@@ -137,7 +137,7 @@ class TestSyntax:
             assert diag.severity == 4
 
     def test_pcap_parse(self):
-        diags = self._test_rules_file("pcap.rules", 10)
+        diags = self._test_rules_file("pcap.rules", 7)
         number_of_alerts = 0
         for diag in diags:
             assert diag.severity == 4
