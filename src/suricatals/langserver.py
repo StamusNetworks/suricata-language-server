@@ -36,6 +36,7 @@ from suricatals.signature_validator import TestRules
 from suricatals.suricata_command import SuriCmd
 from suricatals.signature_tokenizer import SuricataSemanticTokenParser
 from suricatals.mpm_cache import MpmCache
+from suricatals.signature_completion import SignatureCompletion
 
 
 from pygls.lsp.server import LanguageServer
@@ -44,7 +45,6 @@ from lsprotocol import types
 log = logging.getLogger(__name__)
 
 SURICATA_RULES_EXT_REGEX = re.compile(r"^\.rules?$", re.I)
-SID_COMPLETION_PATTERN = re.compile(r"sid:\s*$")
 
 
 def path_from_uri(uri):
@@ -114,6 +114,7 @@ class LangServer:
             self._register_all_features()
         self.keywords_list = []
         self.app_layer_list = []
+        self.completion_handler = None
         # Workspace MPM data cache for cross-file pattern collision detection
         self.workspace_mpm = MpmCache()
 
@@ -196,6 +197,14 @@ class LangServer:
             ),
         )
         self.app_layer_list = self.rules_tester.build_app_layer_list()
+
+        # Initialize completion handler with keyword and app layer data
+        self.completion_handler = SignatureCompletion(
+            keywords_list=self.keywords_list,
+            app_layer_list=self.app_layer_list,
+            actions_items=self.rules_tester.ACTIONS_ITEMS,
+        )
+
         self.server.work_done_progress.end(
             progress_token,
             types.WorkDoneProgressEnd(message="Suricata Language Server ready"),
@@ -229,46 +238,6 @@ class LangServer:
         s_file.load_from_lsp(file_obj)
         return s_file
 
-    def _initial_params_autocomplete(
-        self, params: types.CompletionParams, file_obj
-    ) -> Optional[types.CompletionList]:
-        edit_index = params.position.line
-        sig_content = file_obj.lines[edit_index]
-        sig_index = params.position.character
-        word_split = re.split(" +", sig_content[0:sig_index])
-        if len(word_split) == 1:
-            if self.rules_tester is None:
-                self.rules_tester = self.create_rule_tester()
-            lsp_completion_items = []
-            for item in self.rules_tester.ACTIONS_ITEMS:
-                lsp_completion_items.append(
-                    types.CompletionItem(
-                        label=item["label"],
-                        kind=types.CompletionItemKind(item.get("kind", 3)),
-                        detail=item.get("detail", ""),
-                        documentation=item.get("documentation", ""),
-                        deprecated=item.get("deprecated", False),
-                    )
-                )
-            return types.CompletionList(is_incomplete=False, items=lsp_completion_items)
-        if len(word_split) == 2:
-            lsp_completion_items = []
-            for item in self.app_layer_list:
-                lsp_completion_items.append(
-                    types.CompletionItem(
-                        label=item["label"],
-                        kind=types.CompletionItemKind(item.get("kind", 10)),
-                        detail=item.get("detail", ""),
-                        documentation=item.get("documentation", ""),
-                        deprecated=item.get("deprecated", False),
-                    )
-                )
-            return types.CompletionList(is_incomplete=False, items=lsp_completion_items)
-        if edit_index == 0:
-            return None
-        elif not re.search(r"\\ *$", file_obj.contents_split[edit_index - 1]):
-            return None
-
     @register_feature(
         types.TEXT_DOCUMENT_COMPLETION,
         options=types.CompletionOptions(trigger_characters=[".", ":"]),
@@ -280,81 +249,45 @@ class LangServer:
         file_obj = self.server.workspace.get_text_document(uri)
         if file_obj is None:
             return None
+
+        # Ensure completion handler is initialized
+        if self.completion_handler is None:
+            if self.rules_tester is None:
+                self.rules_tester = self.create_rule_tester()
+            self.completion_handler = SignatureCompletion(
+                keywords_list=self.keywords_list,
+                app_layer_list=self.app_layer_list,
+                actions_items=self.rules_tester.ACTIONS_ITEMS,
+            )
+
         edit_index = params.position.line
         sig_index = params.position.character
-
         sig_content = file_obj.lines[edit_index]
-        # not yet in content matching so just return nothing
-        if "(" not in sig_content[0:sig_index]:
-            return self._initial_params_autocomplete(params, file_obj)
 
-        # Check if we're right after "sid:" or "sid: " to offer SID completion
-        prefix = sig_content[0:sig_index]
-        if SID_COMPLETION_PATTERN.search(prefix):
+        # Handle initial params (action and protocol) - before content section
+        if self.completion_handler.is_before_content_section(sig_content, sig_index):
+            return self.completion_handler.get_initial_params_completion(
+                sig_content, sig_index, edit_index, list(file_obj.lines)
+            )
+
+        # Handle SID completion
+        if self.completion_handler.is_sid_completion_context(sig_content, sig_index):
             try:
                 s_file = self.get_suricata_file(uri)
+                if s_file is None:
+                    return None
                 workspace_view = self.workspace_mpm.get_workspace_view(
                     exclude_file=path_from_uri(uri)
                 )
                 next_sid = s_file.get_next_available_sid(workspace_view)
-
-                lsp_completion_items = [
-                    types.CompletionItem(
-                        label=str(next_sid),
-                        kind=types.CompletionItemKind.Value,
-                        detail="Next available SID",
-                        documentation="Next available signature ID based on file and workspace",
-                        insert_text=str(next_sid),
-                    )
-                ]
-                return types.CompletionList(
-                    is_incomplete=False, items=lsp_completion_items
-                )
+                return self.completion_handler.get_sid_completion(next_sid)
             # pylint: disable=W0703
             except Exception as e:
                 log.error("Error generating SID completion: %s", e)
+                return None
 
-        cursor = sig_index - 1
-        while cursor > 0:
-            log.debug(
-                "At index: %d of %d (%s)",
-                cursor,
-                len(sig_content),
-                sig_content[cursor:sig_index],
-            )
-            if not sig_content[cursor].isalnum() and not sig_content[cursor] in [
-                ".",
-                "_",
-            ]:
-                break
-            cursor -= 1
-        log.debug("Final is: %d : %d", cursor, sig_index)
-        if cursor == sig_index - 1:
-            return None
-        # this is an option edit so dont list keyword
-        if sig_content[cursor] in [":", ","]:
-            return None
-        cursor += 1
-        partial_keyword = sig_content[cursor:sig_index]
-        log.debug("Got keyword start: '%s'", partial_keyword)
-        items_list = []
-        for item in self.keywords_list:
-            if item["label"].startswith(partial_keyword):
-                items_list.append(item)
-        if len(items_list):
-            lsp_completion_items = []
-            for item in items_list:
-                lsp_completion_items.append(
-                    types.CompletionItem(
-                        label=item["label"],
-                        kind=types.CompletionItemKind(item.get("kind", 3)),
-                        detail=item.get("detail", ""),
-                        documentation=item.get("documentation", ""),
-                        deprecated=item.get("deprecated", False),
-                    )
-                )
-            return types.CompletionList(is_incomplete=False, items=lsp_completion_items)
-        return None
+        # Handle keyword completion within content section
+        return self.completion_handler.get_keyword_completion(sig_content, sig_index)
 
     @register_feature(
         types.TEXT_DOCUMENT_SEMANTIC_TOKENS_FULL,
