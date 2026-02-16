@@ -28,7 +28,7 @@ import pytest
 
 from suricatals.mpm_cache import MpmCache
 from suricatals.signature_parser import SuricataFile
-from suricatals.signature_validator import TestRules
+from suricatals.signature_validator import SignaturesTester
 
 
 class TestWorkspaceSidConflicts:
@@ -52,7 +52,7 @@ class TestWorkspaceSidConflicts:
     def workspace_cache(self, rules_files):
         """Create and populate workspace cache with all rules files"""
         cache = MpmCache()
-        rules_tester = TestRules()
+        rules_tester = SignaturesTester()
 
         for filepath in rules_files:
             s_file = SuricataFile(filepath, rules_tester)
@@ -86,7 +86,7 @@ class TestWorkspaceSidConflicts:
 
     def test_sid_conflicts_detected(self, workspace_dir, workspace_cache):
         """Test that SID conflicts are detected across workspace files"""
-        rules_tester = TestRules()
+        rules_tester = SignaturesTester()
 
         # Check emerging-threats.rules
         et_file = os.path.join(workspace_dir, "emerging-threats.rules")
@@ -104,7 +104,7 @@ class TestWorkspaceSidConflicts:
 
     def test_conflict_diagnostics_generated(self, workspace_dir, workspace_cache):
         """Test that conflict diagnostics are properly generated"""
-        rules_tester = TestRules()
+        rules_tester = SignaturesTester()
 
         local_file = os.path.join(workspace_dir, "local-custom.rules")
         s_file = SuricataFile(local_file, rules_tester)
@@ -131,7 +131,7 @@ class TestWorkspaceSidConflicts:
 
     def test_no_self_conflicts(self, workspace_dir, workspace_cache):
         """Test that a file doesn't report conflicts with itself"""
-        rules_tester = TestRules()
+        rules_tester = SignaturesTester()
 
         et_file = os.path.join(workspace_dir, "emerging-threats.rules")
         s_file = SuricataFile(et_file, rules_tester)
@@ -168,7 +168,7 @@ class TestWorkspaceSidConflicts:
         # Add a third file with same conflict
         import tempfile
 
-        rules_tester = TestRules()
+        rules_tester = SignaturesTester()
 
         with tempfile.NamedTemporaryFile(
             mode="w", suffix=".rules", delete=False

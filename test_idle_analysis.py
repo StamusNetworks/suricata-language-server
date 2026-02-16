@@ -19,7 +19,7 @@ from unittest.mock import Mock
 from lsprotocol import types
 
 from suricatals.langserver import LangServer, path_from_uri
-from suricatals.signature_validator import TestRules
+from suricatals.signature_validator import SignaturesTester
 
 
 def test_idle_analysis():
@@ -32,7 +32,7 @@ def test_idle_analysis():
     print("\n1. Creating LangServer with 0.5s idle timeout...")
     settings = {"idle_timeout": 0.5}
     lang_server = LangServer(settings=settings)
-    lang_server.rules_tester = TestRules()
+    lang_server.rules_tester = SignaturesTester()
 
     # Mock the server
     lang_server.server = Mock()

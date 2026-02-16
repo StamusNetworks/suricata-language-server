@@ -23,7 +23,7 @@ import queue
 from typing import Dict, Optional, Tuple, Any
 
 from suricatals.signature_parser import SuricataFile
-from suricatals.signature_validator import TestRules
+from suricatals.signature_validator import SignaturesTester
 
 log = logging.getLogger(__name__)
 
@@ -59,7 +59,7 @@ def analyze_file_worker(
     try:
         # Create TestRules instance in this worker process
         # If this was unpickled, __setstate__ recreates suricmd with its own docker client
-        rules_tester = TestRules(
+        rules_tester = SignaturesTester(
             suricata_binary=rules_tester_config["suricata_binary"],
             suricata_config=rules_tester_config["suricata_config"],
             docker=rules_tester_config["docker"],

@@ -25,7 +25,7 @@ def main():
     from unittest.mock import Mock
     from suricatals.langserver import LangServer, path_from_uri
     from suricatals.signature_parser import SuricataFile
-    from suricatals.signature_validator import TestRules
+    from suricatals.signature_validator import SignaturesTester
 
     print("\n" + "=" * 80)
     print("COMPLETE WORKFLOW: Workspace SID Conflict Detection with Auto-Refresh")
@@ -44,7 +44,7 @@ def main():
     print("-" * 80)
 
     lang_server = LangServer(None)
-    lang_server.rules_tester = TestRules()
+    lang_server.rules_tester = SignaturesTester()
     lang_server.server = Mock()
     lang_server.server.workspace = Mock()
 
@@ -60,7 +60,7 @@ def main():
 
     # Simulate workspace analysis
     print("  Analyzing workspace files...")
-    rules_tester = TestRules()
+    rules_tester = SignaturesTester()
 
     for filepath in [file1_path, file2_path]:
         s_file = SuricataFile(filepath, rules_tester)

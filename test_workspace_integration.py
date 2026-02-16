@@ -19,7 +19,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 
 from suricatals.mpm_cache import MpmCache
 from suricatals.signature_parser import SuricataFile
-from suricatals.signature_validator import TestRules
+from suricatals.signature_validator import SignaturesTester
 
 
 def analyze_workspace_files(workspace_dir, cache, rules_tester):
@@ -118,7 +118,7 @@ def main():
         os.path.dirname(__file__), "tests", "workspace_conflict_test"
     )
     cache = MpmCache()
-    rules_tester = TestRules()
+    rules_tester = SignaturesTester()
 
     # Phase 1: Analyze workspace (simulates WORKSPACE_DID_CHANGE_WORKSPACE_FOLDERS)
     analyze_workspace_files(workspace_dir, cache, rules_tester)

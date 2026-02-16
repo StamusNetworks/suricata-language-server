@@ -32,7 +32,7 @@ import queue
 from threading import Timer
 
 from suricatals.signature_parser import SuricataFile
-from suricatals.signature_validator import TestRules
+from suricatals.signature_validator import SignaturesTester
 from suricatals.suricata_command import SuriCmd
 from suricatals.signature_tokenizer import SuricataSemanticTokenParser
 from suricatals.mpm_cache import MpmCache
@@ -142,7 +142,7 @@ class LangServer:
         return wrapper
 
     def create_rule_tester(self):
-        return TestRules(
+        return SignaturesTester(
             suricata_binary=self.suricata_binary,
             suricata_config=self.suricata_config,
             docker=self.docker,
