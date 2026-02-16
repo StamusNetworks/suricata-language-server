@@ -25,7 +25,7 @@ pre-commit install
 ### Testing and Validation
 ```bash
 # Run unit tests
-python -m pytest src/suricatals/unit_tests.py
+python -m pytest src/suricatals/
 
 # Test in batch mode (parse single file and output diagnostics)
 suricata-language-server --batch-file tests/clean.rules
