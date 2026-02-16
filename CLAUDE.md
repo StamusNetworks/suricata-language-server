@@ -96,7 +96,15 @@ pre-commit run --all-files
    - Tokenizes Suricata signatures for semantic highlighting
    - Identifies keywords, actions, strings, operators, etc.
 
-6. **Worker Pool** (`src/suricatals/worker_pool.py`)
+6. **SignatureCompletion** (`src/suricatals/signature_completion.py`)
+   - Handles auto-completion logic for Suricata signature files
+   - Provides context-aware completion for actions (alert, drop, etc.)
+   - Offers app-layer protocol suggestions
+   - Generates SID (Signature ID) completion with next available ID
+   - Handles keyword completion within signature content
+   - Determines completion context (before/after content section, SID completion)
+
+7. **Worker Pool** (`src/suricatals/worker_pool.py`)
    - Module-level worker function for parallel workspace analysis
    - Analyzes individual rules files in separate processes
    - Returns MPM data structure for cross-file analysis
@@ -234,6 +242,7 @@ src/suricatals/
 ├── signature_validator.py   # Signature validation logic
 ├── signature_parser.py      # Signature parsing and file representation
 ├── signature_tokenizer.py   # Semantic tokenization
+├── signature_completion.py  # Auto-completion logic for signatures
 ├── lsp_helpers.py           # LSP protocol helpers (Diagnosis, FileRange)
 ├── test_syntax.py           # Syntax validation tests
 ├── test_parse_signatures.py # Signature parsing tests
