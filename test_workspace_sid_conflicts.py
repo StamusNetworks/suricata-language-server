@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 
 from suricatals.mpm_cache import MpmCache
 from suricatals.signature_parser import SuricataFile
-from suricatals.signature_validator import TestRules
+from suricatals.signature_validator import SignaturesTester
 
 
 def test_workspace_integration():
@@ -23,7 +23,7 @@ def test_workspace_integration():
     print(f"\nInitial cache state: {cache}")
 
     # Create rules tester
-    rules_tester = TestRules()
+    rules_tester = SignaturesTester()
 
     # Simulate workspace analysis - analyze file1
     print("\n--- Phase 1: Workspace Analysis (Initial Scan) ---")

@@ -33,9 +33,9 @@ def test_refresh_diagnostics_on_workspace_update():
     lang_server = LangServer(None)
 
     # Initialize rules tester
-    from suricatals.signature_validator import TestRules
+    from suricatals.signature_validator import SignaturesTester
 
-    lang_server.rules_tester = TestRules()
+    lang_server.rules_tester = SignaturesTester()
 
     # Set workspace dir
     workspace_dir = os.path.join(
@@ -109,9 +109,9 @@ alert tcp any any -> any 443 (msg:"LOCAL TLS 1.0"; sid:2025002;)
 
     # Manually populate workspace cache (simulate workspace analysis)
     from suricatals.signature_parser import SuricataFile
-    from suricatals.signature_validator import TestRules
+    from suricatals.signature_validator import SignaturesTester
 
-    rules_tester = TestRules()
+    rules_tester = SignaturesTester()
     for rules_file in rules_files:
         s_file = SuricataFile(rules_file, rules_tester)
         s_file.load_from_disk()

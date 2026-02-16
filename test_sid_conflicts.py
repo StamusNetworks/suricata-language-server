@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 
 from suricatals.mpm_cache import MpmCache
 from suricatals.signature_parser import SuricataFile
-from suricatals.signature_validator import TestRules
+from suricatals.signature_validator import SignaturesTester
 
 
 def test_sid_conflicts():
@@ -20,7 +20,7 @@ def test_sid_conflicts():
     cache = MpmCache()
 
     # Create rules tester (without engine analysis for this test)
-    rules_tester = TestRules()
+    rules_tester = SignaturesTester()
 
     # Load first file
     file1_path = os.path.join(

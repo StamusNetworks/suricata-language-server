@@ -34,10 +34,10 @@ from json import JSONDecodeError
 log = logging.getLogger(__name__)
 
 # Re-export for backward compatibility
-__all__ = ["TestRules", "SuricataFileException"]
+__all__ = ["SignaturesTester", "SuricataFileException"]
 
 
-class TestRules:
+class SignaturesTester:
     def __init__(
         self,
         suricata_binary="suricata",
