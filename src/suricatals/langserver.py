@@ -44,6 +44,7 @@ from lsprotocol import types
 log = logging.getLogger(__name__)
 
 SURICATA_RULES_EXT_REGEX = re.compile(r"^\.rules?$", re.I)
+SID_COMPLETION_PATTERN = re.compile(r"sid:\s*$")
 
 
 def path_from_uri(uri):
@@ -270,7 +271,7 @@ class LangServer:
 
     @register_feature(
         types.TEXT_DOCUMENT_COMPLETION,
-        options=types.CompletionOptions(trigger_characters=["."]),
+        options=types.CompletionOptions(trigger_characters=[".", ":"]),
     )
     def serve_autocomplete(
         self, params: types.CompletionParams
@@ -286,6 +287,33 @@ class LangServer:
         # not yet in content matching so just return nothing
         if "(" not in sig_content[0:sig_index]:
             return self._initial_params_autocomplete(params, file_obj)
+
+        # Check if we're right after "sid:" or "sid: " to offer SID completion
+        prefix = sig_content[0:sig_index]
+        if SID_COMPLETION_PATTERN.search(prefix):
+            try:
+                s_file = self.get_suricata_file(uri)
+                workspace_view = self.workspace_mpm.get_workspace_view(
+                    exclude_file=path_from_uri(uri)
+                )
+                next_sid = s_file.get_next_available_sid(workspace_view)
+
+                lsp_completion_items = [
+                    types.CompletionItem(
+                        label=str(next_sid),
+                        kind=types.CompletionItemKind.Value,
+                        detail="Next available SID",
+                        documentation="Next available signature ID based on file and workspace",
+                        insert_text=str(next_sid),
+                    )
+                ]
+                return types.CompletionList(
+                    is_incomplete=False, items=lsp_completion_items
+                )
+            # pylint: disable=W0703
+            except Exception as e:
+                log.error("Error generating SID completion: %s", e)
+
         cursor = sig_index - 1
         while cursor > 0:
             log.debug(
