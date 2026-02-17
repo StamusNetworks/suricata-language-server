@@ -31,7 +31,7 @@ jobs:
         pip install .
     - name: Run tests
       run: |
-        python -m pytest --cov=./ --cov-report=xml src/suricatals/
+        python -m pytest --cov=src/suricatals --cov-report=xml --cov-report=html src/suricatals/
     - name: Upload Coverage to PR
       if: matrix.python-version == '3.13'
       uses: orgoro/coverage@v3.2
@@ -39,3 +39,9 @@ jobs:
         path: coverage.xml
         token: ${{ secrets.GITHUB_TOKEN }}
         threshold: 75 # Optional: Fails the check if coverage is below 75%
+    - name: Upload HTML Coverage Report
+      if: matrix.python-version == '3.13'
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report
+        path: htmlcov/
