@@ -57,7 +57,9 @@ def test_idle_analysis():
 
     # Create mock document
     test_file = os.path.join(
-        os.path.dirname(__file__), "workspace_conflict_test", "local-custom.rules"
+        os.path.dirname(__file__),
+        "../../tests/workspace_conflict_test",
+        "local-custom.rules",
     )
     file_uri = f"file://{test_file}"
 
