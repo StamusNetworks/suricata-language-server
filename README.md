@@ -1,5 +1,7 @@
 # Suricata Language Server
 
+[![Coverage Status](https://coveralls.io/repos/github/StamusNetworks/suricata-language-server/badge.svg?branch=main)](https://coveralls.io/github/StamusNetworks/suricata-language-server?branch=main)
+
 Suricata Language Server is an implementation of the Language Server
 Protocol for Suricata signatures. It adds syntax highlighting, syntax
 check and hints as well as auto-completion to your preferred editor
