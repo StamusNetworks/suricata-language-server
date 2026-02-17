@@ -1,6 +1,6 @@
 # Suricata Language Server
 
-[![Coverage Status](https://coveralls.io/repos/github/StamusNetworks/suricata-language-server/badge.svg?branch=main)](https://coveralls.io/github/StamusNetworks/suricata-language-server?branch=main)
+[![Coverage Status](https://coveralls.io/repos/github/StamusNetworks/suricata-language-server/badge.svg?branch=main)](https://coveralls.io/github/StamusNetworks/suricata-language-server?branch=main) [![Python Unittests](https://github.com/StamusNetworks/suricata-language-server/actions/workflows/python-unittests.yml/badge.svg)](https://github.com/StamusNetworks/suricata-language-server/actions/workflows/python-unittests.yml) [![Pylint](https://github.com/StamusNetworks/suricata-language-server/actions/workflows/pylint.yml/badge.svg)](https://github.com/StamusNetworks/suricata-language-server/actions/workflows/pylint.yml) [![Python Package](https://github.com/StamusNetworks/suricata-language-server/actions/workflows/python-package.yml/badge.svg)](https://github.com/StamusNetworks/suricata-language-server/actions/workflows/python-package.yml)
 
 Suricata Language Server is an implementation of the Language Server
 Protocol for Suricata signatures. It adds syntax highlighting, syntax
