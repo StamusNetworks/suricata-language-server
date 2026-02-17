@@ -57,3 +57,27 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 suricatals = ["data/*.json"]
+
+[tool.coverage.run]
+source = ["src/suricatals"]
+omit = [
+    "*/test_*.py",
+    "*/unit_tests.py",
+    "*/__init__.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "if typing.TYPE_CHECKING:",
+]
+precision = 2
+show_missing = true
+
+[tool.coverage.html]
+directory = "htmlcov"
