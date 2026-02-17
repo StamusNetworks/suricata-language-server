@@ -176,7 +176,7 @@ class SuricataErrorParser:
             prev_err = s_err
         return ret
 
-    def _parse_error_before_7(self, error):
+    def _parse_error_before_7(self, error):  # pragma: no cover
         """Parse Suricata 6.x JSON error format."""
         ret = {
             "errors": [],
