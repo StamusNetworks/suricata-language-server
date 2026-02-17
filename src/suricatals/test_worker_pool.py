@@ -123,7 +123,10 @@ class TestWorkerPool:
         self, rules_tester_config, progress_queue
     ):
         """Test worker handles missing file gracefully"""
-        nonexistent_file = "/tmp/nonexistent_file_12345.rules"
+        # Create a temp file to get a secure path, then delete it
+        with tempfile.NamedTemporaryFile(suffix=".rules", delete=False) as tmp:
+            nonexistent_file = tmp.name
+        os.unlink(nonexistent_file)
 
         filepath, mpm_data, error = analyze_file_worker(
             nonexistent_file, rules_tester_config, progress_queue
@@ -181,7 +184,10 @@ class TestWorkerPool:
         self, rules_tester_config, progress_queue
     ):
         """Test worker sends error notification via progress queue"""
-        nonexistent_file = "/tmp/nonexistent_file_12345.rules"
+        # Create a temp file to get a secure path, then delete it
+        with tempfile.NamedTemporaryFile(suffix=".rules", delete=False) as tmp:
+            nonexistent_file = tmp.name
+        os.unlink(nonexistent_file)
 
         _filepath, _mpm_data, error = analyze_file_worker(
             nonexistent_file, rules_tester_config, progress_queue
