@@ -32,13 +32,13 @@ jobs:
     - name: Run tests
       run: |
         python -m pytest --cov=src/suricatals --cov-report=xml --cov-report=html src/suricatals/
-    - name: Upload Coverage to PR
+    - name: Upload Coverage to Coveralls
       if: matrix.python-version == '3.13'
-      uses: orgoro/coverage@v3.2
+      uses: coverallsapp/github-action@648a8eb78e6d50909eff900e4ec85cab4524a45b # v2.3.6
       with:
-        path: coverage.xml
-        token: ${{ secrets.GITHUB_TOKEN }}
-        threshold: 75 # Optional: Fails the check if coverage is below 75%
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        file: coverage.xml
+        format: cobertura
     - name: Upload HTML Coverage Report
       if: matrix.python-version == '3.13'
       uses: actions/upload-artifact@v4
