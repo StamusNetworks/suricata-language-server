@@ -10,14 +10,15 @@ This simulates:
 Copyright(C) 2026 Stamus Networks SAS
 """
 
+# pylint: disable=W0212  # Allow testing protected methods
+
 import sys
 import os
 
 # Add src to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 
-from unittest.mock import MagicMock, Mock
-from lsprotocol import types
+from unittest.mock import Mock
 
 from suricatals.langserver import LangServer, path_from_uri
 
@@ -109,7 +110,6 @@ alert tcp any any -> any 443 (msg:"LOCAL TLS 1.0"; sid:2025002;)
 
     # Manually populate workspace cache (simulate workspace analysis)
     from suricatals.signature_parser import SuricataFile
-    from suricatals.signature_validator import SignaturesTester
 
     rules_tester = SignaturesTester()
     for rules_file in rules_files:
@@ -148,7 +148,7 @@ alert tcp any any -> any 443 (msg:"LOCAL TLS 1.0"; sid:2025002;)
                 print(
                     f"   ✓ Found {conflict_count} SID conflict warning(s) in refreshed diagnostics"
                 )
-                print(f"   Conflicts detected:")
+                print("   Conflicts detected:")
                 for diag in pub["diagnostics"]:
                     if "conflict" in diag.message.lower():
                         print(
@@ -173,7 +173,7 @@ alert tcp any any -> any 443 (msg:"LOCAL TLS 1.0"; sid:2025002;)
             print(
                 "✅ TEST PASSED: Diagnostics automatically refreshed with SID conflicts!"
             )
-            print(f"   Open files: 1")
+            print("   Open files: 1")
             print(f"   Diagnostics refreshed: {len(published_diagnostics)}")
             print(f"   SID conflicts detected: {conflict_count}")
             print("=" * 70)

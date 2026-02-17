@@ -8,6 +8,8 @@ running Suricata analysis.
 Copyright(C) 2026 Stamus Networks SAS
 """
 
+# pylint: disable=W0212  # Allow testing protected methods
+
 import sys
 import os
 import time
@@ -16,7 +18,6 @@ import time
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 
 from unittest.mock import Mock, patch
-from lsprotocol import types
 
 from suricatals.langserver import LangServer
 

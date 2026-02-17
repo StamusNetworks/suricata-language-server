@@ -8,6 +8,8 @@ is triggered automatically after idle timeout.
 Copyright(C) 2026 Stamus Networks SAS
 """
 
+# pylint: disable=W0212  # Allow testing protected methods
+
 import sys
 import os
 import time
@@ -16,7 +18,6 @@ import time
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 
 from unittest.mock import Mock
-from lsprotocol import types
 
 from suricatals.langserver import LangServer, path_from_uri
 from suricatals.signature_validator import SignaturesTester
@@ -115,7 +116,7 @@ def test_idle_analysis():
     # Check if analysis was triggered
     print("\n5. Verifying results...")
     if len(published_diagnostics) > 0:
-        print(f"   ✓ Idle analysis triggered automatically!")
+        print("   ✓ Idle analysis triggered automatically!")
         print(f"   ✓ Diagnostics published: {published_diagnostics[0]['count']}")
     else:
         print("   ✗ No idle analysis triggered")

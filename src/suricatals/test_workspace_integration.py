@@ -10,6 +10,8 @@ Simulates the language server's workspace analysis workflow:
 Copyright(C) 2026 Stamus Networks SAS
 """
 
+# pylint: disable=W0212  # Allow testing protected methods
+
 import sys
 import os
 import glob
@@ -51,7 +53,7 @@ def analyze_workspace_files(workspace_dir, cache, rules_tester):
 
         # Add to workspace cache
         cache.add_file(filepath, mpm_data)
-        print(f"  ✓ Added to workspace cache")
+        print("  ✓ Added to workspace cache")
 
     # Show cache statistics
     print(f"\n{'-'*70}")
@@ -102,9 +104,9 @@ def check_file_for_conflicts(filepath, cache, rules_tester):
                 print(f"    Rule: {sig.content[:80]}...")
 
         return conflicts
-    else:
-        print("\n✓ No conflicts detected")
-        return {}
+
+    print("\n✓ No conflicts detected")
+    return {}
 
 
 def main():
@@ -149,12 +151,12 @@ def main():
             all_conflict_sids.update(conflicts.keys())
 
         if all_conflict_sids == expected_conflicts:
-            print(f"\n✅ TEST PASSED: All expected conflicts detected!")
+            print("\n✅ TEST PASSED: All expected conflicts detected!")
             print(f"   Expected SIDs: {sorted(expected_conflicts)}")
             print(f"   Found SIDs: {sorted(all_conflict_sids)}")
             return True
         else:
-            print(f"\n❌ TEST FAILED: Conflict mismatch")
+            print("\n❌ TEST FAILED: Conflict mismatch")
             print(f"   Expected: {sorted(expected_conflicts)}")
             print(f"   Found: {sorted(all_conflict_sids)}")
             return False

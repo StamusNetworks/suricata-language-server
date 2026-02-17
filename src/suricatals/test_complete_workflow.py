@@ -13,6 +13,8 @@ This demonstrates the full LSP workflow:
 Copyright(C) 2026 Stamus Networks SAS
 """
 
+# pylint: disable=W0212  # Allow testing protected methods
+
 import sys
 import os
 

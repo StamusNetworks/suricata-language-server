@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Integration test for workspace SID conflict detection."""
 
+# pylint: disable=W0212  # Allow testing protected methods
+
 import sys
 import os
 
@@ -85,7 +87,7 @@ def test_workspace_integration():
             mpm_data2["sids"][sig.sid] = {}
 
     cache.add_file(file2_path, mpm_data2)
-    print(f"\n  ✓ Added file 2 to cache")
+    print("\n  ✓ Added file 2 to cache")
     print(f"  Final cache state: {cache}")
 
     # Test get_sid_conflicts method directly on cache
