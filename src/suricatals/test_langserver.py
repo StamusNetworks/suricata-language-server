@@ -19,7 +19,7 @@ import sys
 import os
 import tempfile
 import logging
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 import pytest
 
 # Add src to path for imports
@@ -83,7 +83,7 @@ class TestRegisterFeature:
         """Test that decorator adds lsp_type and lsp_options attributes."""
 
         @register_feature(types.TEXT_DOCUMENT_COMPLETION, options="test_options")
-        def test_method(self):
+        def test_method():
             pass
 
         assert hasattr(test_method, "lsp_type")
@@ -95,7 +95,7 @@ class TestRegisterFeature:
         """Test decorator without options parameter."""
 
         @register_feature(types.TEXT_DOCUMENT_DID_SAVE)
-        def test_method(self):
+        def test_method():
             pass
 
         assert test_method.lsp_type == types.TEXT_DOCUMENT_DID_SAVE
@@ -171,7 +171,7 @@ class TestLangServerMethods:
         server = LangServer(settings=settings)
 
         with patch("suricatals.langserver.SignaturesTester") as mock_tester:
-            tester = server.create_rule_tester()
+            _tester = server.create_rule_tester()
             mock_tester.assert_called_once_with(
                 suricata_binary="/usr/bin/suricata",
                 suricata_config="/etc/suricata/suricata.yaml",
@@ -571,7 +571,7 @@ class TestWorkspaceFolderManagement:
         params.event.added = []
         params.event.removed = [folder]
 
-        with patch.object(server, "_refresh_open_file_diagnostics") as mock_refresh:
+        with patch.object(server, "_refresh_open_file_diagnostics"):
             # Add some mock data to workspace_mpm
             server.workspace_mpm.add_file(
                 f"{test_dir}/test.rules", {"buffer": {}, "sids": {}}
