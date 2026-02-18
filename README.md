@@ -11,11 +11,6 @@ once it is configured.
 
 Suricata Language Server requires Python and a Suricata binary.
 
-The code is based on [Chris Hansen\'s fortran language
-server](https://github.com/hansec/fortran-language-server) and
-incorporate code from [Stamus Networks\'
-scirius](https://github.com/StamusNetworks/scirius).
-
 ## Features and architecture
 
 Suricata Language Server currently supports syntax highlighting,
