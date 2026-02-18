@@ -109,6 +109,33 @@ pre-commit run --all-files
    - Analyzes individual rules files in separate processes
    - Returns MPM data structure for cross-file analysis
 
+8. **MpmCache** (`src/suricatals/mpm_cache.py`)
+   - Thread-safe cache for Multi-Pattern Matching (MPM) data across workspace files
+   - Enables cross-file pattern collision detection
+   - Stores and queries MPM analysis results for fast lookups
+   - Provides workspace-wide view of patterns and SID conflicts
+   - Used by LangServer to maintain workspace_mpm state
+
+9. **SuricataEngineAnalyzer** (`src/suricatals/suricata_engine_analyzer.py`)
+   - Analyzes Suricata engine analysis output
+   - Handles version-specific JSON format compatibility (pre/post 6.0.4)
+   - Extracts MPM information from engine analysis results
+   - Parses both text and JSON formats depending on Suricata version
+
+10. **SuricataErrorParser** (`src/suricatals/suricata_error_parser.py`)
+    - Parses Suricata error messages and warnings from JSON output
+    - Converts Suricata diagnostics to LSP diagnostic format
+    - Maps error codes to diagnostic severity levels (Error, Warning, Hint)
+    - Handles multiline error messages and extracts line numbers
+    - Defines SuricataFileException for error handling
+
+11. **SuricataDiscovery** (`src/suricatals/suricata_discovery.py`)
+    - Discovers and provides Suricata capabilities metadata
+    - Supplies action items for completion (alert, drop, reject, pass, etc.)
+    - Manages keyword and sticky buffer definitions
+    - Provides cached keyword metadata from suricata-keywords.json
+    - Used by SignatureCompletion for auto-completion items
+
 ### Multiprocessing Architecture
 
 When a workspace folder is added (via `WORKSPACE_DID_CHANGE_WORKSPACE_FOLDERS`), the language server analyzes all `.rules` files to extract MPM (Multi-Pattern Matching) information for cross-file pattern collision detection.
@@ -236,18 +263,33 @@ Test execution requires Suricata to be installed or use `--container` mode.
 
 ```
 src/suricatals/
-├── __init__.py              # Entry point (main() function)
-├── langserver.py            # LSP server implementation
-├── suricata_command.py      # Suricata command execution abstraction
-├── signature_validator.py   # Signature validation logic
-├── signature_parser.py      # Signature parsing and file representation
-├── signature_tokenizer.py   # Semantic tokenization
-├── signature_completion.py  # Auto-completion logic for signatures
-├── lsp_helpers.py           # LSP protocol helpers (Diagnosis, FileRange)
-├── test_syntax.py           # Syntax validation tests
-├── test_parse_signatures.py # Signature parsing tests
+├── __init__.py                      # Entry point (main() function)
+├── langserver.py                    # LSP server implementation
+├── suricata_command.py              # Suricata command execution abstraction
+├── signature_validator.py           # Signature validation logic (SignaturesTester)
+├── signature_parser.py              # Signature parsing and file representation (SuricataFile)
+├── signature_tokenizer.py           # Semantic tokenization
+├── signature_completion.py          # Auto-completion logic for signatures
+├── suricata_engine_analyzer.py      # Engine analysis parsing and MPM extraction
+├── suricata_error_parser.py         # Error/warning parsing and LSP diagnostic conversion
+├── suricata_discovery.py            # Suricata capabilities discovery (keywords, actions)
+├── mpm_cache.py                     # MPM data cache for cross-file analysis
+├── worker_pool.py                   # Parallel workspace analysis worker
+├── test_syntax.py                   # Syntax validation tests
+├── test_parse_signatures.py         # Signature parsing tests
+├── test_completion.py               # Completion functionality tests
+├── test_tokenizer.py                # Tokenization tests
+├── test_sid_conflicts.py            # SID conflict detection tests
+├── test_workspace_conflicts.py      # Workspace-level conflict tests
+├── test_workspace_sid_conflicts.py  # Cross-file SID conflict tests
+├── test_worker_pool.py              # Worker pool tests
+├── test_idle_timer.py               # Idle analysis timer tests
+├── test_idle_analysis.py            # Idle analysis integration tests
+├── test_refresh_diagnostics.py      # Diagnostic refresh tests
+├── test_workspace_integration.py    # Workspace integration tests
+├── test_langserver.py               # LangServer core functionality tests
 └── data/
-    └── suricata-keywords.json  # Cached keyword metadata
+    └── suricata-keywords.json       # Cached keyword metadata
 ```
 
 ## Publishing
