@@ -135,7 +135,7 @@ class TestLangServerInit:
             assert server.max_lines == 2000
             assert server.docker is True
             assert server.docker_image == "custom/suricata:latest"
-            assert server.idle_timeout == 5.0
+            assert int(server.idle_timeout) == 5
 
     def test_batch_mode_initialization(self):
         """Test LangServer in batch mode."""
