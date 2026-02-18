@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Integration test for workspace SID conflict detection.
 
@@ -117,8 +116,9 @@ def main():
 
     # Setup
     workspace_dir = os.path.join(
-        os.path.dirname(__file__), "tests", "workspace_conflict_test"
+        os.path.dirname(__file__), "..", "..", "tests", "workspace_conflict_test"
     )
+    workspace_dir = os.path.abspath(workspace_dir)
     cache = MpmCache()
     rules_tester = SignaturesTester()
 
@@ -154,17 +154,16 @@ def main():
             print("\n✅ TEST PASSED: All expected conflicts detected!")
             print(f"   Expected SIDs: {sorted(expected_conflicts)}")
             print(f"   Found SIDs: {sorted(all_conflict_sids)}")
-            return True
         else:
             print("\n❌ TEST FAILED: Conflict mismatch")
             print(f"   Expected: {sorted(expected_conflicts)}")
             print(f"   Found: {sorted(all_conflict_sids)}")
-            return False
+
+        assert all_conflict_sids == expected_conflicts, (
+            f"Conflict mismatch: expected {sorted(expected_conflicts)}, "
+            f"found {sorted(all_conflict_sids)}"
+        )
     else:
         print("\n❌ TEST FAILED: No conflicts detected (expected 2)")
-        return False
 
-
-if __name__ == "__main__":
-    success = main()
-    sys.exit(0 if success else 1)
+    assert all_conflicts, "No conflicts detected (expected 2)"

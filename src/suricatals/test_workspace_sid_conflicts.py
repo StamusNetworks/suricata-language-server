@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Integration test for workspace SID conflict detection."""
 
 # pylint: disable=W0212  # Allow testing protected methods
@@ -30,8 +29,9 @@ def test_workspace_integration():
     # Simulate workspace analysis - analyze file1
     print("\n--- Phase 1: Workspace Analysis (Initial Scan) ---")
     file1_path = os.path.join(
-        os.path.dirname(__file__), "tests", "conflict-file1.rules"
+        os.path.dirname(__file__), "..", "..", "tests", "conflict-file1.rules"
     )
+    file1_path = os.path.abspath(file1_path)
     print(f"Analyzing: {file1_path}")
 
     file1 = SuricataFile(file1_path, rules_tester)
@@ -51,8 +51,9 @@ def test_workspace_integration():
     # Simulate opening/editing file2 in editor
     print("\n--- Phase 2: File Check (User Opens/Edits File) ---")
     file2_path = os.path.join(
-        os.path.dirname(__file__), "tests", "conflict-file2.rules"
+        os.path.dirname(__file__), "..", "..", "tests", "conflict-file2.rules"
     )
+    file2_path = os.path.abspath(file2_path)
     print(f"Checking: {file2_path}")
 
     file2 = SuricataFile(file2_path, rules_tester)
@@ -108,13 +109,8 @@ def test_workspace_integration():
     if 9999999 in conflicts and 9999999 in cache_conflicts:
         print("✅ TEST PASSED: SID 9999999 conflict detected correctly!")
         print("=" * 70)
-        return True
+        assert True, "Expected SID conflict should be detected"
     else:
         print("❌ TEST FAILED: Expected SID 9999999 conflict not found")
         print("=" * 70)
-        return False
-
-
-if __name__ == "__main__":
-    success = test_workspace_integration()
-    sys.exit(0 if success else 1)
+        assert False, "Expected SID conflict not detected"

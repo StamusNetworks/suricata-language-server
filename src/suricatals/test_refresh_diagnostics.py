@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Test script for automatic diagnostic refresh when workspace changes.
 
@@ -40,8 +39,9 @@ def test_refresh_diagnostics_on_workspace_update():
 
     # Set workspace dir
     workspace_dir = os.path.join(
-        os.path.dirname(__file__), "tests", "workspace_conflict_test"
+        os.path.dirname(__file__), "..", "..", "tests", "workspace_conflict_test"
     )
+    workspace_dir = os.path.abspath(workspace_dir)
     lang_server.source_dirs.append(workspace_dir)
 
     # Mock the pygls server and workspace
@@ -156,7 +156,8 @@ alert tcp any any -> any 443 (msg:"LOCAL TLS 1.0"; sid:2025002;)
                         )
     else:
         print("   ✗ No diagnostics were republished")
-        return False
+
+    assert len(published_diagnostics) > 0, "Diagnostics should be republished"
 
     # Final verification
     print("\n" + "=" * 70)
@@ -167,27 +168,6 @@ alert tcp any any -> any 443 (msg:"LOCAL TLS 1.0"; sid:2025002;)
             for d in pub["diagnostics"]
             if "conflict" in d.message.lower()
         )
-        if (
-            conflict_count >= 2
-        ):  # We expect at least 2 conflicts (SID 1000001 and 2025002)
-            print(
-                "✅ TEST PASSED: Diagnostics automatically refreshed with SID conflicts!"
-            )
-            print("   Open files: 1")
-            print(f"   Diagnostics refreshed: {len(published_diagnostics)}")
-            print(f"   SID conflicts detected: {conflict_count}")
-            print("=" * 70)
-            return True
-        else:
-            print("❌ TEST FAILED: Expected at least 2 SID conflicts")
-            print("=" * 70)
-            return False
+        assert conflict_count >= 2, "Expected at least 2 SID conflicts"
     else:
-        print("❌ TEST FAILED: Diagnostics were not refreshed")
-        print("=" * 70)
-        return False
-
-
-if __name__ == "__main__":
-    success = test_refresh_diagnostics_on_workspace_update()
-    sys.exit(0 if success else 1)
+        assert False, "Diagnostics were not refreshed"

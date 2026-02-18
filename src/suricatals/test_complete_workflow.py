@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Complete workflow test for workspace SID conflict detection with automatic refresh.
 
@@ -178,13 +177,8 @@ Expected conflicts:            2 (SID 1000001 and 2025002)
         print("  ✓ Automatic diagnostic refresh for open files")
         print("  ✓ Real-time conflict updates when workspace changes")
         print("=" * 80 + "\n")
-        return True
+        assert True, "Workflow test passed with expected SID conflicts detected"
     else:
         print("❌ WORKFLOW TEST FAILED: Expected at least 2 SID conflicts")
         print("=" * 80 + "\n")
-        return False
-
-
-if __name__ == "__main__":
-    success = main()
-    sys.exit(0 if success else 1)
+        assert False, "Workflow test failed: Expected at least 2 SID conflicts detected"

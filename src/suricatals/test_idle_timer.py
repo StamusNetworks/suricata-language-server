@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Simple test for idle timer mechanism (without full Suricata analysis).
 
@@ -51,7 +50,8 @@ def test_idle_timer_logic():
         print("   ✓ Timer scheduled successfully")
     else:
         print("   ✗ Timer not scheduled")
-        return False
+
+    assert file_uri in lang_server.idle_timers, "Timer should be scheduled"
 
     # Test 2: Timer rescheduling (cancel + new timer)
     print("\n3. Testing timer rescheduling...")
@@ -66,7 +66,8 @@ def test_idle_timer_logic():
         print("   ✓ New timer scheduled (old timer replaced)")
     else:
         print("   ✗ Timer not rescheduled")
-        return False
+
+    assert second_timer != first_timer, "Timer should be rescheduled"
 
     # Test 3: Timer cancellation
     print("\n4. Testing timer cancellation...")
@@ -76,7 +77,8 @@ def test_idle_timer_logic():
         print("   ✓ Timer cancelled successfully")
     else:
         print("   ✗ Timer not cancelled")
-        return False
+
+    assert file_uri not in lang_server.idle_timers, "Timer should be cancelled"
 
     # Test 4: Timer execution (with mocked analysis)
     print("\n5. Testing timer execution...")
@@ -99,7 +101,10 @@ def test_idle_timer_logic():
                 print(f"   ✓ Analysis called after idle period: {analysis_called[0]}")
             else:
                 print("   ✗ Analysis not called")
-                return False
+
+            assert (
+                len(analysis_called) > 0
+            ), "Analysis should be called after idle period"
 
     # Test 5: Timer cleanup after execution
     print("\n6. Testing timer cleanup...")
@@ -107,7 +112,8 @@ def test_idle_timer_logic():
         print("   ✓ Timer removed after execution")
     else:
         print("   ✗ Timer not removed")
-        return False
+
+    assert file_uri not in lang_server.idle_timers, "Timer should be removed"
 
     # Test 6: Disabled feature (timeout=0)
     print("\n7. Testing disabled feature (timeout=0)...")
@@ -118,7 +124,10 @@ def test_idle_timer_logic():
         print("   ✓ No timer scheduled when disabled")
     else:
         print("   ✗ Timer scheduled despite being disabled")
-        return False
+
+    assert (
+        file_uri not in lang_server.idle_timers
+    ), "Timer should not be scheduled when disabled"
 
     # Test 7: Non-.rules file (should be ignored)
     print("\n8. Testing non-.rules file...")
@@ -133,7 +142,10 @@ def test_idle_timer_logic():
         print("   ✓ Non-.rules files ignored")
     else:
         print("   ✗ Timer scheduled for non-.rules file")
-        return False
+
+    assert (
+        "file:///test/test.py" not in lang_server.idle_timers
+    ), "Non-.rules files should be ignored"
 
     # Summary
     print("\n" + "=" * 70)
@@ -147,9 +159,4 @@ def test_idle_timer_logic():
     print("  ✓ Feature can be disabled (timeout=0)")
     print("  ✓ Only .rules files processed")
     print("=" * 70)
-    return True
-
-
-if __name__ == "__main__":
-    success = test_idle_timer_logic()
-    sys.exit(0 if success else 1)
+    assert True, "Idle timer logic should work correctly"

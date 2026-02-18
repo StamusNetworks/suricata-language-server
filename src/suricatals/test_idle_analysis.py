@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Test script for automatic idle analysis feature.
 
@@ -59,7 +58,10 @@ def test_idle_analysis():
     # Create mock document
     test_file = os.path.join(
         os.path.dirname(__file__),
-        "../../tests/workspace_conflict_test",
+        "..",
+        "..",
+        "tests",
+        "workspace_conflict_test",
         "local-custom.rules",
     )
     file_uri = f"file://{test_file}"
@@ -127,13 +129,16 @@ def test_idle_analysis():
             print(f"   Debug: Direct analysis also failed (exp={diag_exp})")
         else:
             print(f"   Debug: Direct analysis works ({len(diag_results)} diagnostics)")
-        return False
+
+    assert len(published_diagnostics) > 0, "Idle analysis should have been triggered"
 
     # Verify timer was cleaned up
     if file_uri not in lang_server.idle_timers:
         print("   ✓ Timer cleaned up after analysis")
     else:
         print("   ✗ Timer not cleaned up")
+
+    assert file_uri not in lang_server.idle_timers, "Timer should be cleaned up"
 
     # Test that timer is cancelled on save
     print("\n6. Testing timer cancellation on save...")
@@ -151,7 +156,8 @@ def test_idle_analysis():
         print("   ✓ Timer cancelled on save")
     else:
         print("   ✗ Timer not cancelled")
-        return False
+
+    assert file_uri not in lang_server.idle_timers, "Timer should be cancelled"
 
     # Test disabled feature (idle_timeout = 0)
     print("\n7. Testing disabled idle analysis (timeout=0)...")
@@ -161,7 +167,10 @@ def test_idle_analysis():
         print("   ✓ No timer scheduled when feature disabled")
     else:
         print("   ✗ Timer scheduled despite being disabled")
-        return False
+
+    assert (
+        file_uri not in lang_server.idle_timers
+    ), "Timer should not be scheduled when disabled"
 
     # Summary
     print("\n" + "=" * 70)
@@ -173,9 +182,3 @@ def test_idle_analysis():
     print("  ✓ Timer cancelled on save")
     print("  ✓ Feature can be disabled with timeout=0")
     print("=" * 70)
-    return True
-
-
-if __name__ == "__main__":
-    success = test_idle_analysis()
-    sys.exit(0 if success else 1)
