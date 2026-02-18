@@ -594,3 +594,20 @@ profiling:
         if self.returncode is False:
             raise RuntimeError("Suricata returned error while getting version")
         return output.strip()
+
+    def get_build_info(self):
+        """Get Suricata build information by running suricata --build-info.
+
+        Returns:
+            str: Raw build info output from Suricata
+
+        Raises:
+            RuntimeError: If build info retrieval fails or Suricata returns error
+        """
+        cmd = ["--build-info"]
+        output = self.run(cmd)
+        if output is None:
+            raise RuntimeError("Failed to get Suricata build info")
+        if self.returncode is False:
+            raise RuntimeError("Suricata returned error while getting build info")
+        return output.strip()
