@@ -29,11 +29,12 @@ of signatures with respect to the Suricata version you are running.
 Pushing signatures to production will not result in bad surprise as
 the syntax has already been checked by the same engine.
 
-Syntax checking is done when saving the files. A configuration test is
-started using Suricata. This is providing errors to the diagnostic.
-Warnings and hints are also provided by using a detection engine
-analysis done by Suricata. This is returning warnings and hints about
-the potential issues seen of the signatures.
+Syntax checking is done when saving the files or after edition is idle
+for a certain amount of time (3 seconds by default). A configuration test is
+started using Suricata.
+This is providing errors to the diagnostic. Warnings and hints are also provided
+by using a detection engine analysis done by Suricata. This is returning warnings
+and hints about the potential issues seen of the signatures.
 
 ## Installation
 
