@@ -14,6 +14,7 @@ Copyright(C) 2026 Stamus Networks SAS
 import sys
 import os
 import glob
+import logging
 
 # Add src to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
@@ -22,19 +23,19 @@ from suricatals.mpm_cache import MpmCache
 from suricatals.signature_parser import SuricataFile
 from suricatals.signature_validator import SignaturesTester
 
+logger = logging.getLogger(__name__)
+
 
 def analyze_workspace_files(workspace_dir, cache, rules_tester):
     """Simulate workspace analysis - analyze all .rules files in directory."""
-    print(f"\n{'='*70}")
-    print(f"WORKSPACE ANALYSIS: {workspace_dir}")
-    print("=" * 70)
+    logger.info("WORKSPACE ANALYSIS: %s", workspace_dir)
 
     rules_files = glob.glob(os.path.join(workspace_dir, "*.rules"))
-    print(f"Found {len(rules_files)} rules files")
+    logger.info("Found %d rules files", len(rules_files))
 
     for filepath in sorted(rules_files):
         filename = os.path.basename(filepath)
-        print(f"\n--- Analyzing: {filename} ---")
+        logger.info("Analyzing: %s", filename)
 
         s_file = SuricataFile(filepath, rules_tester)
         s_file.load_from_disk()
@@ -42,7 +43,7 @@ def analyze_workspace_files(workspace_dir, cache, rules_tester):
 
         # Extract SID list
         sids = [sig.sid for sig in s_file.sigset.signatures if sig.sid != 0]
-        print(f"  SIDs found: {sorted(sids)}")
+        logger.debug("SIDs found: %s", sorted(sids))
 
         # Build MPM data structure (simulate what worker_pool does)
         mpm_data = {"buffer": {}, "sids": {}}
@@ -52,23 +53,21 @@ def analyze_workspace_files(workspace_dir, cache, rules_tester):
 
         # Add to workspace cache
         cache.add_file(filepath, mpm_data)
-        print("  ✓ Added to workspace cache")
+        logger.debug("Added to workspace cache")
 
     # Show cache statistics
-    print(f"\n{'-'*70}")
     stats = cache.get_statistics()
-    print(
-        f"Workspace cache: {stats['file_count']} files, {stats['total_sids']} total SIDs"
+    logger.info(
+        "Workspace cache: %d files, %d total SIDs",
+        stats["file_count"],
+        stats["total_sids"],
     )
-    print(f"{'-'*70}")
 
 
 def check_file_for_conflicts(filepath, cache, rules_tester):
     """Simulate checking a file for SID conflicts (like when user opens/edits it)."""
     filename = os.path.basename(filepath)
-    print(f"\n{'='*70}")
-    print(f"FILE CHECK: {filename}")
-    print("=" * 70)
+    logger.info("FILE CHECK: %s", filename)
 
     # Load and parse the file
     s_file = SuricataFile(filepath, rules_tester)
@@ -76,17 +75,17 @@ def check_file_for_conflicts(filepath, cache, rules_tester):
     s_file.parse_file()
 
     file_sids = [sig.sid for sig in s_file.sigset.signatures if sig.sid != 0]
-    print(f"File SIDs: {sorted(file_sids)}")
+    logger.debug("File SIDs: %s", sorted(file_sids))
 
     # Get workspace view (excluding current file)
     workspace = cache.get_workspace_view(exclude_file=filepath)
-    print(f"Checking against {len(workspace)} other workspace file(s)")
+    logger.debug("Checking against %d other workspace file(s)", len(workspace))
 
     # Compute conflicts
     conflicts = s_file._compute_sid_conflicts(workspace)
 
     if conflicts:
-        print(f"\n⚠️  CONFLICTS DETECTED: {len(conflicts)} SID(s)")
+        logger.warning("CONFLICTS DETECTED: %d SID(s)", len(conflicts))
 
         # Build diagnostics
         diags = s_file.build_sid_conflict_diagnostics(conflicts)
@@ -96,23 +95,21 @@ def check_file_for_conflicts(filepath, cache, rules_tester):
             sig = s_file.sigset.get_sig_by_sid(diag.sid)
             line_num = sig.line + 1 if sig else "?"
 
-            print(f"\n  SID {diag.sid} (line {line_num}):")
-            print(f"    Message: {diag.message}")
-            print(f"    Severity: {diag.severity.name}")
+            logger.debug("SID %d (line %s):", diag.sid, line_num)
+            logger.debug("  Message: %s", diag.message)
+            logger.debug("  Severity: %s", diag.severity.name)
             if sig:
-                print(f"    Rule: {sig.content[:80]}...")
+                logger.debug("  Rule: %s...", sig.content[:80])
 
         return conflicts
 
-    print("\n✓ No conflicts detected")
+    logger.info("No conflicts detected")
     return {}
 
 
 def main():
     """Run the integration test."""
-    print("\n" + "=" * 70)
-    print("SURICATA LANGUAGE SERVER - WORKSPACE SID CONFLICT TEST")
-    print("=" * 70)
+    logger.info("SURICATA LANGUAGE SERVER - WORKSPACE SID CONFLICT TEST")
 
     # Setup
     workspace_dir = os.path.join(
@@ -135,14 +132,12 @@ def main():
             all_conflicts[filename] = conflicts
 
     # Summary
-    print(f"\n{'='*70}")
-    print("TEST SUMMARY")
-    print("=" * 70)
+    logger.info("TEST SUMMARY")
 
     if all_conflicts:
-        print(f"\n✓ SID conflicts detected in {len(all_conflicts)} file(s):")
+        logger.info("SID conflicts detected in %d file(s):", len(all_conflicts))
         for filename, conflicts in all_conflicts.items():
-            print(f"  - {filename}: SIDs {sorted(conflicts.keys())}")
+            logger.info("  - %s: SIDs %s", filename, sorted(conflicts.keys()))
 
         # Verify expected conflicts
         expected_conflicts = {1000001, 2025002}
@@ -151,19 +146,19 @@ def main():
             all_conflict_sids.update(conflicts.keys())
 
         if all_conflict_sids == expected_conflicts:
-            print("\n✅ TEST PASSED: All expected conflicts detected!")
-            print(f"   Expected SIDs: {sorted(expected_conflicts)}")
-            print(f"   Found SIDs: {sorted(all_conflict_sids)}")
+            logger.info("TEST PASSED: All expected conflicts detected!")
+            logger.debug("Expected SIDs: %s", sorted(expected_conflicts))
+            logger.debug("Found SIDs: %s", sorted(all_conflict_sids))
         else:
-            print("\n❌ TEST FAILED: Conflict mismatch")
-            print(f"   Expected: {sorted(expected_conflicts)}")
-            print(f"   Found: {sorted(all_conflict_sids)}")
+            logger.error("TEST FAILED: Conflict mismatch")
+            logger.error("Expected: %s", sorted(expected_conflicts))
+            logger.error("Found: %s", sorted(all_conflict_sids))
 
         assert all_conflict_sids == expected_conflicts, (
             f"Conflict mismatch: expected {sorted(expected_conflicts)}, "
             f"found {sorted(all_conflict_sids)}"
         )
     else:
-        print("\n❌ TEST FAILED: No conflicts detected (expected 2)")
+        logger.error("TEST FAILED: No conflicts detected (expected 2)")
 
     assert all_conflicts, "No conflicts detected (expected 2)"

@@ -13,6 +13,7 @@ Copyright(C) 2026 Stamus Networks SAS
 
 import sys
 import os
+import logging
 
 # Add src to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
@@ -21,15 +22,15 @@ from unittest.mock import Mock
 
 from suricatals.langserver import LangServer, path_from_uri
 
+logger = logging.getLogger(__name__)
+
 
 def test_refresh_diagnostics_on_workspace_update():
     """Test that open files get diagnostics refreshed after workspace analysis."""
-    print("=" * 70)
-    print("TEST: Automatic Diagnostic Refresh on Workspace Update")
-    print("=" * 70)
+    logger.info("TEST: Automatic Diagnostic Refresh on Workspace Update")
 
     # Create langserver instance
-    print("\n1. Creating LangServer instance...")
+    logger.info("1. Creating LangServer instance")
     lang_server = LangServer(None)
 
     # Initialize rules tester
@@ -52,7 +53,7 @@ def test_refresh_diagnostics_on_workspace_update():
     file_uri = f"file://{os.path.join(workspace_dir, 'local-custom.rules')}"
     filepath = path_from_uri(file_uri)
 
-    print(f"2. Simulating opened file: {os.path.basename(filepath)}")
+    logger.info("2. Simulating opened file: %s", os.path.basename(filepath))
 
     # Mock text_documents dictionary
     mock_text_doc = Mock()
@@ -80,29 +81,33 @@ alert tcp any any -> any 443 (msg:"LOCAL TLS 1.0"; sid:2025002;)
                 "diagnostics": params.diagnostics,
             }
         )
-        print(
-            f"   ✓ Published {len(params.diagnostics)} diagnostic(s) for {os.path.basename(path_from_uri(params.uri))}"
+        logger.debug(
+            "Published %d diagnostic(s) for %s",
+            len(params.diagnostics),
+            os.path.basename(path_from_uri(params.uri)),
         )
 
     lang_server.server.text_document_publish_diagnostics = mock_publish_diagnostics
 
     # First, check the file without workspace context (no conflicts expected)
-    print("\n3. Initial file check (before workspace analysis)...")
+    logger.info("3. Initial file check (before workspace analysis)")
     diag_results, _ = lang_server.get_diagnostics(file_uri)
 
     if diag_results is not None:
         # Count SID conflict warnings
         conflict_warnings = [d for d in diag_results if "conflict" in d.message.lower()]
-        print(
-            f"   Initial diagnostics: {len(diag_results)} total, {len(conflict_warnings)} SID conflicts"
+        logger.debug(
+            "Initial diagnostics: %d total, %d SID conflicts",
+            len(diag_results),
+            len(conflict_warnings),
         )
     else:
-        print("   No diagnostics generated")
+        logger.debug("No diagnostics generated")
 
     published_diagnostics.clear()
 
     # Now analyze the workspace
-    print("\n4. Analyzing workspace...")
+    logger.info("4. Analyzing workspace")
     rules_files = [
         os.path.join(workspace_dir, "emerging-threats.rules"),
         os.path.join(workspace_dir, "local-custom.rules"),
@@ -124,19 +129,21 @@ alert tcp any any -> any 443 (msg:"LOCAL TLS 1.0"; sid:2025002;)
 
         lang_server.workspace_mpm.add_file(rules_file, mpm_data)
 
-    print(
-        f"   Workspace cache: {lang_server.workspace_mpm.get_statistics()['total_sids']} SIDs"
+    logger.debug(
+        "Workspace cache: %d SIDs",
+        lang_server.workspace_mpm.get_statistics()["total_sids"],
     )
 
     # Manually trigger diagnostic refresh (simulates what happens after workspace analysis)
-    print("\n5. Triggering automatic diagnostic refresh...")
+    logger.info("5. Triggering automatic diagnostic refresh")
     lang_server._refresh_open_file_diagnostics()
 
     # Verify diagnostics were republished
-    print("\n6. Verifying results...")
+    logger.info("6. Verifying results")
     if len(published_diagnostics) > 0:
-        print(
-            f"   ✓ Diagnostics were automatically refreshed for {len(published_diagnostics)} file(s)"
+        logger.info(
+            "Diagnostics were automatically refreshed for %d file(s)",
+            len(published_diagnostics),
         )
 
         # Check for SID conflict warnings
@@ -145,22 +152,22 @@ alert tcp any any -> any 443 (msg:"LOCAL TLS 1.0"; sid:2025002;)
                 1 for d in pub["diagnostics"] if "conflict" in d.message.lower()
             )
             if conflict_count > 0:
-                print(
-                    f"   ✓ Found {conflict_count} SID conflict warning(s) in refreshed diagnostics"
+                logger.info(
+                    "Found %d SID conflict warning(s) in refreshed diagnostics",
+                    conflict_count,
                 )
-                print("   Conflicts detected:")
+                logger.debug("Conflicts detected:")
                 for diag in pub["diagnostics"]:
                     if "conflict" in diag.message.lower():
-                        print(
-                            f"     - Line {diag.range.start.line + 1}: {diag.message}"
+                        logger.debug(
+                            "Line %d: %s", diag.range.start.line + 1, diag.message
                         )
     else:
-        print("   ✗ No diagnostics were republished")
+        logger.warning("No diagnostics were republished")
 
     assert len(published_diagnostics) > 0, "Diagnostics should be republished"
 
     # Final verification
-    print("\n" + "=" * 70)
     if len(published_diagnostics) > 0:
         conflict_count = sum(
             1
@@ -168,6 +175,14 @@ alert tcp any any -> any 443 (msg:"LOCAL TLS 1.0"; sid:2025002;)
             for d in pub["diagnostics"]
             if "conflict" in d.message.lower()
         )
+        if conflict_count >= 2:
+            logger.info("TEST PASSED: Found %d SID conflicts", conflict_count)
+        else:
+            logger.error(
+                "TEST FAILED: Expected at least 2 SID conflicts, found %d",
+                conflict_count,
+            )
         assert conflict_count >= 2, "Expected at least 2 SID conflicts"
     else:
+        logger.error("TEST FAILED: Diagnostics were not refreshed")
         assert False, "Diagnostics were not refreshed"

@@ -12,6 +12,7 @@ Copyright(C) 2026 Stamus Networks SAS
 import sys
 import os
 import time
+import logging
 
 # Add src to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
@@ -20,15 +21,15 @@ from unittest.mock import Mock, patch
 
 from suricatals.langserver import LangServer
 
+logger = logging.getLogger(__name__)
+
 
 def test_idle_timer_logic():
     """Test idle timer scheduling and cancellation logic."""
-    print("=" * 70)
-    print("TEST: Idle Timer Scheduling and Cancellation")
-    print("=" * 70)
+    logger.info("TEST: Idle Timer Scheduling and Cancellation")
 
     # Create langserver with short timeout
-    print("\n1. Creating LangServer with 0.3s idle timeout...")
+    logger.info("1. Creating LangServer with 0.3s idle timeout")
     settings = {"idle_timeout": 0.3}
     lang_server = LangServer(settings=settings)
 
@@ -39,7 +40,7 @@ def test_idle_timer_logic():
     file_uri = "file:///test/test.rules"
 
     # Test 1: Timer scheduling
-    print("\n2. Testing timer scheduling...")
+    logger.info("2. Testing timer scheduling")
     change_params = Mock()
     change_params.text_document = Mock()
     change_params.text_document.uri = file_uri
@@ -47,14 +48,14 @@ def test_idle_timer_logic():
     lang_server.serve_on_change(change_params)
 
     if file_uri in lang_server.idle_timers:
-        print("   ✓ Timer scheduled successfully")
+        logger.debug("Timer scheduled successfully")
     else:
-        print("   ✗ Timer not scheduled")
+        logger.error("Timer not scheduled")
 
     assert file_uri in lang_server.idle_timers, "Timer should be scheduled"
 
     # Test 2: Timer rescheduling (cancel + new timer)
-    print("\n3. Testing timer rescheduling...")
+    logger.info("3. Testing timer rescheduling")
     first_timer = lang_server.idle_timers[file_uri]
 
     time.sleep(0.1)  # Wait a bit
@@ -63,25 +64,25 @@ def test_idle_timer_logic():
     second_timer = lang_server.idle_timers.get(file_uri)
 
     if second_timer != first_timer:
-        print("   ✓ New timer scheduled (old timer replaced)")
+        logger.debug("New timer scheduled (old timer replaced)")
     else:
-        print("   ✗ Timer not rescheduled")
+        logger.error("Timer not rescheduled")
 
     assert second_timer != first_timer, "Timer should be rescheduled"
 
     # Test 3: Timer cancellation
-    print("\n4. Testing timer cancellation...")
+    logger.info("4. Testing timer cancellation")
     lang_server._cancel_idle_timer(file_uri)
 
     if file_uri not in lang_server.idle_timers:
-        print("   ✓ Timer cancelled successfully")
+        logger.debug("Timer cancelled successfully")
     else:
-        print("   ✗ Timer not cancelled")
+        logger.error("Timer not cancelled")
 
     assert file_uri not in lang_server.idle_timers, "Timer should be cancelled"
 
     # Test 4: Timer execution (with mocked analysis)
-    print("\n5. Testing timer execution...")
+    logger.info("5. Testing timer execution")
     analysis_called = []
 
     def mock_get_diagnostics(uri):
@@ -92,45 +93,47 @@ def test_idle_timer_logic():
         with patch.object(lang_server.server, "text_document_publish_diagnostics"):
             # Schedule timer
             lang_server.serve_on_change(change_params)
-            print("   Timer scheduled, waiting for execution...")
+            logger.debug("Timer scheduled, waiting for execution")
 
             # Wait for timer to fire
             time.sleep(0.5)
 
             if len(analysis_called) > 0:
-                print(f"   ✓ Analysis called after idle period: {analysis_called[0]}")
+                logger.debug(
+                    "Analysis called after idle period: %s", analysis_called[0]
+                )
             else:
-                print("   ✗ Analysis not called")
+                logger.error("Analysis not called")
 
             assert (
                 len(analysis_called) > 0
             ), "Analysis should be called after idle period"
 
     # Test 5: Timer cleanup after execution
-    print("\n6. Testing timer cleanup...")
+    logger.info("6. Testing timer cleanup")
     if file_uri not in lang_server.idle_timers:
-        print("   ✓ Timer removed after execution")
+        logger.debug("Timer removed after execution")
     else:
-        print("   ✗ Timer not removed")
+        logger.error("Timer not removed")
 
     assert file_uri not in lang_server.idle_timers, "Timer should be removed"
 
     # Test 6: Disabled feature (timeout=0)
-    print("\n7. Testing disabled feature (timeout=0)...")
+    logger.info("7. Testing disabled feature (timeout=0)")
     lang_server.idle_timeout = 0
     lang_server.serve_on_change(change_params)
 
     if file_uri not in lang_server.idle_timers:
-        print("   ✓ No timer scheduled when disabled")
+        logger.debug("No timer scheduled when disabled")
     else:
-        print("   ✗ Timer scheduled despite being disabled")
+        logger.error("Timer scheduled despite being disabled")
 
     assert (
         file_uri not in lang_server.idle_timers
     ), "Timer should not be scheduled when disabled"
 
     # Test 7: Non-.rules file (should be ignored)
-    print("\n8. Testing non-.rules file...")
+    logger.info("8. Testing non-.rules file")
     python_params = Mock()
     python_params.text_document = Mock()
     python_params.text_document.uri = "file:///test/test.py"
@@ -139,24 +142,22 @@ def test_idle_timer_logic():
     lang_server.serve_on_change(python_params)
 
     if "file:///test/test.py" not in lang_server.idle_timers:
-        print("   ✓ Non-.rules files ignored")
+        logger.debug("Non-.rules files ignored")
     else:
-        print("   ✗ Timer scheduled for non-.rules file")
+        logger.error("Timer scheduled for non-.rules file")
 
     assert (
         "file:///test/test.py" not in lang_server.idle_timers
     ), "Non-.rules files should be ignored"
 
     # Summary
-    print("\n" + "=" * 70)
-    print("✅ TEST PASSED: Idle timer logic working correctly!")
-    print("\nFeatures Verified:")
-    print("  ✓ Timer scheduling on text change")
-    print("  ✓ Timer rescheduling on subsequent changes")
-    print("  ✓ Manual timer cancellation")
-    print("  ✓ Timer execution after idle period")
-    print("  ✓ Timer cleanup after execution")
-    print("  ✓ Feature can be disabled (timeout=0)")
-    print("  ✓ Only .rules files processed")
-    print("=" * 70)
+    logger.info("TEST PASSED: Idle timer logic working correctly!")
+    logger.info("Features Verified:")
+    logger.info("  Timer scheduling on text change")
+    logger.info("  Timer rescheduling on subsequent changes")
+    logger.info("  Manual timer cancellation")
+    logger.info("  Timer execution after idle period")
+    logger.info("  Timer cleanup after execution")
+    logger.info("  Feature can be disabled (timeout=0)")
+    logger.info("  Only .rules files processed")
     assert True, "Idle timer logic should work correctly"
