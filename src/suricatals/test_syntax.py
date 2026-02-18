@@ -59,6 +59,18 @@ def min_version(version_str):
     return decorator
 
 
+def get_suricata_version():
+    """Helper function to get the Suricata version for use in tests.
+
+    Returns:
+        list: Suricata version tuple (e.g., [8, 0, 0])
+    """
+    s = LangServer(batch_mode=True, settings=None)
+    suri_version = s.rules_tester.get_suricata_version() if s.rules_tester else "6.0.0"
+    tuple_version = tuple(map(int, suri_version.split(".")))
+    return tuple_version
+
+
 class TestSyntax:
 
     def _test_rules_file(self, filename, expected_diags):
@@ -137,7 +149,11 @@ class TestSyntax:
             assert diag.severity == 4
 
     def test_pcap_parse(self):
-        diags = self._test_rules_file("pcap.rules", 7)
+        if get_suricata_version() < (8, 0, 0):
+            diag_count = 7
+        else:
+            diag_count = 10
+        diags = self._test_rules_file("pcap.rules", diag_count)
         number_of_alerts = 0
         for diag in diags:
             assert diag.severity == 4
@@ -145,6 +161,18 @@ class TestSyntax:
                 assert diag.message == "Alerts: 1"
                 number_of_alerts += 1
         assert number_of_alerts == 2
+
+    def test_pcap_no_file(self):
+        if get_suricata_version() < (8, 0, 0):
+            diag_count = 3
+        else:
+            diag_count = 6
+        diags = self._test_rules_file("pcap_absent.rules", diag_count)
+        for diag in diags:
+            if diag.severity == 2:
+                assert "not found for rules" in diag.message
+            else:
+                assert diag.severity == 4
 
     def test_empty_sticky(self):
         diags = self._test_rules_file("empty_sticky.rules", 1)
