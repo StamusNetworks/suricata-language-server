@@ -19,6 +19,7 @@ along with Suricata Language Server.  If not, see <http://www.gnu.org/licenses/>
 """
 
 import os
+import re
 import pytest
 from functools import wraps
 from suricatals.langserver import LangServer
@@ -149,10 +150,13 @@ class TestSyntax:
             assert diag.severity == 4
 
     def test_pcap_parse(self):
-        if get_suricata_version() < (7, 0, 0):
-            diag_count = 7
-        else:
+        s = LangServer(batch_mode=True, settings=None)
+        build_info = s.rules_tester.suricmd.get_build_info() if s.rules_tester else ""
+        # Check if profiling is enabled in the build using regex to handle multiple spaces
+        if re.search(r"Profiling rules enabled:\s+yes", build_info):
             diag_count = 10
+        else:
+            diag_count = 7
         diags = self._test_rules_file("pcap.rules", diag_count)
         number_of_alerts = 0
         for diag in diags:
