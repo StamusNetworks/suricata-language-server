@@ -149,7 +149,7 @@ class TestSyntax:
             assert diag.severity == 4
 
     def test_pcap_parse(self):
-        if get_suricata_version() < (8, 0, 0):
+        if get_suricata_version() < (7, 0, 0):
             diag_count = 7
         else:
             diag_count = 10
@@ -163,7 +163,7 @@ class TestSyntax:
         assert number_of_alerts == 2
 
     def test_pcap_no_file(self):
-        if get_suricata_version() < (8, 0, 0):
+        if get_suricata_version() < (7, 0, 0):
             diag_count = 3
         else:
             diag_count = 6
