@@ -466,3 +466,220 @@ class TestSignatureCompletion:
         assert len(result.items) == 1
         assert result.items[0].label == "http_method"
         assert result.items[0].deprecated is True
+
+    def test_is_flow_value_completion_context_true(self):
+        """Test flow value completion context detection - positive case"""
+        sig_content = 'alert tcp any any -> any any (msg:"test"; flow:'
+        sig_index = len(sig_content)
+
+        result = self.completion_handler.is_flow_value_completion_context(
+            sig_content, sig_index
+        )
+
+        assert result is True
+
+    def test_is_flow_value_completion_context_with_space(self):
+        """Test flow value completion context with space after colon"""
+        sig_content = 'alert tcp any any -> any any (msg:"test"; flow: '
+        sig_index = len(sig_content)
+
+        result = self.completion_handler.is_flow_value_completion_context(
+            sig_content, sig_index
+        )
+
+        assert result is True
+
+    def test_is_flow_value_completion_context_false(self):
+        """Test flow value completion context detection - negative case"""
+        sig_content = 'alert tcp any any -> any any (msg:"test"; '
+        sig_index = len(sig_content)
+
+        result = self.completion_handler.is_flow_value_completion_context(
+            sig_content, sig_index
+        )
+
+        assert result is False
+
+    def test_parse_existing_flow_values_empty(self):
+        """Test parsing flow values when none exist"""
+        sig_content = "alert tcp any any -> any any (flow:"
+        sig_index = len(sig_content)
+
+        result = self.completion_handler._parse_existing_flow_values(
+            sig_content, sig_index
+        )
+
+        assert result == []
+
+    def test_parse_existing_flow_values_single(self):
+        """Test parsing single flow value"""
+        sig_content = "alert tcp any any -> any any (flow:established"
+        sig_index = len(sig_content)
+
+        result = self.completion_handler._parse_existing_flow_values(
+            sig_content, sig_index
+        )
+
+        assert result == ["established"]
+
+    def test_parse_existing_flow_values_multiple(self):
+        """Test parsing multiple flow values"""
+        sig_content = "alert tcp any any -> any any (flow:established,to_server"
+        sig_index = len(sig_content)
+
+        result = self.completion_handler._parse_existing_flow_values(
+            sig_content, sig_index
+        )
+
+        assert result == ["established", "to_server"]
+
+    def test_parse_existing_flow_values_with_comma(self):
+        """Test parsing flow values with trailing comma"""
+        sig_content = "alert tcp any any -> any any (flow:established,"
+        sig_index = len(sig_content)
+
+        result = self.completion_handler._parse_existing_flow_values(
+            sig_content, sig_index
+        )
+
+        assert result == ["established"]
+
+    def test_flow_value_completion_no_existing_values(self):
+        """Test flow value completion with no existing values"""
+        sig_content = "alert tcp any any -> any any (flow:"
+        sig_index = len(sig_content)
+
+        result = self.completion_handler.get_flow_value_completion(
+            sig_content, sig_index
+        )
+
+        assert result is not None
+        assert len(result.items) == 11  # All flow values available
+        labels = [item.label for item in result.items]
+        assert "established" in labels
+        assert "stateless" in labels
+        assert "to_server" in labels
+        assert "to_client" in labels
+
+    def test_flow_value_completion_excludes_to_server_when_to_client_exists(self):
+        """Test flow value completion excludes to_server when to_client exists"""
+        sig_content = "alert tcp any any -> any any (flow:to_client,"
+        sig_index = len(sig_content)
+
+        result = self.completion_handler.get_flow_value_completion(
+            sig_content, sig_index
+        )
+
+        assert result is not None
+        labels = [item.label for item in result.items]
+        assert "to_server" not in labels
+        assert "from_client" not in labels
+        assert "to_client" not in labels  # Don't suggest duplicates
+        assert "from_server" not in labels  # Alias for to_client
+        assert "established" in labels  # Still available
+
+    def test_flow_value_completion_excludes_to_client_when_to_server_exists(self):
+        """Test flow value completion excludes to_client when to_server exists"""
+        sig_content = "alert tcp any any -> any any (flow:to_server,"
+        sig_index = len(sig_content)
+
+        result = self.completion_handler.get_flow_value_completion(
+            sig_content, sig_index
+        )
+
+        assert result is not None
+        labels = [item.label for item in result.items]
+        assert "to_client" not in labels
+        assert "from_server" not in labels
+        assert "to_server" not in labels  # Don't suggest duplicates
+        assert "from_client" not in labels  # Alias for to_server
+        assert "established" in labels  # Still available
+
+    def test_flow_value_completion_excludes_not_established_when_established_exists(
+        self,
+    ):
+        """Test flow value completion excludes not_established when established exists"""
+        sig_content = "alert tcp any any -> any any (flow:established,"
+        sig_index = len(sig_content)
+
+        result = self.completion_handler.get_flow_value_completion(
+            sig_content, sig_index
+        )
+
+        assert result is not None
+        labels = [item.label for item in result.items]
+        assert "not_established" not in labels
+        assert "established" not in labels  # Don't suggest duplicates
+        assert "to_server" in labels  # Still available
+        assert "to_client" in labels  # Still available
+
+    def test_flow_value_completion_with_multiple_existing_values(self):
+        """Test flow value completion with multiple existing values"""
+        sig_content = "alert tcp any any -> any any (flow:established,to_server,"
+        sig_index = len(sig_content)
+
+        result = self.completion_handler.get_flow_value_completion(
+            sig_content, sig_index
+        )
+
+        assert result is not None
+        labels = [item.label for item in result.items]
+        assert "established" not in labels  # Already present
+        assert "not_established" not in labels  # Excluded by established
+        assert "to_server" not in labels  # Already present
+        assert "to_client" not in labels  # Excluded by to_server
+        assert "from_client" not in labels  # Excluded by to_server
+        assert "from_server" not in labels  # Excluded by to_server
+        assert "only_stream" in labels  # Still available
+        assert "only_frag" in labels  # Still available
+
+    def test_flow_value_completion_from_client_excludes_to_client(self):
+        """Test flow value completion with from_client excludes to_client"""
+        sig_content = "alert tcp any any -> any any (flow:from_client,"
+        sig_index = len(sig_content)
+
+        result = self.completion_handler.get_flow_value_completion(
+            sig_content, sig_index
+        )
+
+        assert result is not None
+        labels = [item.label for item in result.items]
+        assert "to_client" not in labels
+        assert "from_server" not in labels
+        assert "from_client" not in labels  # Don't suggest duplicates
+        assert "to_server" not in labels  # Alias for from_client
+        assert "established" in labels  # Still available
+
+    def test_flow_value_completion_stateless_excludes_established(self):
+        """Test flow value completion with stateless excludes established and not_established"""
+        sig_content = "alert tcp any any -> any any (flow:stateless,"
+        sig_index = len(sig_content)
+
+        result = self.completion_handler.get_flow_value_completion(
+            sig_content, sig_index
+        )
+
+        assert result is not None
+        labels = [item.label for item in result.items]
+        assert "established" not in labels
+        assert "not_established" not in labels
+        assert "stateless" not in labels  # Don't suggest duplicates
+        assert "to_server" in labels  # Still available
+        assert "to_client" in labels  # Still available
+
+    def test_flow_value_completion_established_excludes_stateless(self):
+        """Test flow value completion with established excludes stateless"""
+        sig_content = "alert tcp any any -> any any (flow:established,"
+        sig_index = len(sig_content)
+
+        result = self.completion_handler.get_flow_value_completion(
+            sig_content, sig_index
+        )
+
+        assert result is not None
+        labels = [item.label for item in result.items]
+        assert "not_established" not in labels
+        assert "stateless" not in labels
+        assert "established" not in labels  # Don't suggest duplicates
+        assert "to_server" in labels  # Still available
+        assert "to_client" in labels  # Still available

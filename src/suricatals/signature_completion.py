@@ -27,10 +27,100 @@ from lsprotocol import types
 log = logging.getLogger(__name__)
 
 SID_COMPLETION_PATTERN = re.compile(r"sid:\s*$")
+FLOW_KEYWORD_PATTERN = re.compile(r"flow:\s*([^;)]*?)$")
 
 
 class SignatureCompletion:
     """Handles completion logic for Suricata signature files."""
+
+    # Flow keyword values with their descriptions
+    FLOW_VALUES = [
+        {
+            "label": "established",
+            "kind": types.CompletionItemKind.EnumMember,
+            "detail": "Flow state",
+            "documentation": "Match established connections only",
+        },
+        {
+            "label": "not_established",
+            "kind": types.CompletionItemKind.EnumMember,
+            "detail": "Flow state",
+            "documentation": "Match connections that are not established",
+        },
+        {
+            "label": "stateless",
+            "kind": types.CompletionItemKind.EnumMember,
+            "detail": "Flow state",
+            "documentation": "Match packets without connection state tracking",
+        },
+        {
+            "label": "to_client",
+            "kind": types.CompletionItemKind.EnumMember,
+            "detail": "Flow direction",
+            "documentation": "Match packets from server to client",
+        },
+        {
+            "label": "to_server",
+            "kind": types.CompletionItemKind.EnumMember,
+            "detail": "Flow direction",
+            "documentation": "Match packets from client to server",
+        },
+        {
+            "label": "from_client",
+            "kind": types.CompletionItemKind.EnumMember,
+            "detail": "Flow direction",
+            "documentation": "Match packets from client to server (alias for to_server)",
+        },
+        {
+            "label": "from_server",
+            "kind": types.CompletionItemKind.EnumMember,
+            "detail": "Flow direction",
+            "documentation": "Match packets from server to client (alias for to_client)",
+        },
+        {
+            "label": "only_stream",
+            "kind": types.CompletionItemKind.EnumMember,
+            "detail": "Stream requirement",
+            "documentation": "Match only if flow is part of an established TCP stream",
+        },
+        {
+            "label": "no_stream",
+            "kind": types.CompletionItemKind.EnumMember,
+            "detail": "Stream requirement",
+            "documentation": "Match only if flow is not part of an established TCP stream",
+        },
+        {
+            "label": "only_frag",
+            "kind": types.CompletionItemKind.EnumMember,
+            "detail": "Fragmentation",
+            "documentation": "Match only fragmented packets",
+        },
+        {
+            "label": "no_frag",
+            "kind": types.CompletionItemKind.EnumMember,
+            "detail": "Fragmentation",
+            "documentation": "Match only non-fragmented packets",
+        },
+    ]
+
+    # Mutual exclusivity rules for flow values
+    # Each key cannot coexist with any of its values
+    # Note: to_server and from_client are aliases (client→server)
+    #       to_client and from_server are aliases (server→client)
+    #       stateless is mutually exclusive with stateful options
+    FLOW_EXCLUSIONS = {
+        "to_client": ["to_server", "from_client", "from_server"],
+        "to_server": ["to_client", "from_server", "from_client"],
+        "from_client": ["to_client", "from_server", "to_server"],
+        "from_server": ["to_server", "from_client", "to_client"],
+        "established": ["not_established", "stateless"],
+        "not_established": ["established", "stateless"],
+        "stateless": ["established", "not_established"],
+        "only_stream": ["no_stream"],
+        "no_stream": ["only_stream"],
+        "only_frag": ["no_frag"],
+        "no_frag": ["only_frag"],
+    }
 
     def __init__(
         self,
@@ -218,3 +308,91 @@ class SignatureCompletion:
             True if before content section, False otherwise
         """
         return "(" not in sig_content[0:sig_index]
+
+    def is_flow_value_completion_context(
+        self, sig_content: str, sig_index: int
+    ) -> bool:
+        """
+        Check if cursor is positioned for flow value completion (after "flow:" or "flow:value,").
+
+        Args:
+            sig_content: Content of the current line
+            sig_index: Character index within the line
+
+        Returns:
+            True if in flow value completion context, False otherwise
+        """
+        prefix = sig_content[0:sig_index]
+        match = FLOW_KEYWORD_PATTERN.search(prefix)
+        return match is not None
+
+    def _parse_existing_flow_values(
+        self, sig_content: str, sig_index: int
+    ) -> List[str]:
+        """
+        Parse existing flow values from the current flow keyword.
+
+        Args:
+            sig_content: Content of the current line
+            sig_index: Character index within the line
+
+        Returns:
+            List of existing flow values
+        """
+        prefix = sig_content[0:sig_index]
+        match = FLOW_KEYWORD_PATTERN.search(prefix)
+        if not match:
+            return []
+
+        values_str = match.group(1).strip()
+        if not values_str:
+            return []
+
+        # Split by comma and clean up values
+        values = [v.strip() for v in values_str.split(",")]
+        return [v for v in values if v]
+
+    def get_flow_value_completion(
+        self, sig_content: str, sig_index: int
+    ) -> Optional[types.CompletionList]:
+        """
+        Handle completion for flow keyword values with mutual exclusivity.
+
+        Args:
+            sig_content: Content of the current line
+            sig_index: Character index within the line
+
+        Returns:
+            CompletionList with available flow values, or None if not applicable
+        """
+        # Get existing flow values
+        existing_values = self._parse_existing_flow_values(sig_content, sig_index)
+
+        # Find excluded values based on existing values
+        excluded = set()
+        for value in existing_values:
+            if value in self.FLOW_EXCLUSIONS:
+                excluded.update(self.FLOW_EXCLUSIONS[value])
+            # Also exclude the value itself (don't suggest duplicates)
+            excluded.add(value)
+
+        # Filter available values
+        available_values = [v for v in self.FLOW_VALUES if v["label"] not in excluded]
+
+        # If no values available, return None
+        if not available_values:
+            return None
+
+        # Build completion items
+        lsp_completion_items = []
+        for item in available_values:
+            lsp_completion_items.append(
+                types.CompletionItem(
+                    label=item["label"],
+                    kind=item["kind"],
+                    detail=item.get("detail", ""),
+                    documentation=item.get("documentation", ""),
+                )
+            )
+
+        return types.CompletionList(is_incomplete=False, items=lsp_completion_items)
