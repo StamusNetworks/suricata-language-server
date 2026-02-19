@@ -28,7 +28,7 @@ log = logging.getLogger(__name__)
 
 SID_COMPLETION_PATTERN = re.compile(r"sid:\s*$")
 # Use greedy match (not lazy) since we're anchored with $ - no backtracking issues
-FLOW_KEYWORD_PATTERN = re.compile(r"flow:\s*([^;)]*)$")
+FLOW_KEYWORD_PATTERN = re.compile(r"flow:\s{0,10}([^;)]*)$")
 
 
 class SignatureCompletion:
