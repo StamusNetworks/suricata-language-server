@@ -53,16 +53,27 @@ suricata-language-server --debug-log
 ```
 
 ### Code Quality
+
+**IMPORTANT: After making any code changes, you MUST run pylint to check for code quality issues.**
+
 ```bash
-# Format code with Black is mandatory for all contributions
+# Format code with Black (mandatory for all contributions)
 black src/
 
-# Check code with pylint
+# Check code with pylint (REQUIRED after code changes)
 pylint --disable=C,R src/suricatals
 
 # Run pre-commit checks manually
 pre-commit run --all-files
 ```
+
+**Development Workflow:**
+1. Make code changes
+2. Run tests: `python -m pytest src/suricatals/`
+3. Run pylint: `pylint --disable=C,R src/suricatals`
+4. Fix any pylint warnings/errors
+5. Format with Black: `black src/`
+6. Verify all checks pass before committing
 
 ## Architecture
 
