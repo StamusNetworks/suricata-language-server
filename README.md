@@ -87,7 +87,7 @@ server with the `--container` option. You can also specify a custom
 image with the `--image` option.
 
 
-> [!INFO]
+> [!NOTE]
 > The current version only supports Docker containers.
 
 To use Suricata installed on the system, you need to make sure that the
