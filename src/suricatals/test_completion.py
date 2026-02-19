@@ -27,6 +27,7 @@ along with Suricata Language Server.  If not, see <http://www.gnu.org/licenses/>
 """
 
 # pylint: disable=W0201  # Pytest setup_method pattern
+# pylint: disable=W0212  # Access to protected members for testing
 
 from lsprotocol import types
 
