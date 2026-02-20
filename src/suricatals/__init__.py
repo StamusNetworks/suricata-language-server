@@ -89,6 +89,12 @@ def main():
         help="Disable suricata engine analysis (used with --batch-file only)",
     )
     parser.add_argument(
+        "--error-on-warning",
+        action="store_true",
+        default=False,
+        help="Exit with code 1 if there are any warnings (used with --batch-file only)",
+    )
+    parser.add_argument(
         "--idle-timeout",
         default=3.0,
         type=float,
@@ -121,5 +127,12 @@ def main():
     else:
         s = LangServer(settings=settings, batch_mode=True)
         _, _, diags = s.analyse_file(args.batch_file, not args.no_engine_analysis)
+        exit_code = 0
         for diag in diags:
             print(json.dumps(diag.to_message()))
+            severity = diag.severity.value
+            if severity == 1:
+                exit_code = 1
+            elif args.error_on_warning and severity == 2 and exit_code == 0:
+                exit_code = 1
+        sys.exit(exit_code)
