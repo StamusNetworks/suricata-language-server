@@ -301,13 +301,20 @@ config classification: command-and-control,Malware Command and Control Activity 
         """Enable Docker mode for running Suricata in containers.
 
         Args:
-            docker_image: Docker image name (default: jasonish/suricata)
-            image_version: Docker image tag (default: "latest")
+            docker_image: Docker image name, optionally with tag (e.g., 'jasonish/suricata' or 'jasonish/suricata:7.0.0')
+            image_version: Docker image tag (default: "latest"), ignored if docker_image includes a tag
         """
         self.docker = True
-        self.docker_image = docker_image
-        self.image_version = image_version
-        self.image_version_run = image_version
+        # Parse docker_image to separate name from tag if provided
+        if ":" in docker_image:
+            # Split on last : to handle registry URLs like registry.example.com:5000/image:tag
+            parts = docker_image.rsplit(":", 1)
+            self.docker_image = parts[0]
+            self.image_version = parts[1]
+        else:
+            self.docker_image = docker_image
+            self.image_version = image_version
+        self.image_version_run = self.image_version
         self.docker_client = docker.from_env()
 
     def set_docker_version_for_run(self, image_version="latest"):
