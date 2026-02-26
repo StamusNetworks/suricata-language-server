@@ -138,6 +138,18 @@ class SuricataErrorParser:
                     wait_line = True
             elif s_err["engine"]["module"] == "rules-vars":
                 ret["errors"].append(s_err["engine"])
+            elif s_err["engine"]["module"] == "detect-http-host":
+                if s_err["log_level"] == "Error":
+                    ret["errors"].append(s_err["engine"])
+                else:
+                    # Warning is escalated as error if match
+                    getsid = re.compile(r"rule (\d+)\:")
+                    match = getsid.search(line)
+                    if match:
+                        s_err["engine"]["sid"] = int(match.groups()[0])
+                        wait_line = True
+                    else:
+                        ret["warnings"].append(s_err["engine"])
             elif s_err["engine"]["module"] == "detect":
                 if "error parsing signature" in s_err["engine"]["message"]:
                     message = s_err["engine"]["message"]
