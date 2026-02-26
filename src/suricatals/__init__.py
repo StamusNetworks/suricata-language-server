@@ -24,6 +24,7 @@ import sys
 import argparse
 from suricatals.langserver import LangServer
 from suricatals.suricata_command import SuriCmd
+from suricatals.suricata_discovery import SuricataDiscovery
 import json
 from importlib.metadata import version
 
@@ -100,10 +101,29 @@ def main():
         type=float,
         help="Seconds of inactivity before auto-analyzing open buffer (default: 3.0, 0 to disable)",
     )
+    parser.add_argument(
+        "--list-keywords",
+        action="store_true",
+        default=False,
+        help="List all Suricata keywords in CSV format and exit",
+    )
     args = parser.parse_args()
     if args.version:
         print("{0}".format(__version__))
         sys.exit(0)
+    if args.list_keywords:
+        suricmd = SuriCmd(
+            suricata_binary=args.suricata_binary, suricata_config=args.suricata_config
+        )
+        if args.container:
+            suricmd.set_docker_mode(docker_image=args.image)
+        discovery = SuricataDiscovery(suricmd)
+        outdata = discovery.get_keywords_csv()
+        if outdata:
+            print(outdata)
+            sys.exit(0)
+        else:
+            error_exit("Failed to retrieve keywords list")
     #
     settings = {
         "suricata_binary": args.suricata_binary,

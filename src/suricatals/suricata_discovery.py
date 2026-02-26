@@ -106,18 +106,42 @@ class SuricataDiscovery:
             pass
         return keywords
 
-    def build_keywords_list(self):
-        """Query Suricata for keyword list with metadata.
+    def get_keywords_csv(self):
+        """Query Suricata for raw keyword list in CSV format.
 
         Returns:
-            List of keyword dicts with label, kind, detail, documentation
+            str: Raw CSV output from suricata --list-keywords=csv, filtered to remove warnings
         """
         self.suricmd.prepare()
         tmpdir = self.suricmd.get_tmpdir()
         self.suricmd.generate_config(tmpdir)
         outdata = self.suricmd.run(["--list-keywords=csv"])
         self.suricmd.cleanup()
-        if outdata is None:
+        if not outdata:
+            return ""
+
+        # Filter out Docker/Suricata warning messages, keep only CSV lines
+        lines = outdata.splitlines()
+        csv_lines = []
+        for line in lines:
+            # Keep lines that are part of the CSV (header or data with semicolons)
+            if line.startswith("name;") or (
+                ";" in line
+                and not line.startswith("Warning:")
+                and not line.startswith("Checking")
+            ):
+                csv_lines.append(line)
+
+        return "\n".join(csv_lines)
+
+    def build_keywords_list(self):
+        """Query Suricata for keyword list with metadata.
+
+        Returns:
+            List of keyword dicts with label, kind, detail, documentation
+        """
+        outdata = self.get_keywords_csv()
+        if not outdata:
             return []
         official_keywords = self._get_keywords_from_json()
         keywords = outdata.splitlines()
