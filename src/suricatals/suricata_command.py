@@ -412,7 +412,7 @@ config classification: command-and-control,Malware Command and Control Activity 
             result = subprocess.run(
                 cmd,
                 stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
                 text=True,
                 check=True,
                 shell=False,
@@ -421,56 +421,51 @@ config classification: command-and-control,Malware Command and Control Activity 
             return result.stdout
         except subprocess.CalledProcessError as e:
             self.returncode = False
-            return e.stderr
+            return e.stdout
 
     def _run_docker(self, suri_cmd):
         if self.docker_client is None:
             raise RuntimeError("Docker client is not initialized")
+
+        volumes = None
         if self.tmpdir:
-            try:
-                outdata = self.docker_client.containers.run(
-                    image=":".join([self.docker_image, self.image_version_run]),
-                    command=suri_cmd,
-                    volumes={
-                        self.tmpdir: {
-                            "bind": "/tmp/",  # NOSONAR(S5443)
-                            "mode": "rw",
-                        }
-                    },
-                    remove=True,
-                    stdout=True,
-                    stderr=True,
-                ).decode("utf-8")
-                self.returncode = True
-                return outdata
-            except ContainerError as e:
-                self.returncode = False
-                if e.stderr is not None:
-                    if isinstance(e.stderr, bytes):
-                        return e.stderr.decode("utf-8")
-                    else:
-                        return e.stderr
-                return None
-        else:
-            try:
-                outdata = self.docker_client.containers.run(
-                    image=":".join([self.docker_image, self.image_version_run]),
-                    command=suri_cmd,
-                    remove=True,
-                    stdout=True,
-                    stderr=True,
-                ).decode("utf-8")
-                self.returncode = True
+            volumes = {
+                self.tmpdir: {
+                    "bind": "/tmp/",  # NOSONAR(S5443)
+                    "mode": "rw",
+                }
+            }
+
+        # Create and run container, checking exit code explicitly
+        container = self.docker_client.containers.create(
+            image=":".join([self.docker_image, self.image_version_run]),
+            command=suri_cmd,
+            volumes=volumes,
+            tty=True,
+        )
+
+        try:
+            container.start()
+            result = container.wait()
+            exit_code = result.get("StatusCode", 1)
+
+            # Get logs (with tty=True, stdout and stderr are merged)
+            logs = container.logs(stdout=True, stderr=True)
+            if isinstance(logs, bytes):
+                outdata = logs.decode("utf-8")
+            else:
+                outdata = logs
+
+            # Set returncode based on exit status
+            self.returncode = exit_code == 0
+
+            if not self.tmpdir:
                 self.image_version_run = self.image_version
-                return outdata
-            except ContainerError as e:
-                self.returncode = False
-                if e.stderr is not None:
-                    if isinstance(e.stderr, bytes):
-                        return e.stderr.decode("utf-8")
-                    else:
-                        return e.stderr
-                return None
+
+            return outdata
+        finally:
+            # Always remove container
+            container.remove()
 
     def run(self, cmd):
         """Execute Suricata command either locally or in Docker container.
