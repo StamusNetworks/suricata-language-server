@@ -184,6 +184,14 @@ class TestSyntax:
             assert diag.severity == 1
             assert "sticky buffer" in diag.message
 
+    def test_fail_http_host(self):
+        diags = self._test_rules_file("fail-http.rules", 2)
+        for diag in diags:
+            if diag.severity != 4:
+                assert diag.severity == 1
+                assert "normalized" in diag.message
+                assert diag.range.start.line == 1
+
     def test_api_usage(self):
         signature_buffer = """
 alert http any any -> any any (msg:"Test API usage"; content:"test"; sid:1;)

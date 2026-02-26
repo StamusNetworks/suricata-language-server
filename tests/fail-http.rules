@@ -1,0 +1,2 @@
+alert http any any -> any any (msg:"HTTP connection to google.com domain"; flow:established,to_server; http.host; content:"google.com"; sid:1000002; rev:1; classtype:bad-unknown;)
+alert http any any -> any any (msg:"HTTP connection to toto.com domain"; flow:established,to_server; http.host; content:"toto.com"; nocase; sid:1000003; rev:1; classtype:bad-unknown;)
