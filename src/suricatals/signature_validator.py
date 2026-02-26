@@ -274,7 +274,7 @@ class SignaturesTester:
         self.suricmd.cleanup()
         return res
 
-    def rule_buffer(
+    def _analyze_rule_buffer(
         self,
         rule_buffer,
         engine_analysis=True,
@@ -547,7 +547,7 @@ class SignaturesTester:
             SuricataFileException: If rule buffer contains invalid directives
         """
         related_files = related_files or {}
-        prov_result = self.rule_buffer(
+        prov_result = self._analyze_rule_buffer(
             rule_buffer,
             engine_analysis=engine_analysis,
             config_buffer=config_buffer,
