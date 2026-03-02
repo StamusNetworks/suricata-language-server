@@ -134,6 +134,35 @@ class SuricataDiscovery:
 
         return "\n".join(csv_lines)
 
+    def get_app_layer_protos_list(self):
+        """Query Suricata for app-layer protocols list.
+
+        Returns:
+            str: List of app-layer protocols, one per line, filtered to remove headers
+        """
+        self.suricmd.prepare()
+        tmpdir = self.suricmd.get_tmpdir()
+        self.suricmd.generate_config(tmpdir)
+        outdata = self.suricmd.run(["--list-app-layer-protos"])
+        self.suricmd.cleanup()
+        if not outdata:
+            return ""
+
+        # Filter out header lines and warnings, keep only protocol names
+        lines = outdata.splitlines()
+        proto_lines = []
+        in_list = False
+        for line in lines:
+            # Skip until we hit the header separator
+            if line.startswith("===="):
+                in_list = True
+                continue
+            # Once we're in the list, add non-empty lines
+            if in_list and line.strip():
+                proto_lines.append(line.strip())
+
+        return "\n".join(proto_lines)
+
     def build_keywords_list(self):
         """Query Suricata for keyword list with metadata.
 

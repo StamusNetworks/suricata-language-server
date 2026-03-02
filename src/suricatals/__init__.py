@@ -107,6 +107,12 @@ def main():
         default=False,
         help="List all Suricata keywords in CSV format and exit",
     )
+    parser.add_argument(
+        "--list-app-layer-protos",
+        action="store_true",
+        default=False,
+        help="List all Suricata app-layer protocols and exit",
+    )
     args = parser.parse_args()
     if args.version:
         print("{0}".format(__version__))
@@ -124,6 +130,19 @@ def main():
             sys.exit(0)
         else:
             error_exit("Failed to retrieve keywords list")
+    if args.list_app_layer_protos:
+        suricmd = SuriCmd(
+            suricata_binary=args.suricata_binary, suricata_config=args.suricata_config
+        )
+        if args.container:
+            suricmd.set_docker_mode(docker_image=args.image)
+        discovery = SuricataDiscovery(suricmd)
+        outdata = discovery.get_app_layer_protos_list()
+        if outdata:
+            print(outdata)
+            sys.exit(0)
+        else:
+            error_exit("Failed to retrieve app-layer protocols list")
     #
     settings = {
         "suricata_binary": args.suricata_binary,
