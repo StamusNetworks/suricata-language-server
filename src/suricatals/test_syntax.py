@@ -192,6 +192,11 @@ class TestSyntax:
                 assert "normalized" in diag.message
                 assert diag.range.start.line == 1
 
+    def test_invalid_entropy_parsing(self):
+        diags = self._test_rules_file("high_entropy_domains.rules", 2)
+        for diag in diags:
+            assert diag.severity == 1
+
     def test_api_usage(self):
         signature_buffer = """
 alert http any any -> any any (msg:"Test API usage"; content:"test"; sid:1;)
