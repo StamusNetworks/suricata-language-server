@@ -350,6 +350,71 @@ In the screenshot below, you can see an example of usage of this feature with Ne
 
 It displays the performance metrics of the signatures when evaluated against the pcap file.
 
+## PCAP Analysis Tool
+
+The package includes a standalone `suricata-read` command-line tool for analyzing PCAP files with Suricata and outputting the results in EVE JSON format. This tool is useful for:
+
+- Batch processing of PCAP files
+- Testing signatures against network traffic
+- Generating EVE JSON logs for analysis
+- Integration into automated workflows and scripts
+
+### Usage
+
+Basic usage:
+
+```sh
+suricata-read pcap_file.pcap
+```
+
+With custom rules file:
+
+```sh
+suricata-read --rules-file custom.rules pcap_file.pcap
+```
+
+Using container mode:
+
+```sh
+suricata-read --container pcap_file.pcap
+```
+
+Using a specific Suricata version in container mode:
+
+```sh
+suricata-read --container --image jasonish/suricata:7.0.13 pcap_file.pcap
+```
+
+With custom Suricata binary:
+
+```sh
+suricata-read --suricata-binary /path/to/suricata pcap_file.pcap
+```
+
+### Options
+
+See `suricata-read -h` for complete and up-to-date help.
+
+- `pcap_file`: Path to the PCAP file to analyze (required, positional argument)
+- `--rules-file`: Optional rules file to use with PCAP analysis
+- `--container`: Run Suricata in a container (optional)
+- `--image`: Suricata image to use in container mode (default: `jasonish/suricata:latest`)
+- `--suricata-binary`: Path to the Suricata binary (default: `suricata`)
+- `--suricata-config`: Path to the Suricata config file (optional)
+- `--version`: Print version number and exit
+
+### Output
+
+The tool outputs EVE JSON format to stdout, which can be redirected to a file or piped to other tools for further processing:
+
+```sh
+suricata-read --rules-file my.rules traffic.pcap > output.json
+```
+
+```sh
+suricata-read traffic.pcap | jq '.alert'
+```
+
 
 ## Getting help
 
