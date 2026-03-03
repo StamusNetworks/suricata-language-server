@@ -51,6 +51,7 @@ Repository = "https://github.com/StamusNetworks/suricata-language-server.git"
 
 [project.scripts]
 suricata-language-server = "suricatals.__init__:main"
+suricata-read = "suricatals.suricata_read:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

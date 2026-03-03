@@ -29,6 +29,42 @@ log = logging.getLogger(__name__)
 
 
 class SuriCmd:
+    APP_LAYER_PROTOS = """
+        - http
+        - ftp
+        - smtp
+        - tls
+        - ssh
+        - smb
+        - dcerpc
+        - dns
+        - modbus
+        - enip
+        - dnp3
+        - nfs
+        - ftp-data
+        - tftp
+        - ike
+        - krb5
+        - quic
+        - dhcp
+        - sip
+        - rfb
+        - mqtt
+        - pgsql
+        - telnet
+        - websocket
+        - ldap
+        - doh2
+        - rdp
+        - http2
+        - bittorrent-dht
+        - pop3
+        - mdns
+        - snmp
+        - flow
+        - fileinfo
+    """
     CONFIG_FILE = """
 %YAML 1.1
 ---
@@ -40,14 +76,6 @@ logging:
   - console:
       enabled: yes
       type: json
-outputs:
-  - eve-log:
-      enabled: yes
-      filetype: regular
-      filename: eve.json
-      types:
-        - alert:
-          enabled: yes
 profiling:
   rules:
     enabled: yes
@@ -204,6 +232,14 @@ vars:
     FTP_PORTS: 21
     VXLAN_PORTS: 4789
     TEREDO_PORTS: 3544
+outputs:
+  - eve-log:
+      enabled: yes
+      filetype: regular
+      filename: eve.json
+      types:
+        - alert:
+          enabled: yes
 """
 
     REFERENCE_CONFIG = """
@@ -511,6 +547,7 @@ config classification: command-and-control,Malware Command and Control Activity 
         reference_config=None,
         classification_config=None,
         extra_conf=None,
+        app_layer_protos=False,
     ):
         """Generate Suricata configuration files in temporary directory.
 
@@ -550,6 +587,8 @@ config classification: command-and-control,Malware Command and Control Activity 
             if internal_tmpdir is None:
                 raise RuntimeError("Temporary directory does not exist")
             cf.write(config_buffer)
+            if app_layer_protos:
+                cf.write(self.APP_LAYER_PROTOS)
             cf.write("mpm-algo: auto\n")
             cf.write("default-rule-path: " + internal_tmpdir + "\n")
             cf.write(
@@ -634,3 +673,52 @@ profiling:
         if self.returncode is False:
             raise RuntimeError("Suricata returned error while getting build info")
         return output.strip()
+
+    def read_pcap(self, pcap_path, rules_content=None):
+        """Run Suricata on a PCAP file and return eve.json content.
+
+        Args:
+            pcap_path: Path to PCAP file to process
+            rules_content: Optional rules content to use (string). If None, uses empty rules.
+
+        Returns:
+            str: Contents of eve.json output from Suricata
+
+        Raises:
+            RuntimeError: If PCAP processing fails or no eve.json is generated
+        """
+        try:
+            self.prepare()
+            tmpdir = self.get_tmpdir()
+
+            # Generate Suricata config
+            self.generate_config(tmpdir, app_layer_protos=True)
+
+            # Write rules file
+            rules_file = os.path.join(tmpdir, "file.rules")
+            with open(rules_file, "w", encoding="utf-8") as wf:
+                wf.write(rules_content if rules_content else "")
+
+            # Handle PCAP path for Docker vs local mode
+            if self.docker:
+                # Copy PCAP to tmpdir for Docker access
+                pcap_basename = os.path.basename(pcap_path)
+                pcap_dest = os.path.join(tmpdir, pcap_basename)
+                shutil.copy(pcap_path, pcap_dest)
+                internal_pcap = os.path.join(self.get_internal_tmpdir(), pcap_basename)
+            else:
+                internal_pcap = os.path.abspath(pcap_path)
+
+            # Run Suricata on PCAP
+            cmd = ["-r", internal_pcap]
+            self.run(cmd)
+
+            # Read and return eve.json
+            eve_file = os.path.join(tmpdir, "eve.json")
+            if os.path.exists(eve_file):
+                with open(eve_file, "r", encoding="utf-8") as ef:
+                    return ef.read()
+            else:
+                raise RuntimeError("No eve.json output generated")
+        finally:
+            self.cleanup()
