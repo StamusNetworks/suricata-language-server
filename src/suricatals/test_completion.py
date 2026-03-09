@@ -684,3 +684,33 @@ class TestSignatureCompletion:
         assert "established" not in labels  # Don't suggest duplicates
         assert "to_server" in labels  # Still available
         assert "to_client" in labels  # Still available
+
+    def test_multiline_continuation_keyword_completion(self):
+        """Test that keyword completion works on multiline rule continuation lines.
+
+        When a rule spans multiple lines with backslash continuation, typing a
+        keyword prefix like 'con' on the continuation line should offer keyword
+        completions (content, etc.), not protocol completions.
+
+        This simulates the serve_autocomplete flow from langserver.py where
+        sig_content is only the current line.
+        """
+        # Multiline rule:
+        #   line 0: alert http any any -> any any (msg:"test"; \
+        #   line 1:   con
+        #
+        # User is typing 'con' on line 1, expecting keyword completion.
+        file_lines = [
+            'alert http any any -> any any (msg:"test"; \\',
+            "  con",
+        ]
+        edit_index = 1
+        sig_content = file_lines[edit_index]  # "  con"
+        sig_index = len(sig_content)  # 5 (cursor at end)
+
+        # On a continuation line, we are inside the rule body (after the '(').
+        # is_before_content_section should return False so that keyword
+        # completion is used instead of action/protocol completion.
+        assert not self.completion_handler.is_before_content_section(
+            sig_content, sig_index
+        ), "Continuation line is inside rule body, should not be 'before content section'"
