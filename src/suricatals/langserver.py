@@ -262,22 +262,29 @@ class LangServer:
                 actions_items=self.rules_tester.ACTIONS_ITEMS,
             )
 
+        # Get the suricata file and reconstruct signature content at cursor position
+        # This hides multiline complexity by joining continuation lines
+        s_file = self.get_suricata_file(uri)
+        if s_file is None:
+            return None
+
         edit_index = params.position.line
-        sig_index = params.position.character
-        sig_content = file_obj.lines[edit_index]
+        char_index = params.position.character
+
+        # Reconstruct the full signature content and adjust character index
+        sig_content, sig_index = s_file.get_reconstructed_signature_at_position(
+            edit_index, char_index
+        )
 
         # Handle initial params (action and protocol) - before content section
         if self.completion_handler.is_before_content_section(sig_content, sig_index):
             return self.completion_handler.get_initial_params_completion(
-                sig_content, sig_index, edit_index, list(file_obj.lines)
+                sig_content, sig_index
             )
 
         # Handle SID completion
         if self.completion_handler.is_sid_completion_context(sig_content, sig_index):
             try:
-                s_file = self.get_suricata_file(uri)
-                if s_file is None:
-                    return None
                 workspace_view = self.workspace_mpm.get_workspace_view(
                     exclude_file=path_from_uri(uri)
                 )

@@ -142,16 +142,14 @@ class SignatureCompletion:
         self.actions_items = actions_items
 
     def get_initial_params_completion(
-        self, sig_content: str, sig_index: int, line_index: int, file_lines: List[str]
+        self, sig_content: str, sig_index: int
     ) -> Optional[types.CompletionList]:
         """
         Handle completion for initial signature parameters (action and protocol).
 
         Args:
-            sig_content: Content of the current line
-            sig_index: Character index within the line
-            line_index: Line number in the file
-            file_lines: All lines in the file
+            sig_content: Full reconstructed signature content (multiline rules already joined)
+            sig_index: Character index within the reconstructed content
 
         Returns:
             CompletionList for actions or app layers, or None if not applicable
@@ -187,12 +185,6 @@ class SignatureCompletion:
                     )
                 )
             return types.CompletionList(is_incomplete=False, items=lsp_completion_items)
-
-        # Check if this is a continuation of a previous line
-        if line_index == 0:
-            return None
-        elif not re.search(r"\\ *$", file_lines[line_index - 1]):
-            return None
 
         return None
 
@@ -288,8 +280,8 @@ class SignatureCompletion:
         Check if cursor is positioned for SID completion (after "sid:" or "sid: ").
 
         Args:
-            sig_content: Content of the current line
-            sig_index: Character index within the line
+            sig_content: Full reconstructed signature content (multiline rules already joined)
+            sig_index: Character index within the reconstructed content
 
         Returns:
             True if in SID completion context, False otherwise
@@ -302,13 +294,14 @@ class SignatureCompletion:
         Check if cursor is before the content matching section (before opening parenthesis).
 
         Args:
-            sig_content: Content of the current line
-            sig_index: Character index within the line
+            sig_content: Full reconstructed signature content (multiline rules already joined)
+            sig_index: Character index within the reconstructed content
 
         Returns:
             True if before content section, False otherwise
         """
-        return "(" not in sig_content[0:sig_index]
+        prefix = sig_content[0:sig_index]
+        return "(" not in prefix
 
     def is_flow_value_completion_context(
         self, sig_content: str, sig_index: int
@@ -317,8 +310,8 @@ class SignatureCompletion:
         Check if cursor is positioned for flow value completion (after "flow:" or "flow:value,").
 
         Args:
-            sig_content: Content of the current line
-            sig_index: Character index within the line
+            sig_content: Full reconstructed signature content (multiline rules already joined)
+            sig_index: Character index within the reconstructed content
 
         Returns:
             True if in flow value completion context, False otherwise
@@ -334,8 +327,8 @@ class SignatureCompletion:
         Parse existing flow values from the current flow keyword.
 
         Args:
-            sig_content: Content of the current line
-            sig_index: Character index within the line
+            sig_content: Full reconstructed signature content (multiline rules already joined)
+            sig_index: Character index within the reconstructed content
 
         Returns:
             List of existing flow values
@@ -360,8 +353,8 @@ class SignatureCompletion:
         Handle completion for flow keyword values with mutual exclusivity.
 
         Args:
-            sig_content: Content of the current line
-            sig_index: Character index within the line
+            sig_content: Full reconstructed signature content (multiline rules already joined)
+            sig_index: Character index within the reconstructed content
 
         Returns:
             CompletionList with available flow values, or None if not applicable

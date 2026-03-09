@@ -666,6 +666,14 @@ class TestAutocompletion:
             mock_handler.get_keyword_completion.return_value = None
             mock_completion.return_value = mock_handler
 
+            # Mock get_suricata_file to return a mock file with reconstruction method
+            mock_s_file = Mock()
+            mock_s_file.get_reconstructed_signature_at_position.return_value = (
+                'alert tcp any any -> any any (msg:"test"; sid:',
+                50,
+            )
+            server.get_suricata_file = Mock(return_value=mock_s_file)
+
             server.serve_autocomplete(params)
 
             # Completion handler should have been initialized

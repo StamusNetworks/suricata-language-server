@@ -846,3 +846,67 @@ class SuricataFile:
 
         # Return next available SID, or 1000000 if no SIDs found
         return max_sid + 1 if max_sid > 0 else 1000000
+
+    def get_reconstructed_signature_at_position(self, line_index, char_index):
+        """Reconstruct full signature content at cursor position, handling multiline rules.
+
+        This method hides the complexity of multiline signatures by:
+        1. Detecting if we're on a continuation line (line ending with backslash)
+        2. Walking backwards to find the start of the multiline rule
+        3. Reconstructing the full signature content
+        4. Adjusting the character index to reflect position in reconstructed content
+
+        Args:
+            line_index: Line number (0-based)
+            char_index: Character position within the line
+
+        Returns:
+            tuple: (reconstructed_content, adjusted_char_index)
+                   - reconstructed_content: Full signature with continuation lines joined
+                   - adjusted_char_index: Character position in reconstructed content
+        """
+        if line_index >= len(self.contents_split):
+            # Out of bounds, return current position
+            return "", char_index
+
+        current_line = self.contents_split[line_index]
+
+        # Check if we're NOT on a continuation line
+        if line_index == 0:
+            # First line, can't be a continuation
+            return current_line, char_index
+
+        prev_line = self.contents_split[line_index - 1]
+        if not re.search(r"\\ *$", prev_line):
+            # Not a continuation line, return current line as-is
+            return current_line, char_index
+
+        # We're on a continuation line - reconstruct the full signature
+        accumulated = []
+        accumulated_length = 0
+        current_idx = line_index - 1
+
+        # Walk backwards to find the start of the multiline rule
+        while current_idx >= 0:
+            line = self.contents_split[current_idx]
+            # Remove backslash and trailing whitespace from continuation
+            cleaned = line.rstrip("\\\n\r ")
+            accumulated.insert(0, cleaned)
+            accumulated_length += len(cleaned) + 1  # +1 for space separator
+
+            # Stop if this line doesn't end with backslash (start of rule)
+            if not re.search(r"\\ *$", line):
+                break
+            current_idx -= 1
+
+        # Add current line content up to cursor
+        # The adjusted index is: length of all previous lines + current line position
+        adjusted_index = accumulated_length + char_index
+
+        # Add current line to accumulated content
+        accumulated.append(current_line)
+
+        # Join with spaces to maintain word boundaries
+        reconstructed = " ".join(accumulated)
+
+        return reconstructed, adjusted_index
