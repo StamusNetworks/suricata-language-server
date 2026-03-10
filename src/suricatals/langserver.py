@@ -344,17 +344,24 @@ class LangServer:
                 return None, None
             # Pass workspace_mpm for cross-file MPM analysis
             filepath = path_from_uri(uri)
-            _, diags_list = s_file.check_lsp_file(
-                file_obj,
-                workspace=self.workspace_mpm.get_workspace_view(exclude_file=filepath),
-            )
+            try:
+                _, diags_list = s_file.check_lsp_file(
+                    file_obj,
+                    workspace=self.workspace_mpm.get_workspace_view(
+                        exclude_file=filepath
+                    ),
+                )
 
-            # Update workspace_mpm with the analyzed file's MPM data
-            self.workspace_mpm.add_file_from_suricata_file(filepath, s_file)
+                # Update workspace_mpm with the analyzed file's MPM data
+                self.workspace_mpm.add_file_from_suricata_file(filepath, s_file)
 
-            diags = [diag.to_diagnostic() for diag in diags_list]
-            # pylint: disable=W0703
-            return diags, None
+                diags = [diag.to_diagnostic() for diag in diags_list]
+                # pylint: disable=W0703
+                return diags, None
+            except Exception as exp:
+                # Return exception for caller to handle
+                log.error("Error analyzing file %s: %s", filepath, exp)
+                return None, exp
         return None, None
 
     def _refresh_open_file_diagnostics(self):

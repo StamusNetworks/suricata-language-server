@@ -63,6 +63,21 @@ class SignaturesTester:
         if self.docker:
             self.suricmd.set_docker_mode(docker_image=self.docker_image)
 
+    def _create_analysis_suricmd(self):
+        """Create a fresh SuriCmd instance for a single analysis operation.
+
+        This ensures thread-safety by giving each analysis its own temporary
+        directory and docker client, enabling parallel processing without
+        race conditions.
+
+        Returns:
+            SuriCmd: Fresh instance configured with current settings
+        """
+        suricmd = SuriCmd(self.suricata_binary, self.suricata_config)
+        if self.docker:
+            suricmd.set_docker_mode(docker_image=self.docker_image)
+        return suricmd
+
     def __getstate__(self):
         # Create a copy of the instance's dictionary
         state = self.__dict__.copy()
@@ -126,7 +141,7 @@ class SignaturesTester:
             return mm.group(1)
         return "6.0.0"
 
-    def _prepare_conf(self, rule_buffer, tmpdir, **kwargs):
+    def _prepare_conf(self, rule_buffer, tmpdir, suricmd=None, **kwargs):
         # write the rule file in temp dir
         rule_file = os.path.join(tmpdir, "file.rules")
         with open(rule_file, "w", encoding="utf-8") as rf:
@@ -138,7 +153,9 @@ class SignaturesTester:
                 with open(full_path, "w", encoding="utf-8") as f:
                     f.write(content)
 
-        return self.suricmd.generate_config(
+        # Use provided suricmd or fall back to self.suricmd for backward compat
+        cmd = suricmd if suricmd is not None else self.suricmd
+        return cmd.generate_config(
             tmpdir,
             config_buffer=kwargs.get("config_buffer"),
             related_files=kwargs.get("related_files"),
@@ -229,15 +246,18 @@ class SignaturesTester:
             IOError: If temporary directory cannot be created
             SuricataFileException: If rule buffer contains invalid directives
         """
-        self.suricmd.prepare()
-        tmpdir = self.suricmd.get_tmpdir()
+        # Create fresh SuriCmd for this analysis (thread-safe, enables parallelism)
+        suricmd = self._create_analysis_suricmd()
+
+        suricmd.prepare()
+        tmpdir = suricmd.get_tmpdir()
         if tmpdir is None:
             raise IOError("Unable to get temporary directory for Suricata execution")
 
         try:
             options = self._rules_buffer_get_suricata_options(rule_buffer)
         except SuricataFileException as e:
-            self.suricmd.cleanup()
+            suricmd.cleanup()
             raise e
 
         if options.get("dataset-dir"):
@@ -245,7 +265,7 @@ class SignaturesTester:
             rule_buffer = rule_buffer.replace(options["dataset-dir"], undir)
 
         if self.docker and options.get("version"):
-            self.suricmd.set_docker_version_for_run(image_version=options["version"])
+            suricmd.set_docker_version_for_run(image_version=options["version"])
 
         self._rules_buffer_prepare_dataset(rule_buffer, tmpdir)
 
@@ -261,7 +281,7 @@ class SignaturesTester:
         if suri_options:
             suri_cmd += suri_options
 
-        self.suricmd.run(suri_cmd)
+        suricmd.run(suri_cmd)
 
         res = {}
         json_path = os.path.join(tmpdir, "rules.json")
@@ -271,7 +291,7 @@ class SignaturesTester:
                     content = json.loads(line)
                     res[content["id"]] = content
 
-        self.suricmd.cleanup()
+        suricmd.cleanup()
         return res
 
     def _analyze_rule_buffer(
@@ -304,10 +324,13 @@ class SignaturesTester:
             SuricataFileException: If rule buffer contains invalid directives
         """
 
+        # Create fresh SuriCmd for this analysis (thread-safe, enables parallelism)
+        suricmd = self._create_analysis_suricmd()
+
         try:
             options = self._rules_buffer_get_suricata_options(rule_buffer)
         except SuricataFileException as e:
-            self.suricmd.cleanup()
+            suricmd.cleanup()
             raise e
 
         suri_options = options.get("options")
@@ -318,16 +341,17 @@ class SignaturesTester:
         if replace and len(replace) == 2:
             rule_buffer = re.sub(replace[0], replace[1], rule_buffer)
         if self.docker and options.get("version"):
-            self.suricmd.set_docker_version_for_run(image_version=options["version"])
+            suricmd.set_docker_version_for_run(image_version=options["version"])
 
-        self.suricmd.prepare()
-        tmpdir = self.suricmd.get_tmpdir()
+        suricmd.prepare()
+        tmpdir = suricmd.get_tmpdir()
 
         self._rules_buffer_prepare_dataset(rule_buffer, tmpdir)
 
         self._prepare_conf(
             rule_buffer,
             tmpdir,
+            suricmd=suricmd,
             config_buffer=config_buffer,
             related_files=related_files,
             reference_config=reference_config,
@@ -343,10 +367,10 @@ class SignaturesTester:
         if suri_options:
             suri_cmd += suri_options
 
-        outdata = self.suricmd.run(suri_cmd)
+        outdata = suricmd.run(suri_cmd)
         result = {"status": True, "errors": "", "warnings": [], "info": []}
         # if not a success
-        if self.suricmd.returncode == False:
+        if suricmd.returncode == False:
             result["status"] = False
         result["errors"] = outdata
 
@@ -359,9 +383,9 @@ class SignaturesTester:
             if suri_options:
                 suri_cmd += suri_options
 
-            run_error = self.suricmd.run(suri_cmd)
-            if self.suricmd.returncode == False:
-                self.suricmd.cleanup()
+            run_error = suricmd.run(suri_cmd)
+            if suricmd.returncode == False:
+                suricmd.cleanup()
                 raise SuricataFileException(
                     f"Error during Suricata engine analysis run: {run_error}", 0
                 )
@@ -409,7 +433,7 @@ class SignaturesTester:
                         "line": pcap_file_line,
                     }
                 )
-                self.suricmd.cleanup()
+                suricmd.cleanup()
                 return result
 
             try:
@@ -425,7 +449,7 @@ class SignaturesTester:
                         "line": pcap_file_line,
                     }
                 )
-                self.suricmd.cleanup()
+                suricmd.cleanup()
                 return result
             except OSError as e:
                 if "warnings" not in result:
@@ -438,28 +462,28 @@ class SignaturesTester:
                         "line": pcap_file_line,
                     }
                 )
-                self.suricmd.cleanup()
+                suricmd.cleanup()
                 return result
 
             suri_cmd = [
                 "-r",
-                os.path.join(self.suricmd.get_internal_tmpdir(), "test.pcap"),
+                os.path.join(suricmd.get_internal_tmpdir(), "test.pcap"),
             ]
 
             if suri_options:
                 suri_cmd += suri_options
 
-            run_error = self.suricmd.run(suri_cmd)
-            if self.suricmd.returncode == True:
+            run_error = suricmd.run(suri_cmd)
+            if suricmd.returncode == True:
                 result["matches"] = self.parse_eve(tmpdir)
                 result["profiling"] = self.parse_profiling(tmpdir)
             else:
-                self.suricmd.cleanup()
+                suricmd.cleanup()
                 raise SuricataFileException(
                     f"Error during Suricata run: {run_error}", 0
                 )
 
-        self.suricmd.cleanup()
+        suricmd.cleanup()
         return result
 
     def parse_eve(self, tmpdir):

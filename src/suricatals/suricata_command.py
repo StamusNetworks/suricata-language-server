@@ -21,9 +21,11 @@ along with Suricata Language Server.  If not, see <http://www.gnu.org/licenses/>
 import os
 import subprocess
 import docker
-from docker.errors import ContainerError
 import tempfile
 import shutil
+import logging
+
+log = logging.getLogger(__name__)
 
 
 class SuriCmd:
@@ -400,7 +402,20 @@ config classification: command-and-control,Malware Command and Control Activity 
             self: For method chaining
         """
         if self.tmpdir:
-            shutil.rmtree(self.tmpdir)
+            try:
+                shutil.rmtree(self.tmpdir)
+            except OSError as e:
+                # Directory might still be in use or not empty - retry with ignore_errors
+                log.warning(
+                    "Failed to remove tmpdir %s on first attempt: %s. Retrying with ignore_errors",
+                    self.tmpdir,
+                    e,
+                )
+                try:
+                    shutil.rmtree(self.tmpdir, ignore_errors=True)
+                except OSError:
+                    # If it still fails, log but don't crash
+                    log.error("Failed to cleanup tmpdir %s", self.tmpdir)
         self.tmpdir = None
         self.returncode = None
         self.image_version_run = self.image_version
