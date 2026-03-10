@@ -357,7 +357,13 @@ config classification: command-and-control,Malware Command and Control Activity 
         Raises:
             RuntimeError: If temporary directory creation fails
         """
-        self.tmpdir = tempfile.mkdtemp(prefix="sls_")
+        # When in Docker mode, ensure tmpdir is in a Docker-accessible location
+        # Nix shell sets TMPDIR to a nix-shell-specific path that Docker cannot mount
+        if self.docker and os.environ.get("TMPDIR", "").startswith("/tmp/nix-shell"):
+            # Use /tmp directly, which Docker can always mount
+            self.tmpdir = tempfile.mkdtemp(prefix="sls_", dir="/tmp")
+        else:
+            self.tmpdir = tempfile.mkdtemp(prefix="sls_")
         if self.tmpdir is None:
             raise RuntimeError("Failed to create temporary directory")
         return self
