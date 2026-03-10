@@ -718,3 +718,227 @@ alert tcp any any -> any any (msg:"Test2"; sid:2000;)"""
         assert diagnostics[0].source == "Suricata Pcap Profiling"
         assert "Checks: 100" in diagnostics[0].message
         assert "Ticks: total 5000" in diagnostics[0].message
+
+    def test_get_reconstructed_signature_single_line(self):
+        """Test reconstruction with single-line signature"""
+        suri_file = SuricataFile("/path/to/test.rules", self.mock_tester)
+        content = 'alert tcp any any -> any any (msg:"Test"; sid:1000;)'
+        suri_file.load_from_buffer(content)
+
+        # Cursor at position 10 in single line
+        reconstructed, adjusted_idx = suri_file.get_reconstructed_signature_at_position(
+            line_index=0, char_index=10
+        )
+
+        assert reconstructed == content
+        assert adjusted_idx == 10
+
+    def test_get_reconstructed_signature_first_line_of_file(self):
+        """Test reconstruction on first line always returns that line"""
+        suri_file = SuricataFile("/path/to/test.rules", self.mock_tester)
+        content = "alert tcp any any -> any any \\"
+        suri_file.load_from_buffer(content)
+
+        # Even though line ends with backslash, first line returns as-is
+        reconstructed, adjusted_idx = suri_file.get_reconstructed_signature_at_position(
+            line_index=0, char_index=5
+        )
+
+        assert reconstructed == content
+        assert adjusted_idx == 5
+
+    def test_get_reconstructed_signature_not_continuation(self):
+        """Test reconstruction when not on continuation line"""
+        suri_file = SuricataFile("/path/to/test.rules", self.mock_tester)
+        content = """alert tcp any any -> any any (msg:"First"; sid:1000;)
+alert tcp any any -> any any (msg:"Second"; sid:2000;)"""
+        suri_file.load_from_buffer(content)
+
+        # Second line, but first line doesn't end with backslash
+        reconstructed, adjusted_idx = suri_file.get_reconstructed_signature_at_position(
+            line_index=1, char_index=10
+        )
+
+        expected_line = 'alert tcp any any -> any any (msg:"Second"; sid:2000;)'
+        assert reconstructed == expected_line
+        assert adjusted_idx == 10
+
+    def test_get_reconstructed_signature_multiline_unix_newlines(self):
+        """Test reconstruction with Unix newlines (\\n)"""
+        suri_file = SuricataFile("/path/to/test.rules", self.mock_tester)
+        content = 'alert tcp any any -> any any \\\n(msg:"Test"; \\\nsid:1000;)'
+        suri_file.load_from_buffer(content)
+
+        # Cursor on line 1 (second line) at position 5
+        reconstructed, adjusted_idx = suri_file.get_reconstructed_signature_at_position(
+            line_index=1, char_index=5
+        )
+
+        # Lines should be joined with spaces, backslashes removed
+        expected = 'alert tcp any any -> any any (msg:"Test"; \\'
+        assert reconstructed == expected
+        # adjusted_idx = len("alert tcp any any -> any any") + 1 (space) + 5 = 28 + 1 + 5
+        assert adjusted_idx == 34
+
+    def test_get_reconstructed_signature_multiline_windows_newlines(self):
+        """Test reconstruction with Windows newlines (\\r\\n)"""
+        suri_file = SuricataFile("/path/to/test.rules", self.mock_tester)
+        content = 'alert tcp any any -> any any \\\r\n(msg:"Test"; \\\r\nsid:1000;)'
+        suri_file.load_from_buffer(content)
+
+        # Cursor on line 1 at position 5
+        reconstructed, adjusted_idx = suri_file.get_reconstructed_signature_at_position(
+            line_index=1, char_index=5
+        )
+
+        expected = 'alert tcp any any -> any any (msg:"Test"; \\'
+        assert reconstructed == expected
+        # Same calculation as Unix: 28 + 1 + 5
+        assert adjusted_idx == 34
+
+    def test_get_reconstructed_signature_multiline_old_mac_newlines(self):
+        """Test reconstruction with old Mac newlines (\\r)"""
+        suri_file = SuricataFile("/path/to/test.rules", self.mock_tester)
+        content = 'alert tcp any any -> any any \\\r(msg:"Test"; \\\rsid:1000;)'
+        suri_file.load_from_buffer(content)
+
+        # Cursor on line 1 at position 5
+        reconstructed, adjusted_idx = suri_file.get_reconstructed_signature_at_position(
+            line_index=1, char_index=5
+        )
+
+        expected = 'alert tcp any any -> any any (msg:"Test"; \\'
+        assert reconstructed == expected
+        # Same calculation: 28 + 1 + 5
+        assert adjusted_idx == 34
+
+    def test_get_reconstructed_signature_multiline_last_line(self):
+        """Test reconstruction when cursor is on last continuation line"""
+        suri_file = SuricataFile("/path/to/test.rules", self.mock_tester)
+        content = 'alert tcp any any -> any any \\\n(msg:"Test"; \\\nsid:1000;)'
+        suri_file.load_from_buffer(content)
+
+        # Cursor on line 2 (last line) at position 4
+        reconstructed, adjusted_idx = suri_file.get_reconstructed_signature_at_position(
+            line_index=2, char_index=4
+        )
+
+        # All three lines should be joined
+        expected = 'alert tcp any any -> any any (msg:"Test"; sid:1000;)'
+        assert reconstructed == expected
+        # adjusted_idx = len("alert tcp any any -> any any") + 1 + len('(msg:"Test";') + 1 + 4
+        # = 28 + 1 + 12 + 1 + 4 = 46
+        assert adjusted_idx == 46
+
+    def test_get_reconstructed_signature_multiline_with_trailing_spaces(self):
+        """Test reconstruction with backslash followed by trailing spaces"""
+        suri_file = SuricataFile("/path/to/test.rules", self.mock_tester)
+        content = 'alert tcp any any -> any any \\   \n(msg:"Test"; sid:1000;)'
+        suri_file.load_from_buffer(content)
+
+        # Cursor on line 1 at position 0
+        reconstructed, adjusted_idx = suri_file.get_reconstructed_signature_at_position(
+            line_index=1, char_index=0
+        )
+
+        # Backslash and trailing spaces should be stripped
+        expected = 'alert tcp any any -> any any (msg:"Test"; sid:1000;)'
+        assert reconstructed == expected
+        # Stripped line 0 is 28 chars, + 1 for space separator + 0 = 29
+        assert adjusted_idx == 29
+
+    def test_get_reconstructed_signature_multiline_many_continuations(self):
+        """Test reconstruction with many continuation lines"""
+        suri_file = SuricataFile("/path/to/test.rules", self.mock_tester)
+        content = 'alert tcp \\\nany any \\\n-> any any \\\n(msg:"Test"; \\\nsid:1000;)'
+        suri_file.load_from_buffer(content)
+
+        # Cursor on line 3 (fourth line) at position 0
+        reconstructed, adjusted_idx = suri_file.get_reconstructed_signature_at_position(
+            line_index=3, char_index=0
+        )
+
+        # All lines joined with spaces
+        expected = 'alert tcp any any -> any any (msg:"Test"; \\'
+        assert reconstructed == expected
+        # adjusted_idx = len("alert tcp") + 1 + len("any any") + 1 + len("-> any any") + 1 + 0
+        assert adjusted_idx == 9 + 1 + 7 + 1 + 10 + 1
+
+    def test_get_reconstructed_signature_out_of_bounds(self):
+        """Test reconstruction with out of bounds line index"""
+        suri_file = SuricataFile("/path/to/test.rules", self.mock_tester)
+        content = 'alert tcp any any -> any any (msg:"Test"; sid:1000;)'
+        suri_file.load_from_buffer(content)
+
+        # Line index beyond file bounds
+        reconstructed, adjusted_idx = suri_file.get_reconstructed_signature_at_position(
+            line_index=10, char_index=5
+        )
+
+        assert reconstructed == ""
+        assert adjusted_idx == 5
+
+    def test_get_reconstructed_signature_empty_file(self):
+        """Test reconstruction with empty file"""
+        suri_file = SuricataFile("/path/to/test.rules", self.mock_tester)
+        suri_file.load_from_buffer("")
+
+        # Empty file, any line index is out of bounds
+        reconstructed, adjusted_idx = suri_file.get_reconstructed_signature_at_position(
+            line_index=0, char_index=0
+        )
+
+        assert reconstructed == ""
+        assert adjusted_idx == 0
+
+    def test_get_reconstructed_signature_mixed_newlines(self):
+        """Test reconstruction with mixed newline styles (edge case)"""
+        suri_file = SuricataFile("/path/to/test.rules", self.mock_tester)
+        # First line with \n, second with \r\n
+        content = 'alert tcp any any -> any any \\\n(msg:"Test"; \\\r\nsid:1000;)'
+        suri_file.load_from_buffer(content)
+
+        # Cursor on line 2 at position 0
+        reconstructed, adjusted_idx = suri_file.get_reconstructed_signature_at_position(
+            line_index=2, char_index=0
+        )
+
+        expected = 'alert tcp any any -> any any (msg:"Test"; sid:1000;)'
+        assert reconstructed == expected
+        # adjusted_idx = len("alert tcp any any -> any any") + 1 + len('(msg:"Test";') + 1 + 0
+        # = 28 + 1 + 12 + 1 = 42
+        assert adjusted_idx == 42
+
+    def test_get_reconstructed_signature_position_at_end_of_line(self):
+        """Test reconstruction with cursor at end of continuation line"""
+        suri_file = SuricataFile("/path/to/test.rules", self.mock_tester)
+        content = 'alert tcp any any -> any any \\\n(msg:"Test"; sid:1000;)'
+        suri_file.load_from_buffer(content)
+
+        # Cursor on line 1, at the very end
+        line1_length = len('(msg:"Test"; sid:1000;)')
+        reconstructed, adjusted_idx = suri_file.get_reconstructed_signature_at_position(
+            line_index=1, char_index=line1_length
+        )
+
+        expected = 'alert tcp any any -> any any (msg:"Test"; sid:1000;)'
+        assert reconstructed == expected
+        # adjusted_idx should be at the end of reconstructed string
+        assert adjusted_idx == len(expected)
+
+    def test_get_reconstructed_signature_char_index_zero(self):
+        """Test reconstruction with character index at 0"""
+        suri_file = SuricataFile("/path/to/test.rules", self.mock_tester)
+        content = 'alert tcp any any -> any any \\\n(msg:"Test"; sid:1000;)'
+        suri_file.load_from_buffer(content)
+
+        # Cursor on line 1, at position 0 (start of line)
+        reconstructed, adjusted_idx = suri_file.get_reconstructed_signature_at_position(
+            line_index=1, char_index=0
+        )
+
+        expected = 'alert tcp any any -> any any (msg:"Test"; sid:1000;)'
+        assert reconstructed == expected
+        # adjusted_idx = len("alert tcp any any -> any any") + 1 (for space) + 0
+        # = 28 + 1 = 29
+        assert adjusted_idx == 29
