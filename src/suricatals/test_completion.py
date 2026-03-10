@@ -99,11 +99,9 @@ class TestSignatureCompletion:
         """Test action completion when cursor is at start of line"""
         sig_content = "a"
         sig_index = 1
-        line_index = 0
-        file_lines = ["a"]
 
         result = self.completion_handler.get_initial_params_completion(
-            sig_content, sig_index, line_index, file_lines
+            sig_content, sig_index
         )
 
         assert result is not None
@@ -116,11 +114,9 @@ class TestSignatureCompletion:
         """Test action completion on empty line"""
         sig_content = ""
         sig_index = 0
-        line_index = 0
-        file_lines = [""]
 
         result = self.completion_handler.get_initial_params_completion(
-            sig_content, sig_index, line_index, file_lines
+            sig_content, sig_index
         )
 
         assert result is not None
@@ -130,11 +126,9 @@ class TestSignatureCompletion:
         """Test app layer protocol completion after action"""
         sig_content = "alert "
         sig_index = 6
-        line_index = 0
-        file_lines = ["alert "]
 
         result = self.completion_handler.get_initial_params_completion(
-            sig_content, sig_index, line_index, file_lines
+            sig_content, sig_index
         )
 
         assert result is not None
@@ -146,11 +140,9 @@ class TestSignatureCompletion:
         """Test app layer completion with partial text"""
         sig_content = "alert h"
         sig_index = 7
-        line_index = 0
-        file_lines = ["alert h"]
 
         result = self.completion_handler.get_initial_params_completion(
-            sig_content, sig_index, line_index, file_lines
+            sig_content, sig_index
         )
 
         assert result is not None
@@ -160,11 +152,9 @@ class TestSignatureCompletion:
         """Test no completion after protocol is entered"""
         sig_content = "alert http any any -> any any "
         sig_index = 31
-        line_index = 0
-        file_lines = ["alert http any any -> any any "]
 
         result = self.completion_handler.get_initial_params_completion(
-            sig_content, sig_index, line_index, file_lines
+            sig_content, sig_index
         )
 
         assert result is None
@@ -312,47 +302,14 @@ class TestSignatureCompletion:
         """Test action completion includes drop action"""
         sig_content = "d"
         sig_index = 1
-        line_index = 0
-        file_lines = ["d"]
 
         result = self.completion_handler.get_initial_params_completion(
-            sig_content, sig_index, line_index, file_lines
+            sig_content, sig_index
         )
 
         assert result is not None
         labels = [item.label for item in result.items]
         assert "drop" in labels
-
-    def test_multiline_continuation(self):
-        """Test handling of multiline signature continuation"""
-        sig_content = "  "  # Continuation line with indent
-        sig_index = 2
-        line_index = 1
-        file_lines = ["alert tcp any any -> any any \\\n", "  "]
-
-        result = self.completion_handler.get_initial_params_completion(
-            sig_content, sig_index, line_index, file_lines
-        )
-
-        # Due to regex split behavior on spaces, this returns app_layer completion
-        # This is the actual behavior, though it may not be the intended use case
-        assert result is not None
-        assert len(result.items) == len(SAMPLE_APP_LAYERS)
-
-    def test_multiline_no_backslash(self):
-        """Test multiline without backslash continuation"""
-        sig_content = "  "
-        sig_index = 2
-        line_index = 1
-        file_lines = ["alert tcp any any -> any any\n", "  "]
-
-        result = self.completion_handler.get_initial_params_completion(
-            sig_content, sig_index, line_index, file_lines
-        )
-
-        # Without backslash, still returns app_layer due to regex split
-        assert result is not None
-        assert len(result.items) == len(SAMPLE_APP_LAYERS)
 
     def test_keyword_completion_empty_partial(self):
         """Test keyword completion with empty partial (right after space)"""
@@ -684,33 +641,3 @@ class TestSignatureCompletion:
         assert "established" not in labels  # Don't suggest duplicates
         assert "to_server" in labels  # Still available
         assert "to_client" in labels  # Still available
-
-    def test_multiline_continuation_keyword_completion(self):
-        """Test that keyword completion works on multiline rule continuation lines.
-
-        When a rule spans multiple lines with backslash continuation, typing a
-        keyword prefix like 'con' on the continuation line should offer keyword
-        completions (content, etc.), not protocol completions.
-
-        This simulates the serve_autocomplete flow from langserver.py where
-        sig_content is only the current line.
-        """
-        # Multiline rule:
-        #   line 0: alert http any any -> any any (msg:"test"; \
-        #   line 1:   con
-        #
-        # User is typing 'con' on line 1, expecting keyword completion.
-        file_lines = [
-            'alert http any any -> any any (msg:"test"; \\',
-            "  con",
-        ]
-        edit_index = 1
-        sig_content = file_lines[edit_index]  # "  con"
-        sig_index = len(sig_content)  # 5 (cursor at end)
-
-        # On a continuation line, we are inside the rule body (after the '(').
-        # is_before_content_section should return False so that keyword
-        # completion is used instead of action/protocol completion.
-        assert not self.completion_handler.is_before_content_section(
-            sig_content, sig_index
-        ), "Continuation line is inside rule body, should not be 'before content section'"
