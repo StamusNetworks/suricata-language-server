@@ -356,8 +356,8 @@ class LangServer:
                 self.workspace_mpm.add_file_from_suricata_file(filepath, s_file)
 
                 diags = [diag.to_diagnostic() for diag in diags_list]
-                # pylint: disable=W0703
                 return diags, None
+            # pylint: disable=W0718
             except Exception as exp:
                 # Return exception for caller to handle
                 log.error("Error analyzing file %s: %s", filepath, exp)
