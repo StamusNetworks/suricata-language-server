@@ -80,7 +80,7 @@ needed.
 ## Working modes
 
 Suricata Language Server can work in two modes : with a Suricata binary
-installed on the system or with Suricata installed in a container.
+installed on the system or with Suricata running in a container.
 
 To use Suricata commands in a container, you need to start the
 server with the `--container` option. You can also specify a custom
@@ -102,7 +102,7 @@ Suricata binary with the `--suricata-binary` option.
 
 One simple way is to use
 [nvim-lspconfig](https://github.com/neovim/nvim-lspconfig) and add the
-following snippet to your configuration :
+following snippet to your configuration:
 
 ```lua
 local suricata_ls_cmd = {vim.fn.expand('$HOME/.local/bin/suricata-language-server')}
@@ -192,6 +192,10 @@ settings look like:
 
 The Suricata IntelliSense extension is hosted on its [own project on
 GitHub](https://github.com/StamusNetworks/suricata-ls-vscode).
+
+> [!NOTE]
+> [VSCodium](https://vscodium.com/) is also supported and the Suricata Intellisense extension is
+> available in the market place.
 
 ### Sublime Text 3
 
