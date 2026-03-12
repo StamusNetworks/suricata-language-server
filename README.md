@@ -195,7 +195,7 @@ GitHub](https://github.com/StamusNetworks/suricata-ls-vscode).
 
 > [!NOTE]
 > [VSCodium](https://vscodium.com/) is also supported and the Suricata Intellisense extension is
-> available in the market place.
+> available in the [market place](https://open-vsx.org/extension/StamusNetworks/suricata-ls).
 
 ### Sublime Text 3
 
