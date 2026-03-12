@@ -472,7 +472,7 @@ You can get help by:
     [#suricata-language-server](https://discord.com/channels/911231224448712714/927591953967751199)
     on Discord.
 
-## Developement
+## Development
 
 Suricata Language Server is open source and contributions are welcome. You can used GitHub pull requests to
 propose changes.
