@@ -276,6 +276,8 @@ up-to-date help.
     file count is superior to this limit
 -   `--batch-file`: batch mode to parse only the file in argument and
     return result on stdout
+-   `--list-keywords`: list all Suricata keywords in CSV format and exit
+-   `--list-app-layer-protos`: list all Suricata app-layer protocols and exit
 
 ### Passing options to Suricata
 
@@ -353,6 +355,46 @@ In the screenshot below, you can see an example of usage of this feature with Ne
 ![image](https://raw.githubusercontent.com/StamusNetworks/suricata-language-server/main/images/nvim-perf.png)
 
 It displays the performance metrics of the signatures when evaluated against the pcap file.
+
+### Listing Suricata Keywords and Protocols
+
+The language server can output information about the Suricata version it's using, which is helpful for documentation, tooling integration, or understanding what features are available.
+
+#### Listing Keywords
+
+To list all available Suricata keywords in CSV format:
+
+```sh
+suricata-language-server --list-keywords
+```
+
+This outputs a CSV with columns: `name`, `description`, `app layer`, `features`, and `documentation` (URL to docs). Each keyword includes metadata such as whether it supports firewall mode, is a sticky buffer, or is a prefilter keyword.
+
+Example output:
+```csv
+name;description;app layer;features;documentation
+sid;set rule ID;Unset;supports firewall;https://docs.suricata.io/en/latest/rules/meta.html#sid-signature-id;
+priority;rules with a higher priority will be examined first;Unset;none;https://docs.suricata.io/en/latest/rules/meta.html#priority;
+```
+
+#### Listing App-Layer Protocols
+
+To list all supported app-layer protocols:
+
+```sh
+suricata-language-server --list-app-layer-protos
+```
+
+This outputs a simple list of protocol names (one per line) such as `http`, `tls`, `dns`, `ssh`, etc. These protocols can be used with the `app-layer-protocol` keyword or as second parameter in Suricata rules.
+
+Example output:
+```
+http
+ftp
+smtp
+tls
+ssh
+```
 
 ## PCAP Analysis Tool
 
