@@ -347,7 +347,7 @@ and if there is a `mta.pcap` then the following syntax can be used:
 ## SLS pcap-file: tests/mta.pcap
 ```
 
-The preceeding syntax will work on Unix operating system, systems using backslash as directory separator
+The preceding syntax will work on Unix operating system, systems using backslash as directory separator
 will have to use it instead of slash.
 
 In the screenshot below, you can see an example of usage of this feature with Neovim:
