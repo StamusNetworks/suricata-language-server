@@ -493,9 +493,19 @@ config classification: command-and-control,Malware Command and Control Activity 
                 }
             }
 
+        # Ensure image is available, pull if necessary
+        image_name = ":".join([self.docker_image, self.image_version_run])
+        try:
+            self.docker_client.images.get(image_name)
+        except docker.errors.ImageNotFound:
+            log.info("Pulling Docker image: %s", image_name)
+            self.docker_client.images.pull(
+                self.docker_image, tag=self.image_version_run
+            )
+
         # Create and run container, checking exit code explicitly
         container = self.docker_client.containers.create(
-            image=":".join([self.docker_image, self.image_version_run]),
+            image=image_name,
             command=suri_cmd,
             volumes=volumes,
             tty=True,
