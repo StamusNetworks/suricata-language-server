@@ -113,6 +113,23 @@ def main():
         default=False,
         help="List all Suricata app-layer protocols and exit",
     )
+    parser.add_argument(
+        "--tcp",
+        action="store_true",
+        default=False,
+        help="Run language server over TCP socket instead of stdio",
+    )
+    parser.add_argument(
+        "--host",
+        default="127.0.0.1",
+        help="Host address to bind TCP socket (default: 127.0.0.1, only used with --tcp)",
+    )
+    parser.add_argument(
+        "--port",
+        default=2087,
+        type=int,
+        help="Port number to bind TCP socket (default: 2087, only used with --tcp)",
+    )
     args = parser.parse_args()
     if args.version:
         print("{0}".format(__version__))
@@ -162,7 +179,10 @@ def main():
             debug_log=args.debug_log,
             settings=settings,
         )
-        s.run()
+        if args.tcp:
+            s.run_tcp(host=args.host, port=args.port)
+        else:
+            s.run()
     else:
         s = LangServer(settings=settings, batch_mode=True)
         _, _, diags = s.analyse_file(args.batch_file, not args.no_engine_analysis)

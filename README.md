@@ -462,6 +462,36 @@ suricata-read traffic.pcap | jq '.alert'
 ```
 
 
+## Advanced Configuration
+
+### TCP Socket Mode
+
+By default, the language server communicates over stdio (standard input/output), which is the typical mode used by most editors. However, you can also run the server in TCP socket mode for remote development, debugging, or when multiple clients need to connect to the same server instance.
+
+To start the server in TCP mode:
+
+```sh
+# Use defaults (127.0.0.1:2087)
+suricata-language-server --tcp
+
+# Custom host and port
+suricata-language-server --tcp --host 0.0.0.0 --port 9999
+
+# With other options (container mode, custom image, etc.)
+suricata-language-server --tcp --port 8080 --container --image jasonish/suricata:7.0.13
+```
+
+TCP mode options:
+- `--tcp`: Enable TCP socket mode instead of stdio
+- `--host`: Host address to bind (default: `127.0.0.1`)
+- `--port`: Port number to bind (default: `2087`)
+
+When using TCP mode, editors/clients must be configured to connect to the TCP socket instead of launching the server as a subprocess. This is useful for:
+- Remote development scenarios
+- Debugging the language server
+- Sharing a single server instance across multiple editor windows
+- Network-based editor integration
+
 ## Getting help
 
 You can get help by:

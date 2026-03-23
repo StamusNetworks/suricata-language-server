@@ -228,8 +228,13 @@ class LangServer:
                 self.analyze_workspace_files(all_rules_files)
 
     def run(self):
-        # Run server
+        # Run server over stdio
         self.server.start_io()
+
+    def run_tcp(self, host="127.0.0.1", port=2087):
+        # Run server over TCP socket
+        log.info("Starting Suricata Language Server on %s:%d", host, port)
+        self.server.start_tcp(host, port)
 
     def get_suricata_file(self, uri) -> Optional[SuricataFile]:
         if self.rules_tester == None:
