@@ -29,6 +29,8 @@ log = logging.getLogger(__name__)
 SID_COMPLETION_PATTERN = re.compile(r"sid:\s*$")
 # Use greedy match (not lazy) since we're anchored with $ - no backtracking issues
 FLOW_KEYWORD_PATTERN = re.compile(r"flow:\s{0,10}([^;)]*)$")
+# Dataset keyword pattern - matches dataset: followed by content up to ; or )
+DATASET_KEYWORD_PATTERN = re.compile(r"dataset:\s{0,10}([^;)]*)$")
 
 
 class SignatureCompletion:
@@ -121,6 +123,166 @@ class SignatureCompletion:
         "no_stream": ["only_stream"],
         "only_frag": ["no_frag"],
         "no_frag": ["only_frag"],
+    }
+
+    # Dataset command options (first positional argument after dataset:)
+    DATASET_COMMANDS = [
+        {
+            "label": "isset",
+            "kind": types.CompletionItemKind.EnumMember,
+            "detail": "Dataset operation",
+            "documentation": "Check if data exists in the dataset",
+        },
+        {
+            "label": "isnotset",
+            "kind": types.CompletionItemKind.EnumMember,
+            "detail": "Dataset operation",
+            "documentation": "Check if data does not exist in the dataset",
+        },
+        {
+            "label": "set",
+            "kind": types.CompletionItemKind.EnumMember,
+            "detail": "Dataset operation",
+            "documentation": "Add data to the dataset",
+        },
+        {
+            "label": "unset",
+            "kind": types.CompletionItemKind.EnumMember,
+            "detail": "Dataset operation",
+            "documentation": "Remove data from the dataset",
+        },
+    ]
+
+    # Dataset type options (after 'type' keyword)
+    DATASET_TYPES = [
+        {
+            "label": "string",
+            "kind": types.CompletionItemKind.EnumMember,
+            "detail": "Dataset type",
+            "documentation": "String type dataset",
+        },
+        {
+            "label": "md5",
+            "kind": types.CompletionItemKind.EnumMember,
+            "detail": "Dataset type",
+            "documentation": "MD5 hash type dataset",
+        },
+        {
+            "label": "sha256",
+            "kind": types.CompletionItemKind.EnumMember,
+            "detail": "Dataset type",
+            "documentation": "SHA256 hash type dataset",
+        },
+        {
+            "label": "ipv4",
+            "kind": types.CompletionItemKind.EnumMember,
+            "detail": "Dataset type",
+            "documentation": "IPv4 address type dataset",
+        },
+        {
+            "label": "ip",
+            "kind": types.CompletionItemKind.EnumMember,
+            "detail": "Dataset type",
+            "documentation": "IP address type dataset",
+        },
+    ]
+
+    # Dataset parameter keywords (after type is specified)
+    DATASET_PARAMS = [
+        {
+            "label": "load",
+            "kind": types.CompletionItemKind.Property,
+            "detail": "Dataset parameter",
+            "documentation": "Load dataset from file at startup",
+        },
+        {
+            "label": "state",
+            "kind": types.CompletionItemKind.Property,
+            "detail": "Dataset parameter",
+            "documentation": "Load on startup and save on exit",
+        },
+        {
+            "label": "save",
+            "kind": types.CompletionItemKind.Property,
+            "detail": "Dataset parameter",
+            "documentation": "Save data when Suricata exits",
+        },
+        {
+            "label": "memcap",
+            "kind": types.CompletionItemKind.Property,
+            "detail": "Dataset parameter",
+            "documentation": "Memory limit for dataset (e.g., 10mb)",
+        },
+        {
+            "label": "hashsize",
+            "kind": types.CompletionItemKind.Property,
+            "detail": "Dataset parameter",
+            "documentation": "Hash table size for entries",
+        },
+    ]
+
+    # JSON format related dataset parameters
+    DATASET_JSON_PARAMS = [
+        {
+            "label": "format",
+            "kind": types.CompletionItemKind.Property,
+            "detail": "Dataset parameter",
+            "documentation": "File format (csv, json, ndjson)",
+        },
+        {
+            "label": "context_key",
+            "kind": types.CompletionItemKind.Property,
+            "detail": "JSON parameter",
+            "documentation": "JSON enrichment alert key",
+        },
+        {
+            "label": "value_key",
+            "kind": types.CompletionItemKind.Property,
+            "detail": "JSON parameter",
+            "documentation": "JSON field containing matching value",
+        },
+        {
+            "label": "array_key",
+            "kind": types.CompletionItemKind.Property,
+            "detail": "JSON parameter",
+            "documentation": "Location of JSON array to search",
+        },
+        {
+            "label": "remove_key",
+            "kind": types.CompletionItemKind.Property,
+            "detail": "JSON parameter",
+            "documentation": "Remove value_key from alert output",
+        },
+    ]
+
+    # Dataset format options (for 'format' parameter)
+    DATASET_FORMATS = [
+        {
+            "label": "csv",
+            "kind": types.CompletionItemKind.EnumMember,
+            "detail": "Dataset format",
+            "documentation": "CSV format (default)",
+        },
+        {
+            "label": "json",
+            "kind": types.CompletionItemKind.EnumMember,
+            "detail": "Dataset format",
+            "documentation": "JSON format",
+        },
+        {
+            "label": "ndjson",
+            "kind": types.CompletionItemKind.EnumMember,
+            "detail": "Dataset format",
+            "documentation": "Newline-delimited JSON format",
+        },
+    ]
+
+    # Mutual exclusivity rules for dataset parameters
+    # load/state/save are mutually exclusive storage options
+    DATASET_EXCLUSIONS = {
+        "load": ["state"],
+        "state": ["load", "save"],
+        "save": ["state"],
     }
 
     def __init__(
@@ -390,3 +552,289 @@ class SignatureCompletion:
             )
 
         return types.CompletionList(is_incomplete=False, items=lsp_completion_items)
+
+    def is_dataset_completion_context(self, sig_content: str, sig_index: int) -> bool:
+        """
+        Check if cursor is positioned for dataset value completion.
+
+        Args:
+            sig_content: Full reconstructed signature content (multiline rules already joined)
+            sig_index: Character index within the reconstructed content
+
+        Returns:
+            True if in dataset completion context, False otherwise
+        """
+        prefix = sig_content[0:sig_index]
+        match = DATASET_KEYWORD_PATTERN.search(prefix)
+        return match is not None
+
+    def _parse_dataset_context(
+        self, sig_content: str, sig_index: int
+    ) -> Dict[str, Any]:
+        """
+        Parse the current dataset keyword state to determine what to suggest.
+
+        Args:
+            sig_content: Full reconstructed signature content (multiline rules already joined)
+            sig_index: Character index within the reconstructed content
+
+        Returns:
+            dict with:
+            - 'state': 'command' | 'name' | 'type_keyword' | 'type_value' |
+                       'format_value' | 'param_key' | 'param_value'
+            - 'existing_params': list of already specified parameter names
+            - 'current_param': the parameter currently being edited (if applicable)
+            - 'has_type': whether type has been specified
+        """
+        prefix = sig_content[0:sig_index]
+        match = DATASET_KEYWORD_PATTERN.search(prefix)
+        if not match:
+            return {"state": "unknown", "existing_params": [], "has_type": False}
+
+        content = match.group(1)
+
+        # Empty content - suggest commands
+        if not content or not content.strip():
+            return {"state": "command", "existing_params": [], "has_type": False}
+
+        # Parse the comma-separated parts - don't strip the last part
+        # as trailing spaces are significant
+        raw_parts = content.split(",")
+        parts = [p.strip() for p in raw_parts[:-1]]  # Strip all but last
+        last_part_raw = raw_parts[-1] if raw_parts else ""
+        parts.append(last_part_raw.lstrip())  # Only strip leading space from last
+
+        # First part is the command
+        # Second part is the dataset name
+        # Remaining parts are key-value parameters
+
+        if len(parts) == 1:
+            # Still typing command or just finished command
+            part = parts[0].strip()
+            if part in ["isset", "isnotset", "set", "unset"]:
+                # Command complete, but no comma yet - waiting for comma
+                return {
+                    "state": "after_command",
+                    "existing_params": [],
+                    "has_type": False,
+                }
+            # Still typing command
+            return {"state": "command", "existing_params": [], "has_type": False}
+
+        if len(parts) == 2:
+            # Second part is the dataset name
+            # Could be typing name or finished name
+            return {"state": "name", "existing_params": [], "has_type": False}
+
+        # Three or more parts - parsing parameters
+        existing_params = []
+        has_type = False
+
+        # Parse parameters starting from part 3 (index 2)
+        # Don't process the last part in this loop - handle it separately
+        for part in parts[2:-1]:
+            part = part.strip()
+            if not part:
+                continue
+
+            # Check if this part starts with 'type '
+            if part.startswith("type "):
+                has_type = True
+                existing_params.append("type")
+            elif " " in part:
+                # key value pair
+                key = part.split()[0]
+                existing_params.append(key)
+
+        # Now analyze the last part (which has preserved trailing spaces)
+        last_part = parts[-1]
+
+        # Check if cursor is right after a comma (empty last part)
+        if not last_part.strip():
+            if not has_type:
+                return {
+                    "state": "type_keyword",
+                    "existing_params": existing_params,
+                    "has_type": False,
+                }
+            return {
+                "state": "param_key",
+                "existing_params": existing_params,
+                "has_type": True,
+            }
+
+        # Check if we're typing after "type " (with trailing space)
+        if last_part.startswith("type "):
+            type_value = last_part[5:].strip()
+            if type_value in ["string", "md5", "sha256", "ipv4", "ip"]:
+                # Type is complete - this becomes an existing param
+                has_type = True
+                existing_params.append("type")
+            else:
+                # Still typing type value or just "type "
+                return {
+                    "state": "type_value",
+                    "existing_params": existing_params,
+                    "has_type": False,
+                }
+
+        # Check if we're typing after "format " (with trailing space)
+        if last_part.startswith("format "):
+            format_value = last_part[7:].strip()
+            if format_value not in ["csv", "json", "ndjson"]:
+                return {
+                    "state": "format_value",
+                    "existing_params": existing_params,
+                    "has_type": has_type,
+                }
+
+        # Check other parameter patterns with trailing space
+        if " " in last_part:
+            key = last_part.split()[0]
+            # Check if there's a value after the space
+            value_part = last_part[len(key) :].strip()
+            if not value_part:
+                # Just "key " - typing parameter value
+                if key == "format":
+                    return {
+                        "state": "format_value",
+                        "existing_params": existing_params,
+                        "has_type": has_type,
+                    }
+                return {
+                    "state": "param_value",
+                    "existing_params": existing_params,
+                    "has_type": has_type,
+                    "current_param": key,
+                }
+
+        # Typing a parameter key (no space yet)
+        last_part_stripped = last_part.strip()
+
+        # Check if 'type' is complete (as a standalone word about to get a space)
+        if last_part_stripped == "type":
+            return {
+                "state": "type_keyword_partial",
+                "existing_params": existing_params,
+                "has_type": False,
+            }
+
+        if has_type:
+            return {
+                "state": "param_key",
+                "existing_params": existing_params,
+                "has_type": True,
+                "partial": last_part_stripped,
+            }
+
+        # Need to type 'type' first
+        return {
+            "state": "type_keyword",
+            "existing_params": existing_params,
+            "has_type": False,
+            "partial": last_part_stripped,
+        }
+
+    def get_dataset_completion(
+        self, sig_content: str, sig_index: int
+    ) -> Optional[types.CompletionList]:
+        """
+        Handle completion for dataset keyword values.
+
+        Args:
+            sig_content: Full reconstructed signature content (multiline rules already joined)
+            sig_index: Character index within the reconstructed content
+
+        Returns:
+            CompletionList with available dataset values, or None if not applicable
+        """
+        context = self._parse_dataset_context(sig_content, sig_index)
+        state = context.get("state", "unknown")
+        existing_params = context.get("existing_params", [])
+
+        log.debug("Dataset completion context: %s", context)
+
+        if state == "command":
+            return self._build_completion_list(self.DATASET_COMMANDS)
+
+        if state == "after_command":
+            # After command, waiting for comma - no completion
+            return None
+
+        if state == "name":
+            # Dataset name is user-defined - no completion
+            return None
+
+        if state in ["type_keyword", "type_keyword_partial"]:
+            # Suggest "type" keyword
+            items = [
+                types.CompletionItem(
+                    label="type",
+                    kind=types.CompletionItemKind.Keyword,
+                    detail="Required parameter",
+                    documentation="Dataset type (string, md5, sha256, ipv4, ip)",
+                    insert_text="type ",
+                )
+            ]
+            return types.CompletionList(is_incomplete=False, items=items)
+
+        if state == "type_value":
+            return self._build_completion_list(self.DATASET_TYPES)
+
+        if state == "format_value":
+            return self._build_completion_list(self.DATASET_FORMATS)
+
+        if state == "param_key":
+            # Filter out already used params and apply exclusions
+            excluded = set(existing_params)
+
+            # Apply mutual exclusivity rules
+            for param in existing_params:
+                if param in self.DATASET_EXCLUSIONS:
+                    excluded.update(self.DATASET_EXCLUSIONS[param])
+
+            # Combine base params and JSON params
+            all_params = self.DATASET_PARAMS + self.DATASET_JSON_PARAMS
+
+            # Filter available params
+            available = [p for p in all_params if p["label"] not in excluded]
+
+            if not available:
+                return None
+
+            return self._build_completion_list(available)
+
+        if state == "param_value":
+            # Only format has predefined values
+            current_param = context.get("current_param", "")
+            if current_param == "format":
+                return self._build_completion_list(self.DATASET_FORMATS)
+            # Other params take user-defined values (file paths, numbers)
+            return None
+
+        return None
+
+    def _build_completion_list(
+        self, items: List[Dict[str, Any]]
+    ) -> types.CompletionList:
+        """
+        Build a CompletionList from a list of item dictionaries.
+
+        Args:
+            items: List of completion item dictionaries
+
+        Returns:
+            CompletionList with the items
+        """
+        lsp_items = []
+        for item in items:
+            lsp_items.append(
+                types.CompletionItem(
+                    label=item["label"],
+                    kind=item.get("kind", types.CompletionItemKind.Text),
+                    detail=item.get("detail", ""),
+                    documentation=item.get("documentation", ""),
+                    insert_text=item.get("insert_text"),
+                )
+            )
+        return types.CompletionList(is_incomplete=False, items=lsp_items)

@@ -247,7 +247,7 @@ class LangServer:
 
     @register_feature(
         types.TEXT_DOCUMENT_COMPLETION,
-        options=types.CompletionOptions(trigger_characters=[".", ":"]),
+        options=types.CompletionOptions(trigger_characters=[".", ":", ","]),
     )
     def serve_autocomplete(
         self, params: types.CompletionParams
@@ -299,6 +299,14 @@ class LangServer:
             except Exception as e:
                 log.error("Error generating SID completion: %s", e)
                 return None
+
+        # Handle dataset keyword value completion
+        if self.completion_handler.is_dataset_completion_context(
+            sig_content, sig_index
+        ):
+            return self.completion_handler.get_dataset_completion(
+                sig_content, sig_index
+            )
 
         # Handle flow keyword value completion
         if self.completion_handler.is_flow_value_completion_context(
