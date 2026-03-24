@@ -33,7 +33,6 @@ from lsprotocol import types
 
 from suricatals.signature_completion import SignatureCompletion
 
-
 # Sample data for testing
 SAMPLE_ACTIONS = [
     {"label": "alert", "kind": 14, "detail": "Alert", "documentation": "Trigger alert"},
@@ -641,3 +640,233 @@ class TestSignatureCompletion:
         assert "established" not in labels  # Don't suggest duplicates
         assert "to_server" in labels  # Still available
         assert "to_client" in labels  # Still available
+
+
+class TestDatasetCompletion:
+    """Tests for dataset keyword completion"""
+
+    def setup_method(self):
+        """Set up test fixtures"""
+        self.completion_handler = SignatureCompletion(
+            keywords_list=SAMPLE_KEYWORDS,
+            app_layer_list=SAMPLE_APP_LAYERS,
+            actions_items=SAMPLE_ACTIONS,
+        )
+
+    def test_is_dataset_completion_context_true(self):
+        """Test dataset completion context detection - positive case"""
+        sig_content = 'alert tcp any any -> any any (msg:"test"; dataset:'
+        sig_index = len(sig_content)
+
+        result = self.completion_handler.is_dataset_completion_context(
+            sig_content, sig_index
+        )
+
+        assert result is True
+
+    def test_is_dataset_completion_context_false(self):
+        """Test dataset completion context detection - negative case"""
+        sig_content = 'alert tcp any any -> any any (msg:"test"; '
+        sig_index = len(sig_content)
+
+        result = self.completion_handler.is_dataset_completion_context(
+            sig_content, sig_index
+        )
+
+        assert result is False
+
+    def test_dataset_command_completion(self):
+        """Test dataset completion suggests commands after dataset:"""
+        sig_content = 'alert tcp any any -> any any (msg:"test"; dataset:'
+        sig_index = len(sig_content)
+
+        result = self.completion_handler.get_dataset_completion(sig_content, sig_index)
+
+        assert result is not None
+        labels = [item.label for item in result.items]
+        assert "isset" in labels
+        assert "isnotset" in labels
+        assert "set" in labels
+        assert "unset" in labels
+
+    def test_dataset_command_completion_partial(self):
+        """Test dataset completion with partial command"""
+        sig_content = 'alert tcp any any -> any any (msg:"test"; dataset:is'
+        sig_index = len(sig_content)
+
+        result = self.completion_handler.get_dataset_completion(sig_content, sig_index)
+
+        assert result is not None
+        labels = [item.label for item in result.items]
+        assert "isset" in labels
+        assert "isnotset" in labels
+
+    def test_dataset_no_completion_for_name(self):
+        """Test no dataset completion for dataset name"""
+        sig_content = 'alert tcp any any -> any any (msg:"test"; dataset:isset,'
+        sig_index = len(sig_content)
+
+        result = self.completion_handler.get_dataset_completion(sig_content, sig_index)
+
+        # Name is user-defined, no completion
+        assert result is None
+
+    def test_dataset_type_keyword_completion(self):
+        """Test dataset completion suggests 'type' keyword after name"""
+        sig_content = 'alert tcp any any -> any any (msg:"test"; dataset:isset,mydata,'
+        sig_index = len(sig_content)
+
+        result = self.completion_handler.get_dataset_completion(sig_content, sig_index)
+
+        assert result is not None
+        labels = [item.label for item in result.items]
+        assert "type" in labels
+
+    def test_dataset_type_value_completion(self):
+        """Test dataset completion suggests type values after 'type '"""
+        sig_content = (
+            'alert tcp any any -> any any (msg:"test"; dataset:isset,mydata,type '
+        )
+        sig_index = len(sig_content)
+
+        result = self.completion_handler.get_dataset_completion(sig_content, sig_index)
+
+        assert result is not None
+        labels = [item.label for item in result.items]
+        assert "string" in labels
+        assert "md5" in labels
+        assert "sha256" in labels
+        assert "ipv4" in labels
+        assert "ip" in labels
+
+    def test_dataset_param_completion_after_type(self):
+        """Test dataset completion suggests params after type is set"""
+        sig_content = 'alert tcp any any -> any any (msg:"test"; dataset:isset,mydata,type string,'
+        sig_index = len(sig_content)
+
+        result = self.completion_handler.get_dataset_completion(sig_content, sig_index)
+
+        assert result is not None
+        labels = [item.label for item in result.items]
+        assert "load" in labels
+        assert "state" in labels
+        assert "save" in labels
+        assert "memcap" in labels
+        assert "hashsize" in labels
+        assert "format" in labels
+
+    def test_dataset_param_exclusion_load_excludes_state(self):
+        """Test that 'load' excludes 'state' from completion"""
+        sig_content = 'alert tcp any any -> any any (msg:"test"; dataset:isset,mydata,type string,load file.lst,'
+        sig_index = len(sig_content)
+
+        result = self.completion_handler.get_dataset_completion(sig_content, sig_index)
+
+        assert result is not None
+        labels = [item.label for item in result.items]
+        assert "state" not in labels
+        assert "load" not in labels  # Already used
+        assert "save" in labels  # Still available
+        assert "memcap" in labels  # Still available
+
+    def test_dataset_param_exclusion_state_excludes_load_save(self):
+        """Test that 'state' excludes 'load' and 'save' from completion"""
+        sig_content = 'alert tcp any any -> any any (msg:"test"; dataset:isset,mydata,type string,state file.lst,'
+        sig_index = len(sig_content)
+
+        result = self.completion_handler.get_dataset_completion(sig_content, sig_index)
+
+        assert result is not None
+        labels = [item.label for item in result.items]
+        assert "load" not in labels
+        assert "save" not in labels
+        assert "state" not in labels  # Already used
+        assert "memcap" in labels  # Still available
+
+    def test_dataset_format_value_completion(self):
+        """Test dataset completion suggests format values after 'format '"""
+        sig_content = 'alert tcp any any -> any any (msg:"test"; dataset:isset,mydata,type string,format '
+        sig_index = len(sig_content)
+
+        result = self.completion_handler.get_dataset_completion(sig_content, sig_index)
+
+        assert result is not None
+        labels = [item.label for item in result.items]
+        assert "csv" in labels
+        assert "json" in labels
+        assert "ndjson" in labels
+
+    def test_dataset_json_params_available(self):
+        """Test that JSON-related params are available after type"""
+        sig_content = 'alert tcp any any -> any any (msg:"test"; dataset:isset,mydata,type string,'
+        sig_index = len(sig_content)
+
+        result = self.completion_handler.get_dataset_completion(sig_content, sig_index)
+
+        assert result is not None
+        labels = [item.label for item in result.items]
+        assert "context_key" in labels
+        assert "value_key" in labels
+        assert "array_key" in labels
+        assert "remove_key" in labels
+
+    def test_dataset_no_duplicate_params(self):
+        """Test that already-used params are not suggested again"""
+        sig_content = 'alert tcp any any -> any any (msg:"test"; dataset:isset,mydata,type string,memcap 10mb,'
+        sig_index = len(sig_content)
+
+        result = self.completion_handler.get_dataset_completion(sig_content, sig_index)
+
+        assert result is not None
+        labels = [item.label for item in result.items]
+        assert "memcap" not in labels
+        assert "load" in labels  # Still available
+
+    def test_dataset_context_after_complete_command(self):
+        """Test context parsing after complete command without comma"""
+        sig_content = 'alert tcp any any -> any any (msg:"test"; dataset:isset'
+        sig_index = len(sig_content)
+
+        context = self.completion_handler._parse_dataset_context(sig_content, sig_index)
+
+        assert context["state"] == "after_command"
+
+    def test_dataset_context_typing_command(self):
+        """Test context parsing while typing command"""
+        sig_content = 'alert tcp any any -> any any (msg:"test"; dataset:iss'
+        sig_index = len(sig_content)
+
+        context = self.completion_handler._parse_dataset_context(sig_content, sig_index)
+
+        assert context["state"] == "command"
+
+    def test_dataset_context_type_keyword(self):
+        """Test context parsing when type keyword is needed"""
+        sig_content = 'alert tcp any any -> any any (msg:"test"; dataset:isset,mydata,'
+        sig_index = len(sig_content)
+
+        context = self.completion_handler._parse_dataset_context(sig_content, sig_index)
+
+        assert context["state"] == "type_keyword"
+        assert context["has_type"] is False
+
+    def test_dataset_context_type_value(self):
+        """Test context parsing when typing type value"""
+        sig_content = (
+            'alert tcp any any -> any any (msg:"test"; dataset:isset,mydata,type '
+        )
+        sig_index = len(sig_content)
+
+        context = self.completion_handler._parse_dataset_context(sig_content, sig_index)
+
+        assert context["state"] == "type_value"
+
+    def test_dataset_context_param_key(self):
+        """Test context parsing when expecting param key"""
+        sig_content = 'alert tcp any any -> any any (msg:"test"; dataset:isset,mydata,type string,'
+        sig_index = len(sig_content)
+
+        context = self.completion_handler._parse_dataset_context(sig_content, sig_index)
+
+        assert context["state"] == "param_key"
+        assert context["has_type"] is True
