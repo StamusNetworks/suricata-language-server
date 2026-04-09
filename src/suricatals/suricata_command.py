@@ -63,7 +63,9 @@ class SuriCmd:
         - mdns
         - snmp
         - flow
-        - fileinfo
+        - files:
+          force-magic: yes
+          force-mimetype: yes
     """
     CONFIG_FILE = """
 %YAML 1.1
