@@ -28,3 +28,4 @@ rules:
     options:
       - sls
       - rules
+      - read
