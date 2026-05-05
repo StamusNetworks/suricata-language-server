@@ -269,6 +269,8 @@ class SignaturesTester:
 
         self._rules_buffer_prepare_dataset(rule_buffer, tmpdir)
 
+        self._prepare_conf(rule_buffer, tmpdir, suricmd=suricmd)
+
         replace = options.get("replace")
         if replace and len(replace) == 2:
             rule_buffer = re.sub(replace[0], replace[1], rule_buffer)
