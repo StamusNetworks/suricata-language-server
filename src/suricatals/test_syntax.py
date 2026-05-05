@@ -209,3 +209,24 @@ alert http any any -> any any (msg:"Test API usage"; content:"test"; sid:1;)
         )
         assert len(result["errors"]) == 0
         assert len(result["warnings"]) == 1
+
+    def test_rules_infos(self):
+        rule_buffer = 'alert http any any -> any any (msg:"Test rules_infos"; http.uri; content:"testAAA"; sid:42; rev:1;)'
+        testor = LangServer(batch_mode=True)
+        if not testor.rules_tester:
+            pytest.fail("Rules tester is not initialized")
+        result = testor.rules_infos(rule_buffer)
+        assert isinstance(result, dict)
+        assert 42 in result
+        entry = result[42]
+        assert entry["id"] == 42
+        assert entry["msg"] == "Test rules_infos"
+        assert "mpm" in entry
+        assert "type" in entry
+        http_uri_engines = [e for e in entry["engines"] if e["name"] == "http_uri"]
+        assert len(http_uri_engines) > 0
+        matches = http_uri_engines[0]["matches"]
+        assert any(
+            m["name"] == "content" and m["content"]["pattern"] == "testAAA"
+            for m in matches
+        )
