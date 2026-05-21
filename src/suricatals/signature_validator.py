@@ -209,6 +209,21 @@ class SignaturesTester:
                     ) from exc
         return result
 
+    def _rules_buffer_prepare_lua_files(self, rule_buffer, tmpdir, file_path=None):
+        lua_re = re.compile(r"\blua\s*:\s*([^;]+\.lua)\s*;")
+        base_dir = os.path.dirname(file_path) if file_path else ""
+        for line in rule_buffer.splitlines():
+            match = lua_re.search(line)
+            if match:
+                lua_file = match.group(1).strip()
+                candidate = os.path.join(base_dir, lua_file) if base_dir else lua_file
+                if os.path.exists(candidate):
+                    shutil.copyfile(
+                        candidate, os.path.join(tmpdir, os.path.basename(lua_file))
+                    )
+                else:
+                    log.warning("Lua file not found: %s", candidate)
+
     def _rules_buffer_prepare_dataset(self, rule_buffer, tmpdir):
         # check that we have a dataset keyword and create the load/save file in tmpdir after transformation
         # if we have a file with same basename as the dataset then we copy it to tmp dir with correct name
@@ -268,6 +283,7 @@ class SignaturesTester:
             suricmd.set_docker_version_for_run(image_version=options["version"])
 
         self._rules_buffer_prepare_dataset(rule_buffer, tmpdir)
+        self._rules_buffer_prepare_lua_files(rule_buffer, tmpdir)
 
         self._prepare_conf(rule_buffer, tmpdir, suricmd=suricmd)
 
@@ -349,6 +365,9 @@ class SignaturesTester:
         tmpdir = suricmd.get_tmpdir()
 
         self._rules_buffer_prepare_dataset(rule_buffer, tmpdir)
+        self._rules_buffer_prepare_lua_files(
+            rule_buffer, tmpdir, file_path=kwargs.get("file_path")
+        )
 
         self._prepare_conf(
             rule_buffer,

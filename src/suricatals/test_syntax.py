@@ -86,6 +86,11 @@ class TestSyntax:
         for diag in diags:
             assert diag.severity == 4
 
+    def test_lua_rule(self):
+        diags = self._test_rules_file("lua.rules", 2)
+        for diag in diags:
+            assert diag.severity == 4
+
     def test_invalid_multilines(self):
         diags = self._test_rules_file("invalid-multiline.rules", 3)
         has_missing = False
