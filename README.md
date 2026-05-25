@@ -33,29 +33,24 @@ and hints about the potential issues seen of the signatures.
 
 ## Installation
 
-You can use pip to install the Suricata language server :
+The recommended way to install Suricata Language Server is in a
+dedicated virtualenv. This avoids conflicts with system packages and
+works on all platforms:
 
 ```sh
-pip install suricata-language-server
+python3 -m venv ~/.venv/sls
+~/.venv/sls/bin/pip install suricata-language-server
 ```
 
-Run this command with sudo if you want to install it globally.
+Then point your editor to the full path of the binary inside the
+virtualenv:
 
-On system where [PEP 704](https://peps.python.org/pep-0704/) is
-implemented, the installation via PIP is done by default in a virtualenv
-which is not convenient for our use case where the editor is running the
-server. A workaround is to force the installation outside a virtualenv
-by doing :
-
-```sh
-pip install --break-system-packages suricata-language-server
+```
+~/.venv/sls/bin/suricata-language-server
 ```
 
-> [!TIP]
-> It is also possible to install the server in a virtualenv and then
-> you can set up your editor to use the virtualenv. This is done by
-> specifying in the editor configuration the complete path to the
-> `suricata-language-server` binary in the virtualenv.
+On Microsoft Windows the binary path will be
+`%USERPROFILE%\.venv\sls\Scripts\suricata-language-server.exe`.
 
 If you are a Microsoft Windows user and need to install Suricata, you
 can use the MSI available on [Suricata download
@@ -65,17 +60,15 @@ page](https://www.python.org/downloads/windows/) is working well.
 
 ### Manual Installation
 
-After cloning the repository, you need to install first the server by
-running in the root directory of the project :
+After cloning the repository, install the server into a virtualenv
+from the root directory of the project:
 
 ```sh
-pip install .
+python3 -m venv ~/.venv/sls
+~/.venv/sls/bin/pip install .
 ```
 
-This will add a `suricata-language-server` command to the system that
-will be invoked transparently by the editors that are configured to use
-it. You can use `sudo pip install .` to install it system wide if
-needed.
+Point your editor to `~/.venv/sls/bin/suricata-language-server`.
 
 ## Working modes
 
@@ -105,7 +98,7 @@ One simple way is to use
 following snippet to your configuration:
 
 ```lua
-local suricata_ls_cmd = {vim.fn.expand('$HOME/.local/bin/suricata-language-server')}
+local suricata_ls_cmd = {vim.fn.expand('$HOME/.venv/sls/bin/suricata-language-server')}
 vim.lsp.config('Suricata LS',
   {
       cmd = suricata_ls_cmd;
