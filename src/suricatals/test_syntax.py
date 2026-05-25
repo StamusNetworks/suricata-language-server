@@ -191,6 +191,11 @@ class TestSyntax:
             or "absolute" in diags[0].message.lower()
         )
 
+    def test_pcap_relative_path(self):
+        diags = self._test_rules_file("pcap-relative.rules", 1)
+        assert diags[0].severity == 1
+        assert "relative" in diags[0].message.lower()
+
     def test_empty_sticky(self):
         diags = self._test_rules_file("empty_sticky.rules", 1)
         for diag in diags:
