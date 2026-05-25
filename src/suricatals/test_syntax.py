@@ -86,12 +86,9 @@ class TestSyntax:
         for diag in diags:
             assert diag.severity == 4
 
+    @min_version("8.0.0")
     def test_lua_rule(self):
-        if get_suricata_version() < (8, 0, 0):
-            diag_count = 1
-        else:
-            diag_count = 2
-        diags = self._test_rules_file("lua.rules", diag_count)
+        diags = self._test_rules_file("lua.rules", 2)
         for diag in diags:
             assert diag.severity == 4
 
