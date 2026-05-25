@@ -22,6 +22,7 @@ import re
 
 from lsprotocol import types
 from .signature_tokenizer import SuricataSemanticTokenParser
+from .suricata_error_parser import SuricataFileException
 
 
 class DiagnosticBuilder:
@@ -710,6 +711,18 @@ class SuricataFile:
         self.diagnosis = diagnostics
         return result["status"], sorted(diagnostics, key=self.sort_diagnosis)
 
+    def _diag_from_file_exception(self, exc):
+        """Convert a SuricataFileException to a DiagnosticBuilder."""
+        diag = DiagnosticBuilder()
+        line = exc.line_number if exc.line_number is not None else 0
+        diag.range = types.Range(
+            start=types.Position(line=line, character=0),
+            end=types.Position(line=line, character=1000),
+        )
+        diag.message = str(exc)
+        diag.severity = DiagnosticBuilder.ERROR_LEVEL
+        return diag
+
     def check_lsp_file(self, lsp_file, workspace=None, engine_analysis=True, **kwargs):
         """Check LSP file object using Suricata and return diagnostics.
 
@@ -722,12 +735,16 @@ class SuricataFile:
         Returns:
             tuple: (status, diagnostics) where status is bool and diagnostics is list
         """
-        result = {}
         if not workspace:
             workspace = {}
         kwargs["file_path"] = self.path
         buffer = lsp_file.source
-        result = self.rules_tester.check_rule_buffer(buffer, engine_analysis, **kwargs)
+        try:
+            result = self.rules_tester.check_rule_buffer(
+                buffer, engine_analysis, **kwargs
+            )
+        except SuricataFileException as exc:
+            return False, [self._diag_from_file_exception(exc)]
         return self.build_all_diags(
             result, workspace=workspace, engine_analysis=engine_analysis
         )
@@ -743,14 +760,16 @@ class SuricataFile:
         Returns:
             tuple: (status, diagnostics) where status is bool and diagnostics is list
         """
-        result = {}
         if not workspace:
             workspace = {}
         with open(self.path, "r", encoding="utf-8", errors="replace") as fhandle:
             kwargs["file_path"] = self.path
-            result = self.rules_tester.check_rule_buffer(
-                fhandle.read(), engine_analysis, **kwargs
-            )
+            try:
+                result = self.rules_tester.check_rule_buffer(
+                    fhandle.read(), engine_analysis, **kwargs
+                )
+            except SuricataFileException as exc:
+                return False, [self._diag_from_file_exception(exc)]
         return self.build_all_diags(
             result, workspace=workspace, engine_analysis=engine_analysis
         )
