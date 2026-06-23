@@ -210,7 +210,7 @@ class SignaturesTester:
         return result
 
     def _rules_buffer_prepare_lua_files(self, rule_buffer, tmpdir, file_path=None):
-        lua_re = re.compile(r"\blua\s*:\s*([^;]+\.lua)\s*;")
+        lua_re = re.compile(r"\blua\s*:\s*([^;\s]+\.lua)\s*;")
         base_dir = os.path.dirname(file_path) if file_path else ""
         for line in rule_buffer.splitlines():
             match = lua_re.search(line)
