@@ -229,6 +229,35 @@ alert http any any -> any any (msg:"Test API usage"; content:"test"; sid:1;)
         assert len(result["errors"]) == 0
         assert len(result["warnings"]) == 1
 
+    def test_file_data_mpm_analysis(self):
+        """Test file_data rules with explicit fast_pattern are analyzed without crash."""
+        testor = LangServer(batch_mode=True)
+        if not testor.rules_tester:
+            pytest.fail("Rules tester is not initialized")
+        with open(
+            os.path.join(os.getcwd(), "tests", "file_data.rules"), "r", encoding="utf-8"
+        ) as f:
+            rule_buffer = f.read()
+        result = testor.rules_tester.check_rule_buffer(
+            rule_buffer, engine_analysis=True
+        )
+        assert len(result["errors"]) == 0
+        assert "mpm" in result
+        sids = result["mpm"]["sids"]
+        # single file_data + content: AAAA selected as MPM
+        assert 1000010 in sids
+        assert sids[1000010]["pattern"] == "AAAA"
+        assert sids[1000010]["buffer"] == "file_data"
+        # repeated file_data + content: first content (AAAA) auto-selected as MPM
+        assert 1000011 in sids
+        assert sids[1000011]["pattern"] == "AAAA"
+        assert sids[1000011]["buffer"] == "file_data"
+        # repeated file_data with explicit fast_pattern on second content:
+        # mpm field lacks pattern info, engine analysis correctly identifies BBBB
+        assert 1000012 in sids
+        assert sids[1000012]["pattern"] == "BBBB"
+        assert sids[1000012]["buffer"] == "file_data"
+
     def test_rules_infos(self):
         rule_buffer = 'alert http any any -> any any (msg:"Test rules_infos"; http.uri; content:"testAAA"; sid:42; rev:1;)'
         testor = LangServer(batch_mode=True)
