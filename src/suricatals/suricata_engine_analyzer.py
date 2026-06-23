@@ -312,12 +312,13 @@ class SuricataEngineAnalyzer:
         Returns:
             MPM data dict with id, gid, buffer, pattern, or None
         """
-        # Direct MPM field (older format)
+        # Direct MPM field (older format) — only use if it contains pattern info
         if "mpm" in rule_analysis:
             mpm = rule_analysis["mpm"]
-            mpm["id"] = rule_analysis["id"]
-            mpm["gid"] = rule_analysis["gid"]
-            return mpm
+            if "content" in mpm or "pattern" in mpm:
+                mpm["id"] = rule_analysis["id"]
+                mpm["gid"] = rule_analysis["gid"]
+                return mpm
 
         # Extract from engines
         if "engines" in rule_analysis:
@@ -415,6 +416,8 @@ class SuricataEngineAnalyzer:
 
         for sig in mpm_data:
             sig_pattern = self._get_pattern_from_sig(sig)
+            if sig_pattern is None:
+                continue
             sig_buffer = sig["buffer"]
             sig_id = sig["id"]
             sig_gid = sig["gid"]
@@ -435,8 +438,8 @@ class SuricataEngineAnalyzer:
     def _get_pattern_from_sig(self, sig):
         """Extract pattern from signature data (handles both old and new formats)."""
         if "content" in sig:
-            return sig["content"]["pattern"]
-        return sig["pattern"]
+            return sig["content"].get("pattern")
+        return sig.get("pattern")
 
     def _add_to_buffer_analysis(
         self, buffer_analysis, buffer_name, pattern, sig_id, sig_gid
