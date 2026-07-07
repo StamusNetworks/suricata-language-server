@@ -383,6 +383,7 @@ class SignaturesTester:
 
         suri_cmd = [
             "-T",
+            "-v",
         ]
 
         if suri_options:

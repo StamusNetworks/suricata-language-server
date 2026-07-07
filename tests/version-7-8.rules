@@ -1,0 +1,4 @@
+## SLS suricata-version: 7.0.12
+
+alert http any any => any any (msg:"test"; requires: version > 8.0.0; http.host; content:"bbb"; http.server; content:"ttt"; sid:1;)
+alert http any any -> any any (msg:"test"; requires: version < 8.0.0; http.host; content:"bbb"; sid:2;)

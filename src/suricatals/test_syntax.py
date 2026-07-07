@@ -258,6 +258,26 @@ alert http any any -> any any (msg:"Test API usage"; content:"test"; sid:1;)
         assert sids[1000012]["pattern"] == "BBBB"
         assert sids[1000012]["buffer"] == "file_data"
 
+    def test_version_requirement_not_met(self):
+        """On Suricata < 8: rule requiring version > 8 is not loaded, shows warning, no fast pattern hint."""
+        if get_suricata_version() >= (8, 0, 0):
+            pytest.skip("Test only applies when Suricata version < 8.0.0")
+        diags = self._test_rules_file("version-8.rules", 1)
+        assert diags[0].severity == 2  # Warning
+        assert "not loaded" in diags[0].message
+        assert "requirements" in diags[0].message
+
+    def test_version_requirement_combo(self):
+        """On Suricata < 8: one rule loads (version < 8.0.0), one does not (version > 8.0.0)."""
+        if get_suricata_version() >= (8, 0, 0):
+            pytest.skip("Test only applies when Suricata version < 8.0.0")
+        diags = self._test_rules_file("version-7-8.rules", 2)
+        missing = [d for d in diags if "not loaded" in d.message]
+        assert len(missing) == 1
+        assert missing[0].severity == 2  # Warning
+        loaded = [d for d in diags if d.severity == 4]
+        assert len(loaded) == 1
+
     def test_rules_infos(self):
         rule_buffer = 'alert http any any -> any any (msg:"Test rules_infos"; http.uri; content:"testAAA"; sid:42; rev:1;)'
         testor = LangServer(batch_mode=True)

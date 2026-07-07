@@ -112,6 +112,19 @@ class SuricataErrorParser:
             ] not in ["rule-vars"]:
                 continue
 
+            if s_err.get("log_level") == "Info":
+                msg = s_err["engine"].get("message", "")
+                if msg.startswith("Skipping signature due to missing requirements:"):
+                    line_match = re.search(r"at line (\d+)$", msg)
+                    if line_match:
+                        s_err["engine"]["line"] = int(line_match.group(1)) - 1
+                        s_err["engine"][
+                            "message"
+                        ] = "Signature not loaded: missing requirements"
+                        s_err["engine"]["suricata_error"] = True
+                        ret["warnings"].append(s_err["engine"])
+                continue  # Don't update prev_err for Info messages
+
             if re.search(
                 'Variable "(.+)" is not defined in configuration file',
                 s_err["engine"].get("message", ""),
