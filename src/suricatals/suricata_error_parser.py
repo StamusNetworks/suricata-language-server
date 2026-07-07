@@ -122,6 +122,7 @@ class SuricataErrorParser:
                             "message"
                         ] = "Signature not loaded: missing requirements"
                         s_err["engine"]["suricata_error"] = True
+                        s_err["engine"]["hint"] = True
                         ret["warnings"].append(s_err["engine"])
                 continue  # Don't update prev_err for Info messages
 

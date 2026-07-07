@@ -28,8 +28,8 @@ from .suricata_error_parser import SuricataFileException
 class DiagnosticBuilder:
     """Helper class to build LSP diagnostics with a convenient interface."""
 
-    # Use Hint (4) for INFO_LEVEL to maintain backward compatibility
-    INFO_LEVEL = types.DiagnosticSeverity.Hint
+    HINT_LEVEL = types.DiagnosticSeverity.Hint
+    INFORMATION_LEVEL = types.DiagnosticSeverity.Information
     WARNING_LEVEL = types.DiagnosticSeverity.Warning
     ERROR_LEVEL = types.DiagnosticSeverity.Error
 
@@ -440,7 +440,11 @@ class SuricataFile:
             l_diag = DiagnosticBuilder()
             l_diag.message = warning["message"]
             l_diag.source = warning["source"]
-            l_diag.severity = DiagnosticBuilder.WARNING_LEVEL
+            l_diag.severity = (
+                DiagnosticBuilder.INFORMATION_LEVEL
+                if warning.get("hint")
+                else DiagnosticBuilder.WARNING_LEVEL
+            )
             if "line" in warning:
                 line = warning["line"]
                 signature = self.sigset.get_sig_by_line(line)
@@ -481,7 +485,7 @@ class SuricataFile:
             l_diag = DiagnosticBuilder()
             l_diag.message = info["message"]
             l_diag.source = info["source"]
-            l_diag.severity = DiagnosticBuilder.INFO_LEVEL
+            l_diag.severity = DiagnosticBuilder.HINT_LEVEL
             if "line" in info:
                 line = info["line"]
             elif "content" in info:
@@ -520,7 +524,7 @@ class SuricataFile:
                     l_diag = DiagnosticBuilder()
                     l_diag.message = message
                     l_diag.source = "Suricata MPM Analysis"
-                    l_diag.severity = DiagnosticBuilder.INFO_LEVEL
+                    l_diag.severity = DiagnosticBuilder.HINT_LEVEL
                     l_diag.range = sig.get_diag_range(mode="msg")
                     l_diag.sid = sig.sid
                     l_diag.content = sig.content
@@ -571,7 +575,7 @@ class SuricataFile:
                 )
                 l_diag.source = "Suricata MPM Analysis"
             sig_range = sig.get_diag_range(mode="pattern", pattern=sig.mpm["pattern"])
-            l_diag.severity = DiagnosticBuilder.INFO_LEVEL
+            l_diag.severity = DiagnosticBuilder.HINT_LEVEL
             l_diag.range = sig.get_diag_range(
                 mode="pattern", pattern=sig.mpm["pattern"]
             )
@@ -586,7 +590,7 @@ class SuricataFile:
             l_diag = DiagnosticBuilder()
             l_diag.message = f"Alerts: {count}"
             l_diag.source = "Suricata Pcap Analysis"
-            l_diag.severity = DiagnosticBuilder.INFO_LEVEL
+            l_diag.severity = DiagnosticBuilder.HINT_LEVEL
             signature = self.sigset.get_sig_by_sid(sid)
             if signature:
                 sig_range = signature.get_diag_range(mode="msg")
@@ -603,7 +607,7 @@ class SuricataFile:
             l_diag = DiagnosticBuilder()
             l_diag.message = f"Checks: {res['checks']}. Ticks: total {res['ticks_total']}, max {res['ticks_max']}, avg {res['ticks_avg']}"
             l_diag.source = "Suricata Pcap Profiling"
-            l_diag.severity = DiagnosticBuilder.INFO_LEVEL
+            l_diag.severity = DiagnosticBuilder.HINT_LEVEL
             signature = self.sigset.get_sig_by_sid(res["signature_id"])
             if signature:
                 sig_range = signature.get_diag_range(mode="msg")

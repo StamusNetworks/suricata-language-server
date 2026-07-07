@@ -263,7 +263,7 @@ alert http any any -> any any (msg:"Test API usage"; content:"test"; sid:1;)
         if get_suricata_version() >= (8, 0, 0):
             pytest.skip("Test only applies when Suricata version < 8.0.0")
         diags = self._test_rules_file("version-8.rules", 1)
-        assert diags[0].severity == 2  # Warning
+        assert diags[0].severity == 3  # Information — normal case
         assert "not loaded" in diags[0].message
         assert "requirements" in diags[0].message
 
@@ -274,8 +274,8 @@ alert http any any -> any any (msg:"Test API usage"; content:"test"; sid:1;)
         diags = self._test_rules_file("version-7-8.rules", 2)
         missing = [d for d in diags if "not loaded" in d.message]
         assert len(missing) == 1
-        assert missing[0].severity == 2  # Warning
-        loaded = [d for d in diags if d.severity == 4]
+        assert missing[0].severity == 3  # Information — normal case
+        loaded = [d for d in diags if "not loaded" not in d.message]
         assert len(loaded) == 1
 
     def test_rules_infos(self):

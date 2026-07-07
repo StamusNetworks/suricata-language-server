@@ -45,7 +45,7 @@ class TestDiagnosticBuilder:
 
     def test_severity_levels(self):
         """Test severity level constants"""
-        assert DiagnosticBuilder.INFO_LEVEL == types.DiagnosticSeverity.Hint
+        assert DiagnosticBuilder.HINT_LEVEL == types.DiagnosticSeverity.Hint
         assert DiagnosticBuilder.WARNING_LEVEL == types.DiagnosticSeverity.Warning
         assert DiagnosticBuilder.ERROR_LEVEL == types.DiagnosticSeverity.Error
 
@@ -659,7 +659,7 @@ line three"""
         suri_file = SuricataFile("/path/to/test.rules", self.mock_tester)
 
         diag1 = DiagnosticBuilder()
-        diag1.severity = DiagnosticBuilder.INFO_LEVEL
+        diag1.severity = DiagnosticBuilder.HINT_LEVEL
 
         diag2 = DiagnosticBuilder()
         diag2.severity = DiagnosticBuilder.ERROR_LEVEL
@@ -672,7 +672,7 @@ line three"""
 
         # Should be sorted by -severity, which puts higher values first
         # Hint (4) > Warning (2) > Error (1)
-        assert sorted_diags[0].severity == DiagnosticBuilder.INFO_LEVEL
+        assert sorted_diags[0].severity == DiagnosticBuilder.HINT_LEVEL
         assert sorted_diags[1].severity == DiagnosticBuilder.WARNING_LEVEL
         assert sorted_diags[2].severity == DiagnosticBuilder.ERROR_LEVEL
 
@@ -689,7 +689,7 @@ alert tcp any any -> any any (msg:"Test2"; sid:2000;)"""
         assert len(diagnostics) == 2
 
         for diag in diagnostics:
-            assert diag.severity == DiagnosticBuilder.INFO_LEVEL
+            assert diag.severity == DiagnosticBuilder.HINT_LEVEL
             assert diag.source == "Suricata Pcap Analysis"
             if diag.sid == 1000:
                 assert diag.message == "Alerts: 5"
@@ -714,7 +714,7 @@ alert tcp any any -> any any (msg:"Test2"; sid:2000;)"""
 
         diagnostics = suri_file.build_profiling_diagnostics(profiling_results)
         assert len(diagnostics) == 1
-        assert diagnostics[0].severity == DiagnosticBuilder.INFO_LEVEL
+        assert diagnostics[0].severity == DiagnosticBuilder.HINT_LEVEL
         assert diagnostics[0].source == "Suricata Pcap Profiling"
         assert "Checks: 100" in diagnostics[0].message
         assert "Ticks: total 5000" in diagnostics[0].message
