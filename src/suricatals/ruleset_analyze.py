@@ -523,14 +523,33 @@ def build_parser():
         "--sid-allocations",
         default=None,
         help=(
-            "Source for the SID allocation registry (URL or local file). "
-            "Default fetches sidallocation.org and caches it in ~/.cache/."
+            "Override the SID allocation registry source (URL or local file). "
+            "Default: use the user cache under ~/.cache/, refreshing weekly "
+            "from sidallocation.org and falling back to the bundled copy "
+            "shipped with the package if the network is unreachable."
+        ),
+    )
+    parser.add_argument(
+        "--offline-sid-allocations",
+        action="store_true",
+        help=(
+            "Never touch the network for the SID allocations lookup. Uses the "
+            "on-disk cache if present, otherwise the bundled copy shipped with "
+            "the package."
+        ),
+    )
+    parser.add_argument(
+        "--refresh-sid-allocations",
+        action="store_true",
+        help=(
+            "Fetch the latest allocations.yml from sidallocation.org, "
+            "overwrite the bundled copy in-place, then exit."
         ),
     )
     parser.add_argument(
         "--no-sid-allocations",
         action="store_true",
-        help="Skip SID provenance lookup (no network access)",
+        help="Skip SID provenance lookup entirely",
     )
     parser.add_argument("rules_file", nargs="?", help="Path to rules file")
     return parser
@@ -542,6 +561,11 @@ def main():
 
     if args.version:
         print(__version__)
+        sys.exit(0)
+
+    if args.refresh_sid_allocations:
+        path = SidAllocations.refresh_bundled()
+        print(f"Refreshed bundled SID allocations at {path}")
         sys.exit(0)
 
     if not args.rules_file:
@@ -572,8 +596,15 @@ def main():
     allocations = None
     if not args.no_sid_allocations and "composition" in sections:
         try:
-            allocations = SidAllocations.load(args.sid_allocations)
-        except (OSError, ValueError, yaml.YAMLError) as exc:  # pragma: no cover
+            allocations = SidAllocations.load(
+                args.sid_allocations, offline=args.offline_sid_allocations
+            )
+        except (
+            OSError,
+            ValueError,
+            RuntimeError,
+            yaml.YAMLError,
+        ) as exc:  # pragma: no cover
             print(
                 f"warning: could not load SID allocations ({exc}); skipping provenance",
                 file=sys.stderr,

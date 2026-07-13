@@ -59,7 +59,7 @@ suricata-ruleset-analyze = "suricatals.ruleset_analyze:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-suricatals = ["data/*.json"]
+suricatals = ["data/*.json", "data/*.yml"]
 
 [tool.coverage.run]
 source = ["src/suricatals"]

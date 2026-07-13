@@ -1,0 +1,185 @@
+meta:
+  title: Sid Allocation
+  preamble: |
+    **Mission statement**: a working group to self organize sid ranges for the benefit of users
+
+allocations:
+
+  local:
+    org: local
+    name: Reserved for local use. Put your custom rules in this range.
+    note: Reserved for Local Use - Put your custom rules in this range to avoid conflicts
+    ranges:
+      - start: 1000000
+        size: 1000000
+
+  emergingthreats/open:
+    org: Emerging Threats
+    name: Emerging Threats Open
+    url: https://community.emergingthreats.net/
+    note: "[Emerging Threats Open](https://community.emergingthreats.net/)"
+    ranges:
+      - start: 2000000
+        size: 104000
+      - start: 2400000
+        size: 210000
+
+  oisf/core:
+    org: OISF
+    name: Suricata Engine Rules
+    note: Suricata Engine Events
+    ranges:
+      - start: 2200000
+        size: 100000
+
+  travisbgreen/hunting:
+    org: Travis Green
+    name: Hunting Ruleset
+    url: https://github.com/travisbgreen/hunting-rules
+    note: "[Hunting Ruleset](https://github.com/travisbgreen/hunting-rules)"
+    ranges:
+      - start: 2610000
+        size: 10000
+
+  emergingthreats:
+    org: Emerging Threats
+    name: Emerging Threats
+    note: "[Emerging Threats](https://doc.emergingthreats.net/bin/view/Main/SidAllocation)"
+    ranges:
+      - start: 2700000
+        size: 100000
+      - start: 100000000
+        size: 100000000
+
+  emergingthreats/pro:
+    org: Emerging Threats
+    name: Emerging Threats Pro
+    note: "[Emerging Threats Pro](https://doc.emergingthreats.net/bin/view/Main/SidAllocation)"
+    ranges:
+      - start: 2800000
+        size: 100000
+
+  corelight:
+    org: Corelight
+    name: Corelight
+    note: "[Corelight Github](https://github.com/corelight/)"
+    ranges:
+      - start: 3000000
+        size: 100000
+
+  stamusnetworks:
+    org: Stamus Networks
+    name: Stamus Networks
+    note: "[Stamus Networks Detection](https://stamus-networks.com)"
+    ranges:
+      - start: 3100000
+        size: 100000
+
+  dcso:
+    org: DCSO
+    name: DCSO
+    note: "[DCSO CyTec](https://medium.com/@DCSO_CyTec), [DCSO Github](https://github.com/DCSO/suricata-rules)"
+    ranges:
+      - start: 3200000
+        size: 100000
+
+  extrahopnetworks:
+    org: ExtraHop
+    name: ExtraHop
+    note: "[ExtraHop IDS](https://www.extrahop.com/solutions/security/ids/)"
+    ranges:
+      - start: 4000000
+        size: 100000
+
+  etnetera:
+    org: Etnetera a.s.
+    name: Etnetera a.s.
+    note: "[Etnetera aggressive IP blacklist](https://security.etnetera.cz/feeds/etn_aggressive.rules)"
+    ranges:
+      - start: 5000000
+        size: 214
+
+  julioliraup:
+    org: Julioliraup
+    name: Julioliraup Antiphishing
+    note: "[Antiphishing](https://github.com/julioliraup/Antiphishing)"
+    ranges:
+      - start: 6000000
+        size: 100000
+
+  positivetechnologies:
+    org: Positive Technologies
+    name: Positive Technologies Attack Detection Team ruleset
+    note: "[PT Security Attack Detection Team ruleset](https://github.com/ptresearch/AttackDetection#sid-range)"
+    ranges:
+      - start: 10000000
+        size: 2000000
+
+  jpgview:
+    org: jpgview
+    name: DOH rules
+    note: "[DOH Rules](https://raw.githubusercontent.com/jpgpi250/piholemanual/master/DOH/DOH.rules)"
+    ranges:
+      - start: 27990000
+        size: 10000
+
+  abusech:
+    org: Abuse.ch
+    name: Abuse.ch
+    note: "Abuse.ch"
+    ranges:
+      - start: 902200000
+        size: 4000097
+
+  pawpatrules:
+    org: Pawpatrules
+    name: PAW Patrules
+    note: "[PAW Patrules](https://pawpatrules.fr/)"
+    engine:
+      - suricata
+    ranges:
+      - start: 3300000
+        size: 100000
+
+  aleksibovellan:
+    org:  Aleksi Bovellan
+    name: Aleksi Bovellan
+    note: "[NMAP Ruleset](https://github.com/aleksibovellan/opnsense-suricata-nmaps)"
+    engine:
+      - suricata
+    ranges:
+      - start: 3400000
+        size: 100000
+
+  the-hunters-ledger:
+    org: The Hunters Ledger
+    name: The Hunters Ledger Detection Feed
+    url: https://the-hunters-ledger.com/
+    note: "[The Hunters Ledger](https://the-hunters-ledger.com/) - Community threat-intelligence Suricata feed (CC BY 4.0)"
+    engine:
+      - suricata
+    ranges:
+      - start: 3500000
+        size: 10000
+
+  wybot:
+    org: Wybot SAS
+    name: Wybot SAS
+    note: "[Wybot Cybersecurity](https://www.wybot-cybersecurite.com/)"
+    engine:
+      - suricata
+    ranges:
+      - start: 9555000
+        size: 400000
+
+  ipfire/dbl:
+    org: IPFire
+    name: IPFire DBL
+    url: https://www.ipfire.org/dbl/
+    note: "[IPFire Domain Block List](https://www.ipfire.org/dbl/)"
+    engine:
+      - snort
+      - suricata
+    ranges:
+      - start: 12000000
+        size: 1000000
