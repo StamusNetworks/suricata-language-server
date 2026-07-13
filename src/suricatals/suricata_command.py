@@ -721,6 +721,36 @@ profiling:
             raise RuntimeError("Suricata returned error while getting build info")
         return output.strip()
 
+    def _run_pcap(self, pcap_path, rules_content=None, extra_args=None):
+        """Set up config, write rules, stage the pcap, and run Suricata against it.
+
+        Caller owns cleanup — always wrap in a try/finally with self.cleanup().
+
+        Returns:
+            str: tmpdir path where Suricata's output files can be read.
+        """
+        self.prepare()
+        tmpdir = self.get_tmpdir()
+        self.generate_config(tmpdir, app_layer_protos=True)
+
+        rules_file = os.path.join(tmpdir, "file.rules")
+        with open(rules_file, "w", encoding="utf-8") as wf:
+            wf.write(rules_content if rules_content else "")
+
+        if self.docker:
+            pcap_basename = os.path.basename(pcap_path)
+            pcap_dest = os.path.join(tmpdir, pcap_basename)
+            shutil.copy(pcap_path, pcap_dest)
+            internal_pcap = os.path.join(self.get_internal_tmpdir(), pcap_basename)
+        else:
+            internal_pcap = os.path.abspath(pcap_path)
+
+        cmd = ["-r", internal_pcap]
+        if extra_args:
+            cmd.extend(extra_args)
+        self.run(cmd)
+        return tmpdir
+
     def read_pcap(self, pcap_path, rules_content=None):
         """Run Suricata on a PCAP file and return eve.json content.
 
@@ -735,37 +765,47 @@ profiling:
             RuntimeError: If PCAP processing fails or no eve.json is generated
         """
         try:
-            self.prepare()
-            tmpdir = self.get_tmpdir()
-
-            # Generate Suricata config
-            self.generate_config(tmpdir, app_layer_protos=True)
-
-            # Write rules file
-            rules_file = os.path.join(tmpdir, "file.rules")
-            with open(rules_file, "w", encoding="utf-8") as wf:
-                wf.write(rules_content if rules_content else "")
-
-            # Handle PCAP path for Docker vs local mode
-            if self.docker:
-                # Copy PCAP to tmpdir for Docker access
-                pcap_basename = os.path.basename(pcap_path)
-                pcap_dest = os.path.join(tmpdir, pcap_basename)
-                shutil.copy(pcap_path, pcap_dest)
-                internal_pcap = os.path.join(self.get_internal_tmpdir(), pcap_basename)
-            else:
-                internal_pcap = os.path.abspath(pcap_path)
-
-            # Run Suricata on PCAP
-            cmd = ["-r", internal_pcap]
-            self.run(cmd)
-
-            # Read and return eve.json
+            tmpdir = self._run_pcap(pcap_path, rules_content)
             eve_file = os.path.join(tmpdir, "eve.json")
             if os.path.exists(eve_file):
                 with open(eve_file, "r", encoding="utf-8") as ef:
                     return ef.read()
-            else:
-                raise RuntimeError("No eve.json output generated")
+            raise RuntimeError("No eve.json output generated")
+        finally:
+            self.cleanup()
+
+    def read_pcap_profile(self, pcap_path, rules_content=None, top_n=100):
+        """Run Suricata on a PCAP with rules profiling active and return rule_perf.json.
+
+        The generated config already enables profiling.rules; this method overrides
+        the row limit via --set so Suricata emits exactly top_n entries. Requires a
+        Suricata binary compiled with --enable-profiling (the default docker image
+        used by SLS ships with profiling enabled).
+
+        Args:
+            pcap_path: Path to PCAP file to process
+            rules_content: Optional rules content to use (string). If None, empty rules.
+            top_n: Number of top-ticks signatures to record
+
+        Returns:
+            str: Contents of rule_perf.json output from Suricata
+
+        Raises:
+            RuntimeError: If PCAP processing fails or no rule_perf.json is generated
+        """
+        try:
+            tmpdir = self._run_pcap(
+                pcap_path,
+                rules_content,
+                extra_args=["--set", f"profiling.rules.limit={top_n}"],
+            )
+            perf_file = os.path.join(tmpdir, "rule_perf.json")
+            if os.path.exists(perf_file):
+                with open(perf_file, "r", encoding="utf-8") as pf:
+                    return pf.read()
+            raise RuntimeError(
+                "No rule_perf.json output generated; ensure the Suricata build has "
+                "--enable-profiling"
+            )
         finally:
             self.cleanup()
