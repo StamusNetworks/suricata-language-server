@@ -23,6 +23,7 @@ import re
 from lsprotocol import types
 from .signature_tokenizer import SuricataSemanticTokenParser
 from .suricata_error_parser import SuricataFileException
+from .suricata_engine_analyzer import SuricataEngineAnalyzer
 
 
 class DiagnosticBuilder:
@@ -96,6 +97,7 @@ class Signature:
         self.rev = 0
         self._search_rev(content)
         self.mpm = None
+        self.type = None
         self.has_error = False
 
     def append_content(self, content, line):
@@ -519,7 +521,11 @@ class SuricataFile:
             diagnostics.append(l_diag)
         for sig in self.sigset.signatures:
             if sig.mpm is None:
-                if sig.sid and sig.has_error is False:
+                if (
+                    sig.sid
+                    and sig.has_error is False
+                    and sig.type not in SuricataEngineAnalyzer.MPM_BYPASS_TYPES
+                ):
                     message = "No Fast Pattern used, if possible add one content match to improve performance."
                     l_diag = DiagnosticBuilder()
                     l_diag.message = message
@@ -682,6 +688,10 @@ class SuricataFile:
             signature = self.sigset.get_sig_by_sid(sid)
             if signature is not None:
                 signature.mpm = result.get("mpm", {}).get("sids", {}).get(sid)
+        for sid, rule_type in result.get("rule_types", {}).items():
+            signature = self.sigset.get_sig_by_sid(sid)
+            if signature is not None:
+                signature.type = rule_type
         errors = self.build_errors_diagnostics(result.get("errors", []))
         diagnostics.extend(errors)
         warnings = self.build_warnings_diagnostics(result.get("warnings", []))

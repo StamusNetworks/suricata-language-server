@@ -28,7 +28,6 @@ from suricatals.suricata_discovery import SuricataDiscovery
 import json
 from importlib.metadata import version
 
-
 __version__ = version("suricata-language-server")
 
 

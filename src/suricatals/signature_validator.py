@@ -413,6 +413,7 @@ class SignaturesTester:
                 )
 
             engine_analysis = self.engine_analyzer.parse_engine_analysis(tmpdir)
+            rule_types = {}
             for signature in engine_analysis:
                 for warning in signature.get("warnings", []):
                     result["warnings"].append(
@@ -434,8 +435,13 @@ class SignaturesTester:
                         }
                     )
 
+                sid = signature.get("sid")
+                if sid is not None and "type" in signature:
+                    rule_types[sid] = signature["type"]
+
             mpm_analysis = self.engine_analyzer.parse_mpm_data(tmpdir)
             result["mpm"] = mpm_analysis
+            result["rule_types"] = rule_types
 
         if options.get("pcap"):
             pcap_file = options["pcap"]

@@ -136,9 +136,16 @@ class SuricataEngineAnalyzer:
 
         return signature_msg
 
+    # Rule types that bypass the MPM entirely (no fast_pattern is expected).
+    # Source: Suricata's SIG_TYPE_* — ip_only / like_ip_only use the radix-tree
+    # IP-only fast path, pd_only uses protocol detection only, de_only uses the
+    # decoder-event path. None of these participate in the multi-pattern matcher.
+    MPM_BYPASS_TYPES = {"ip_only", "like_ip_only", "pd_only", "de_only"}
+
     def _add_type_info(self, signature_msg, signature_info):
-        """Add rule type to info list."""
+        """Add rule type to info list and expose it as a structured field."""
         if "type" in signature_info:
+            signature_msg["type"] = signature_info["type"]
             self._ensure_list(signature_msg, "info")
             type_msg = f'Rule type is "{signature_info["type"]}"'
             signature_msg["info"].append(type_msg)

@@ -25,7 +25,6 @@ import re
 from suricatals.suricata_command import SuriCmd
 from importlib.metadata import version
 
-
 __version__ = version("suricata-language-server")
 
 MSG_RE = re.compile(r'msg\s*:\s*"([^"]*)"')
