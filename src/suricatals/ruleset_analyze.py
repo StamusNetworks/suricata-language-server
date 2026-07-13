@@ -158,23 +158,40 @@ def analyze_metadata(parsed_rules):
     total = len(parsed_rules)
     key_counts = Counter()
     per_key_values = defaultdict(Counter)
+    per_key_sids = defaultdict(list)
     multi_value_by_key = Counter()
 
     for rule in parsed_rules:
+        sid = rule.get("sid") if isinstance(rule.get("sid"), int) else None
         for key, values in rule.get("metadata", {}).items():
             key_counts[key] += 1
             per_key_values[key].update(values)
+            if sid is not None:
+                per_key_sids[key].append(sid)
             if len(values) > 1:
                 multi_value_by_key[key] += 1
 
-    # Value format-drift per key: unique shapes normalised to \d -> N
+    # Value format-drift per key: unique shapes normalised to \d -> N.
+    # For every key with >1 shape, also record which SIDs use which shape so
+    # downstream views (e.g. --errors-only) can list them.
     shape_drift = {}
+    shape_drift_sids = {}
     for key, values in per_key_values.items():
         shapes = Counter()
         for value, count in values.items():
             shapes[re.sub(r"\d", "N", value)] += count
         if len(shapes) > 1:
             shape_drift[key] = dict(shapes)
+            per_shape_sids = defaultdict(list)
+            for rule in parsed_rules:
+                sid = rule.get("sid")
+                if not isinstance(sid, int):
+                    continue
+                for value in rule.get("metadata", {}).get(key, []):
+                    per_shape_sids[re.sub(r"\d", "N", value)].append(sid)
+            shape_drift_sids[key] = {
+                shape: sorted(set(sids)) for shape, sids in per_shape_sids.items()
+            }
 
     # MITRE ID <-> name consistency
     id_name_mismatches = {}
@@ -201,8 +218,10 @@ def analyze_metadata(parsed_rules):
     return {
         "total_valid_rules": total,
         "key_coverage": coverage,
+        "sids_by_key": {k: sorted(set(v)) for k, v in per_key_sids.items()},
         "multi_value_sigs_by_key": dict(multi_value_by_key),
         "format_drift_by_key": shape_drift,
+        "format_drift_sids_by_key": shape_drift_sids,
         "mitre_id_name_mismatches": id_name_mismatches,
     }
 
@@ -253,6 +272,7 @@ def analyze_engine_and_mpm(rules_path, settings):
     warn_categories = Counter()
     warn_sids = set()
     err_sids = set()
+    err_messages = []  # [(sid, message), …] for the --errors-only view
     mpm_conflicts = 0
     mpm_conflict_sids = set()
     mpm_worst = {}  # (pattern, buffer) -> max N
@@ -270,6 +290,7 @@ def analyze_engine_and_mpm(rules_path, settings):
         if sev == 1:  # error
             if sid:
                 err_sids.add(sid)
+            err_messages.append({"sid": sid, "message": msg})
         elif sev == 2:  # warning
             if sid:
                 warn_sids.add(sid)
@@ -300,6 +321,7 @@ def analyze_engine_and_mpm(rules_path, settings):
 
     return {
         "errors_sid_count": len(err_sids),
+        "errors": err_messages,
         "warning_sid_count": len(warn_sids),
         "warning_categories": dict(warn_categories),
         "mpm_conflicts_total": mpm_conflicts,
@@ -308,6 +330,7 @@ def analyze_engine_and_mpm(rules_path, settings):
             {"pattern": p, "buffer": b, "shared_sigs": n} for (p, b), n in worst_top
         ],
         "no_fast_pattern_sig_count": len(no_fp_sids),
+        "no_fast_pattern_sids": sorted(s for s in no_fp_sids if s),
     }
 
 
@@ -344,6 +367,144 @@ def analyze_runtime(pcap_path, rules_content, top_n, settings):
 # --------------------------------------------------------------------------
 # Human-readable renderer
 # --------------------------------------------------------------------------
+
+
+def extract_error_report(report):
+    """Reduce a full report to just the error-level indicators.
+
+    Returned dict has keys (each present only when non-empty):
+      - syntax_errors: list of {sid, message}
+      - cve_format_drift: {"reference_cve": {...}, "metadata_cve": {...}}
+      - mitre_format_drift: {key: {shape: count, …}, …}
+      - mitre_id_name_mismatches: {id_key: {id: {name: count, …}, …}}
+    """
+    errors = {}
+
+    engine = report.get("engine") or {}
+    syntax_errors = engine.get("errors") or []
+    if syntax_errors:
+        errors["syntax_errors"] = syntax_errors
+
+    no_fp_sids = engine.get("no_fast_pattern_sids") or []
+    if no_fp_sids:
+        errors["no_fast_pattern"] = no_fp_sids
+
+    cve = report.get("cve") or {}
+    cve_drift = {}
+    if len(cve.get("reference_cve_shapes") or {}) > 1:
+        cve_drift["reference_cve"] = cve["reference_cve_shapes"]
+    if len(cve.get("metadata_cve_shapes") or {}) > 1:
+        cve_drift["metadata_cve"] = cve["metadata_cve_shapes"]
+    if cve_drift:
+        errors["cve_format_drift"] = cve_drift
+
+    # Shape drift only makes sense for MITRE ID fields whose values follow a
+    # regular shape (`TAxxxx` or `Txxxx[.NNN]`). Name/label fields like
+    # `mitre_tactic_name` / `mitre_technique_name` are free-form strings
+    # without digits — every distinct name registers as a fake shape and
+    # floods the report. Bare `mitre_technique` (see below) is treated
+    # separately as a non-canonical-key error, not as drift.
+    mitre_id_keys = {"mitre_tactic_id", "mitre_technique_id"}
+    metadata = report.get("metadata") or {}
+    mitre_drift_sids = {
+        key: shape_sids
+        for key, shape_sids in (metadata.get("format_drift_sids_by_key") or {}).items()
+        if key in mitre_id_keys
+    }
+    if mitre_drift_sids:
+        errors["mitre_format_drift"] = mitre_drift_sids
+
+    # Any use of the bare `mitre_technique` metadata key is itself an error —
+    # rules should use the canonical `mitre_technique_id` / `mitre_technique_name`
+    # pair. List the offending SIDs.
+    noncanonical_mitre_sids = (metadata.get("sids_by_key") or {}).get("mitre_technique")
+    if noncanonical_mitre_sids:
+        errors["mitre_noncanonical_key"] = {"mitre_technique": noncanonical_mitre_sids}
+
+    mitre_mismatches = metadata.get("mitre_id_name_mismatches") or {}
+    if mitre_mismatches:
+        errors["mitre_id_name_mismatches"] = mitre_mismatches
+
+    return errors
+
+
+def render_error_report(errors):
+    """Format the errors-only report as text."""
+    if not errors:
+        return (
+            "No errors, no-fast-pattern rules, CVE/MITRE format drift, "
+            "non-canonical MITRE keys, or MITRE id↔name mismatches."
+        )
+
+    lines = []
+
+    def header(text):
+        lines.append("")
+        lines.append(text)
+        lines.append("=" * len(text))
+
+    if "syntax_errors" in errors:
+        header("Syntax errors")
+        for item in errors["syntax_errors"]:
+            lines.append(
+                f"  sid={item.get('sid') or '?':<10}  {item.get('message', '')}"
+            )
+
+    if "no_fast_pattern" in errors:
+        header("No fast_pattern (sigs that should have one but don't)")
+        sids = errors["no_fast_pattern"]
+        lines.append(f"  {len(sids)} signature(s):")
+        for sid in sids[:50]:
+            lines.append(f"    sid={sid}")
+        if len(sids) > 50:
+            lines.append(f"    … and {len(sids) - 50} more")
+
+    if "cve_format_drift" in errors:
+        header("CVE format drift")
+        for field, shapes in errors["cve_format_drift"].items():
+            lines.append(f"  {field}:")
+            for shape, count in shapes.items():
+                lines.append(f"    {shape}   {count}")
+
+    if "mitre_noncanonical_key" in errors:
+        header("MITRE non-canonical metadata key")
+        for key, sids in errors["mitre_noncanonical_key"].items():
+            lines.append(
+                f"  {key}: use `mitre_technique_id` / `mitre_technique_name` "
+                f"instead ({len(sids)} sig(s)):"
+            )
+            for sid in sids[:50]:
+                lines.append(f"    sid={sid}")
+            if len(sids) > 50:
+                lines.append(f"    … and {len(sids) - 50} more")
+
+    if "mitre_format_drift" in errors:
+        header("MITRE format drift")
+        for key, shape_sids in errors["mitre_format_drift"].items():
+            # The most-common shape is treated as the norm; only sigs using
+            # any other shape are listed here.
+            if not shape_sids:
+                continue
+            majority = max(shape_sids.items(), key=lambda kv: len(kv[1]))[0]
+            lines.append(f"  {key}  (norm: {majority}):")
+            for shape, sids in shape_sids.items():
+                if shape == majority:
+                    continue
+                lines.append(f"    {shape}  ({len(sids)} sig(s)):")
+                for sid in sids[:50]:
+                    lines.append(f"      sid={sid}")
+                if len(sids) > 50:
+                    lines.append(f"      … and {len(sids) - 50} more")
+
+    if "mitre_id_name_mismatches" in errors:
+        header("MITRE id ↔ name mismatches")
+        for id_key, conflicts in errors["mitre_id_name_mismatches"].items():
+            lines.append(f"  {id_key}: {len(conflicts)} conflicting ID(s)")
+            for mitre_id, names in list(conflicts.items())[:10]:
+                names_summary = ", ".join(f"{n} (x{c})" for n, c in names.items())
+                lines.append(f"    {mitre_id}: {names_summary}")
+
+    return "\n".join(lines).lstrip("\n")
 
 
 def render_text_report(report, top_n=10):
@@ -495,6 +656,15 @@ def build_parser():
         "--json", action="store_true", help="Emit JSON instead of a text report"
     )
     parser.add_argument(
+        "--errors-only",
+        action="store_true",
+        help=(
+            "Show only error-level findings: syntax errors, CVE format drift, "
+            "MITRE format drift, and MITRE id↔name mismatches. Skips coverage "
+            "and distribution output."
+        ),
+    )
+    parser.add_argument(
         "--sections",
         default=",".join(DEFAULT_SECTIONS),
         help=(
@@ -624,7 +794,13 @@ def main():
     if args.pcap:
         report["runtime"] = analyze_runtime(args.pcap, text, args.profile_top, settings)
 
-    if args.json:
+    if args.errors_only:
+        errors = extract_error_report(report)
+        if args.json:
+            print(json.dumps(errors, indent=2, ensure_ascii=False))
+        else:
+            print(render_error_report(errors))
+    elif args.json:
         print(json.dumps(report, indent=2, ensure_ascii=False))
     else:
         print(render_text_report(report, top_n=args.top))

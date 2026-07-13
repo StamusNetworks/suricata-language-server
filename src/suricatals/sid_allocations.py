@@ -26,7 +26,6 @@ from collections import Counter
 
 import yaml
 
-
 DEFAULT_ALLOCATIONS_URL = (
     "https://raw.githubusercontent.com/sidallocation/sidallocation.org/"
     "refs/heads/gh-pages/allocations.yml"
