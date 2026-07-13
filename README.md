@@ -430,6 +430,12 @@ With custom Suricata binary:
 suricata-read --suricata-binary /path/to/suricata pcap_file.pcap
 ```
 
+Profile a rules file against a PCAP (report the top-N most CPU-expensive signatures instead of EVE JSON alerts):
+
+```sh
+suricata-read --container --rules-file my.rules --profile --profile-top 100 traffic.pcap
+```
+
 ### Options
 
 See `suricata-read -h` for complete and up-to-date help.
@@ -440,6 +446,8 @@ See `suricata-read -h` for complete and up-to-date help.
 - `--image`: Suricata image to use in container mode (default: `jasonish/suricata:latest`)
 - `--suricata-binary`: Path to the Suricata binary (default: `suricata`)
 - `--suricata-config`: Path to the Suricata config file (optional)
+- `--profile`: Enable rules profiling — output the top-N most CPU-expensive signatures (by ticks) instead of EVE JSON alerts. Requires a Suricata build with `--enable-profiling` (the default container image ships with profiling enabled).
+- `--profile-top`: Number of signatures to include in `--profile` output (default: 100)
 - `--version`: Print version number and exit
 
 ### Output
@@ -453,6 +461,44 @@ suricata-read --rules-file my.rules traffic.pcap > output.json
 ```sh
 suricata-read traffic.pcap | jq '.alert'
 ```
+
+### Rule performance profiling
+
+When `--profile` is used, `suricata-read` runs Suricata against the PCAP with rules profiling enabled, then returns a compact JSON document with two top-level keys:
+
+- `processing` — pcap replay stats reported by Suricata: `seconds` (load-free replay time — excludes rule loading), `packets`, `bytes`, `files`.
+- `rules` — the top-N most expensive signatures ordered by total ticks, each with `sid`, `msg` (looked up from the rules file), `gid`, `rev`, `checks`, `matches`, `ticks_total`, `ticks_max`, `ticks_avg`, `ticks_avg_match`, `ticks_avg_nomatch`.
+
+Example output (truncated):
+
+```json
+{
+  "processing": {
+    "seconds": 2.473,
+    "files": 1,
+    "packets": 733721,
+    "bytes": 313285745
+  },
+  "rules": [
+    {
+      "sid": 50100002,
+      "msg": "Possible XSS attack, js event handler",
+      "gid": 1,
+      "rev": 1,
+      "checks": 43291,
+      "matches": 120,
+      "ticks_total": 197349634,
+      "ticks_max": 1234,
+      "ticks_avg": 4559,
+      "ticks_avg_match": 5100,
+      "ticks_avg_nomatch": 4551
+    },
+    ...
+  ]
+}
+```
+
+This mode is useful for identifying signatures that dominate sensor CPU: sort by `ticks_total` for absolute cost, or compare `checks` against `matches` to find rules that scan traffic heavily without producing alerts.
 
 
 ## Advanced Configuration
