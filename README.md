@@ -501,6 +501,86 @@ Example output (truncated):
 This mode is useful for identifying signatures that dominate sensor CPU: sort by `ticks_total` for absolute cost, or compare `checks` against `matches` to find rules that scan traffic heavily without producing alerts.
 
 
+## Ruleset Analyzer
+
+The package includes a `suricata-ruleset-analyze` command that produces a full quality report on a `.rules` file, covering:
+
+- **Composition** — signature counts, protocol distribution, and SID provenance looked up against the [sidallocation.org](https://sidallocation.org) registry (allocations.yml is bundled with the package and cached locally so it works offline).
+- **Engine diagnostics** — warnings and errors from the Suricata engine analysis (flow-missing, multi-app-layer, pcre-without-content, etc.).
+- **CVE tagging** — presence of `reference:cve,` and `metadata: cve`, cross-field matrix, value-shape distribution.
+- **Metadata** — per-key coverage, MITRE ATT&CK stats, format drift detection, and coverage subsections for `deployment` / `confidence` / `signature_severity`.
+- **Reference keyword** — distribution of `reference:<type>,` fields (`url`, `md5`, `cve`, `bugtraq`, …).
+- **MPM / fast-pattern** — cross-signature conflicts, worst-N shared patterns, sigs without a fast_pattern.
+- **Runtime cost** (optional, with `--pcap`) — replays the ruleset against a PCAP and reports load-free replay time, wasted ticks, and the top-N most expensive rules.
+
+### Usage
+
+Basic run (offline; uses the bundled SID allocations map):
+
+```sh
+suricata-ruleset-analyze --offline-sid-allocations ruleset.rules
+```
+
+With a container Suricata (needed for the `engine` and MPM sections):
+
+```sh
+suricata-ruleset-analyze --container ruleset.rules
+```
+
+Add runtime profiling:
+
+```sh
+suricata-ruleset-analyze --container --pcap traffic.pcap ruleset.rules
+```
+
+Run only a subset of analyses:
+
+```sh
+suricata-ruleset-analyze --sections composition,cve,metadata ruleset.rules
+```
+
+Machine-readable JSON output:
+
+```sh
+suricata-ruleset-analyze --json ruleset.rules > report.json
+```
+
+### Errors-only mode
+
+`--errors-only` filters the report down to error-level findings, listing the offending signature IDs for each category:
+
+- Syntax errors (from Suricata engine analysis)
+- Signatures with no fast_pattern (MPM-eligible but missing a `content:` promotable to the MPM)
+- CVE format drift (multiple value shapes in `reference:cve,` or `metadata:cve`)
+- MITRE format drift on ID fields (`mitre_tactic_id` / `mitre_technique_id`) — outlier shapes are listed relative to the majority shape treated as the norm.
+- Non-canonical MITRE metadata keys — usage of the bare `mitre_technique` key (should be `mitre_technique_id` / `mitre_technique_name`).
+- MITRE id ↔ name mismatches (an ID mapped to multiple canonical names).
+
+```sh
+suricata-ruleset-analyze --container --errors-only ruleset.rules
+```
+
+Combine with `--json` for machine-readable output.
+
+### Options
+
+See `suricata-ruleset-analyze -h` for complete and up-to-date help.
+
+- `rules_file`: Path to the rules file to analyze (required, positional)
+- `--container` / `--image` / `--suricata-binary` / `--suricata-config`: same semantics as `suricata-language-server` and `suricata-read`
+- `--sections a,b,c`: restrict output to a subset (`composition`, `engine`, `cve`, `metadata`, `reference`, `mpm`; default: all except runtime)
+- `--top N`: cap top-K lists per analysis (default: 10)
+- `--pcap FILE`: also run runtime profiling against this PCAP
+- `--profile-top N`: number of top signatures to report in the runtime section (default: 100)
+- `--json`: emit JSON instead of a text report
+- `--errors-only`: show only error-level findings (see above)
+- `--sid-allocations URL|PATH`: override the SID allocation registry source (default: user cache under `~/.cache/`, refreshing weekly from sidallocation.org, falling back to the bundled copy shipped with the package)
+- `--offline-sid-allocations`: never touch the network for the allocations lookup — uses the on-disk cache if present, otherwise the bundled copy
+- `--refresh-sid-allocations`: fetch the latest `allocations.yml` from sidallocation.org, overwrite the bundled copy in-place, then exit
+- `--no-sid-allocations`: skip SID provenance lookup entirely
+- `--version`: print version and exit
+
+
 ## Advanced Configuration
 
 ### TCP Socket Mode
