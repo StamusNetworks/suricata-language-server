@@ -154,13 +154,17 @@ def main():
 
     try:
         if args.profile:
-            raw = suricmd.read_pcap_profile(
+            raw, pcap_stats = suricmd.read_pcap_profile(
                 args.pcap_file, rules_content, top_n=args.profile_top
             )
             reshaped = reshape_profile(
                 raw, build_sid_msg_index(rules_content), args.profile_top
             )
-            print(json.dumps(reshaped, indent=2, ensure_ascii=False))
+            output = {
+                "processing": pcap_stats,
+                "rules": reshaped,
+            }
+            print(json.dumps(output, indent=2, ensure_ascii=False))
         else:
             eve_output = suricmd.read_pcap(args.pcap_file, rules_content)
             print(eve_output)

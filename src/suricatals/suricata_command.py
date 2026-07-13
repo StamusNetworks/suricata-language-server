@@ -18,7 +18,9 @@ You should have received a copy of the GNU General Public License
 along with Suricata Language Server.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+import json
 import os
+import re
 import subprocess
 import docker
 import tempfile
@@ -727,7 +729,7 @@ profiling:
         Caller owns cleanup — always wrap in a try/finally with self.cleanup().
 
         Returns:
-            str: tmpdir path where Suricata's output files can be read.
+            tuple[str, str]: (tmpdir path, Suricata console output).
         """
         self.prepare()
         tmpdir = self.get_tmpdir()
@@ -748,8 +750,8 @@ profiling:
         cmd = ["-r", internal_pcap]
         if extra_args:
             cmd.extend(extra_args)
-        self.run(cmd)
-        return tmpdir
+        output = self.run(cmd)
+        return tmpdir, output
 
     def read_pcap(self, pcap_path, rules_content=None):
         """Run Suricata on a PCAP file and return eve.json content.
@@ -765,7 +767,7 @@ profiling:
             RuntimeError: If PCAP processing fails or no eve.json is generated
         """
         try:
-            tmpdir = self._run_pcap(pcap_path, rules_content)
+            tmpdir, _ = self._run_pcap(pcap_path, rules_content)
             eve_file = os.path.join(tmpdir, "eve.json")
             if os.path.exists(eve_file):
                 with open(eve_file, "r", encoding="utf-8") as ef:
@@ -774,13 +776,54 @@ profiling:
         finally:
             self.cleanup()
 
+    @staticmethod
+    def _parse_pcap_stats(run_output):
+        """Extract pcap processing stats from Suricata's JSON console output.
+
+        Suricata (with -v) emits log lines as JSON with an `engine.message` field.
+        Two lines carry the numbers we care about:
+          - "time elapsed <s>s"                       (module suricata)
+          - "read <files> file, <packets> packets, <bytes> bytes"  (module pcap)
+
+        Returns a dict with any of: seconds, packets, bytes, files. Missing keys
+        indicate the line was not found in the output (e.g. Suricata failure).
+        """
+        stats = {}
+        if not run_output:
+            return stats
+        time_re = re.compile(r"time elapsed ([\d.]+)s")
+        pcap_re = re.compile(r"read (\d+) file, (\d+) packets, (\d+) bytes")
+        for line in run_output.splitlines():
+            line = line.strip()
+            if not line.startswith("{"):
+                continue
+            try:
+                event = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            msg = event.get("engine", {}).get("message", "")
+            m = time_re.search(msg)
+            if m:
+                stats["seconds"] = float(m.group(1))
+                continue
+            m = pcap_re.search(msg)
+            if m:
+                stats["files"] = int(m.group(1))
+                stats["packets"] = int(m.group(2))
+                stats["bytes"] = int(m.group(3))
+        return stats
+
     def read_pcap_profile(self, pcap_path, rules_content=None, top_n=100):
-        """Run Suricata on a PCAP with rules profiling active and return rule_perf.json.
+        """Run Suricata on a PCAP with rules profiling active.
 
         The generated config already enables profiling.rules; this method overrides
         the row limit via --set so Suricata emits exactly top_n entries. Requires a
         Suricata binary compiled with --enable-profiling (the default docker image
         used by SLS ships with profiling enabled).
+
+        Passes -v so Suricata drops its Info-level "time elapsed" and
+        "read N file, N packets, N bytes" lines into the console log — used to
+        report pcap processing time (loading time is excluded).
 
         Args:
             pcap_path: Path to PCAP file to process
@@ -788,24 +831,27 @@ profiling:
             top_n: Number of top-ticks signatures to record
 
         Returns:
-            str: Contents of rule_perf.json output from Suricata
+            tuple[str, dict]: (rule_perf.json content, pcap processing stats).
+            Stats dict has keys: seconds, packets, bytes, files (any may be absent
+            if Suricata did not emit the corresponding line).
 
         Raises:
             RuntimeError: If PCAP processing fails or no rule_perf.json is generated
         """
         try:
-            tmpdir = self._run_pcap(
+            tmpdir, run_output = self._run_pcap(
                 pcap_path,
                 rules_content,
-                extra_args=["--set", f"profiling.rules.limit={top_n}"],
+                extra_args=["-v", "--set", f"profiling.rules.limit={top_n}"],
             )
             perf_file = os.path.join(tmpdir, "rule_perf.json")
-            if os.path.exists(perf_file):
-                with open(perf_file, "r", encoding="utf-8") as pf:
-                    return pf.read()
-            raise RuntimeError(
-                "No rule_perf.json output generated; ensure the Suricata build has "
-                "--enable-profiling"
-            )
+            if not os.path.exists(perf_file):
+                raise RuntimeError(
+                    "No rule_perf.json output generated; ensure the Suricata build "
+                    "has --enable-profiling"
+                )
+            with open(perf_file, "r", encoding="utf-8") as pf:
+                perf_content = pf.read()
+            return perf_content, self._parse_pcap_stats(run_output)
         finally:
             self.cleanup()
