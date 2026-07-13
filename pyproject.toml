@@ -35,6 +35,7 @@ keywords = [
 dependencies = [
     "docker>=7.1.0",
     "pygls>=2.0.0",
+    "pyyaml>=6.0",
 ]
 
 [project.optional-dependencies]
@@ -52,6 +53,7 @@ Repository = "https://github.com/StamusNetworks/suricata-language-server.git"
 [project.scripts]
 suricata-language-server = "suricatals.__init__:main"
 suricata-read = "suricatals.suricata_read:main"
+suricata-ruleset-analyze = "suricatals.ruleset_analyze:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
