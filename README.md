@@ -460,7 +460,7 @@ See `suricata-read -h` for complete and up-to-date help.
 - `--suricata-config`: Path to the Suricata config file (optional)
 - `-k all|none`: Force checksum checking (`all`) or disable it (`none`). Useful for PCAPs captured on a host with checksum offloading enabled, where the NIC computes checksums after capture.
 - `--set KEY=VALUE`: Override a Suricata config value on the command line (can be repeated). Uses the same syntax as Suricata's native `--set` flag.
-- `--profile`: Enable rules profiling — output the top-N most CPU-expensive signatures (by ticks) instead of EVE JSON alerts. Requires a Suricata build with `--enable-profiling` (the default container image ships with profiling enabled).
+- `--profile`: Enable rules profiling — output the top-N most CPU-expensive signatures (by ticks) instead of EVE JSON alerts. Requires a Suricata build with `--enable-rules-profiling` (the default container image ships with profiling enabled).
 - `--profile-top`: Number of signatures to include in `--profile` output (default: 100)
 - `--version`: Print version number and exit
 
