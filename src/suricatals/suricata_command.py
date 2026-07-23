@@ -763,12 +763,14 @@ profiling:
         output = self.run(cmd)
         return tmpdir, output
 
-    def read_pcap(self, pcap_path, rules_content=None):
+    def read_pcap(self, pcap_path, rules_content=None, set_options=None, checksum_checks=None):
         """Run Suricata on a PCAP file and return eve.json content.
 
         Args:
             pcap_path: Path to PCAP file to process
             rules_content: Optional rules content to use (string). If None, uses empty rules.
+            set_options: Optional list of "key=value" strings passed as --set to Suricata.
+            checksum_checks: Optional value for Suricata -k flag ("all" or "none").
 
         Returns:
             str: Contents of eve.json output from Suricata
@@ -776,8 +778,13 @@ profiling:
         Raises:
             RuntimeError: If PCAP processing fails or no eve.json is generated
         """
+        extra_args = []
+        for opt in set_options or []:
+            extra_args += ["--set", opt]
+        if checksum_checks is not None:
+            extra_args += ["-k", checksum_checks]
         try:
-            tmpdir, _ = self._run_pcap(pcap_path, rules_content)
+            tmpdir, _ = self._run_pcap(pcap_path, rules_content, extra_args=extra_args or None)
             eve_file = os.path.join(tmpdir, "eve.json")
             if os.path.exists(eve_file):
                 with open(eve_file, "r", encoding="utf-8") as ef:

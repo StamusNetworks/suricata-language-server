@@ -177,3 +177,78 @@ class TestSuricataRead:
         # Should still work with empty rules
         assert eve_output is not None
         assert len(eve_output) > 0
+
+    def test_read_pcap_set_option_smb_transactions(self):
+        """Test that --set stream.checksum-validation=no enables SMB transaction events."""
+        pcap_path = os.path.join(os.getcwd(), "tests", "pcap", "smb.pcap")
+        if not os.path.exists(pcap_path):
+            pytest.skip(f"PCAP file not found: {pcap_path}")
+
+        suricmd = SuriCmd()
+        eve_output = suricmd.read_pcap(
+            pcap_path, set_options=["stream.checksum-validation=no"]
+        )
+
+        assert eve_output is not None
+        events = [json.loads(l) for l in eve_output.strip().split("\n") if l]
+        event_types = [e["event_type"] for e in events]
+        assert "smb" in event_types
+
+    def test_read_pcap_cli_set_option_smb_transactions(self):
+        """Test that --set stream.checksum-validation=no enables SMB transaction events via CLI."""
+        pcap_path = os.path.join(os.getcwd(), "tests", "pcap", "smb.pcap")
+        if not os.path.exists(pcap_path):
+            pytest.skip(f"PCAP file not found: {pcap_path}")
+
+        # Without --set: only a flow event, no SMB transactions
+        result_plain = subprocess.run(
+            ["suricata-read", pcap_path],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        assert result_plain.returncode == 0
+        events_plain = [
+            json.loads(l) for l in result_plain.stdout.strip().split("\n") if l
+        ]
+        assert not any(e["event_type"] == "smb" for e in events_plain)
+
+        # With --set: SMB transactions are decoded
+        result_set = subprocess.run(
+            ["suricata-read", "--set", "stream.checksum-validation=no", pcap_path],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        assert result_set.returncode == 0
+        events_set = [json.loads(l) for l in result_set.stdout.strip().split("\n") if l]
+        assert any(e["event_type"] == "smb" for e in events_set)
+
+    def test_read_pcap_k_none_smb_transactions(self):
+        """Test that -k none enables SMB transaction events via the API."""
+        pcap_path = os.path.join(os.getcwd(), "tests", "pcap", "smb.pcap")
+        if not os.path.exists(pcap_path):
+            pytest.skip(f"PCAP file not found: {pcap_path}")
+
+        suricmd = SuriCmd()
+        eve_output = suricmd.read_pcap(pcap_path, checksum_checks="none")
+
+        assert eve_output is not None
+        events = [json.loads(l) for l in eve_output.strip().split("\n") if l]
+        assert any(e["event_type"] == "smb" for e in events)
+
+    def test_read_pcap_cli_k_none_smb_transactions(self):
+        """Test that -k none enables SMB transaction events via the CLI."""
+        pcap_path = os.path.join(os.getcwd(), "tests", "pcap", "smb.pcap")
+        if not os.path.exists(pcap_path):
+            pytest.skip(f"PCAP file not found: {pcap_path}")
+
+        result = subprocess.run(
+            ["suricata-read", "-k", "none", pcap_path],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        assert result.returncode == 0
+        events = [json.loads(l) for l in result.stdout.strip().split("\n") if l]
+        assert any(e["event_type"] == "smb" for e in events)

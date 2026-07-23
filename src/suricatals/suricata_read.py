@@ -124,6 +124,21 @@ def main():
         help="Number of signatures to include in --profile output (default: 100)",
     )
     parser.add_argument(
+        "--set",
+        action="append",
+        dest="set_options",
+        metavar="KEY=VALUE",
+        default=[],
+        help="Override Suricata config value (can be repeated)",
+    )
+    parser.add_argument(
+        "-k",
+        dest="checksum_checks",
+        choices=["all", "none"],
+        default=None,
+        help="Force checksum checking (all) or disable it (none)",
+    )
+    parser.add_argument(
         "pcap_file",
         nargs="?",
         help="PCAP file to process with Suricata",
@@ -165,7 +180,11 @@ def main():
             }
             print(json.dumps(output, indent=2, ensure_ascii=False))
         else:
-            eve_output = suricmd.read_pcap(args.pcap_file, rules_content)
+            eve_output = suricmd.read_pcap(
+                args.pcap_file, rules_content,
+                set_options=args.set_options,
+                checksum_checks=args.checksum_checks,
+            )
             print(eve_output)
         sys.exit(0)
     except RuntimeError as e:
