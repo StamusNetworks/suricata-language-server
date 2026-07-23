@@ -797,6 +797,20 @@ profiling:
         output = self.run(cmd)
         return tmpdir, output
 
+    @staticmethod
+    def _resolve_rules(rules_file, rules_content, rules_dir):
+        """Resolve rules content and directory from rules_file or explicit arguments.
+
+        rules_file takes precedence: its content is read and its directory used as rules_dir
+        unless rules_dir is explicitly provided.
+        """
+        if rules_file:
+            with open(rules_file, "r", encoding="utf-8") as rf:
+                rules_content = rf.read()
+            if rules_dir is None:
+                rules_dir = os.path.dirname(os.path.abspath(rules_file))
+        return rules_content, rules_dir
+
     def read_pcap(
         self,
         pcap_path,
@@ -804,6 +818,7 @@ profiling:
         set_options=None,
         checksum_checks=None,
         rules_dir=None,
+        rules_file=None,
     ):
         """Run Suricata on a PCAP file and return eve.json content.
 
@@ -812,8 +827,9 @@ profiling:
             rules_content: Optional rules content to use (string). If None, uses empty rules.
             set_options: Optional list of "key=value" strings passed as --set to Suricata.
             checksum_checks: Optional value for Suricata -k flag ("all" or "none").
-            rules_dir: Optional directory to search for Lua scripts and dataset files
-                referenced in rules_content.
+            rules_dir: Optional directory to search for Lua scripts and dataset files.
+            rules_file: Optional path to a rules file; takes precedence over rules_content
+                and automatically sets rules_dir to the file's directory.
 
         Returns:
             str: Contents of eve.json output from Suricata
@@ -821,6 +837,9 @@ profiling:
         Raises:
             RuntimeError: If PCAP processing fails or no eve.json is generated
         """
+        rules_content, rules_dir = self._resolve_rules(
+            rules_file, rules_content, rules_dir
+        )
         extra_args = []
         for opt in set_options or []:
             extra_args += ["--set", opt]
@@ -879,7 +898,7 @@ profiling:
         return stats
 
     def read_pcap_profile(
-        self, pcap_path, rules_content=None, top_n=100, rules_dir=None
+        self, pcap_path, rules_content=None, top_n=100, rules_dir=None, rules_file=None
     ):
         """Run Suricata on a PCAP with rules profiling active.
 
@@ -896,8 +915,9 @@ profiling:
             pcap_path: Path to PCAP file to process
             rules_content: Optional rules content to use (string). If None, empty rules.
             top_n: Number of top-ticks signatures to record
-            rules_dir: Optional directory to search for Lua scripts and dataset files
-                referenced in rules_content.
+            rules_dir: Optional directory to search for Lua scripts and dataset files.
+            rules_file: Optional path to a rules file; takes precedence over rules_content
+                and automatically sets rules_dir to the file's directory.
 
         Returns:
             tuple[str, dict]: (rule_perf.json content, pcap processing stats).
@@ -907,6 +927,9 @@ profiling:
         Raises:
             RuntimeError: If PCAP processing fails or no rule_perf.json is generated
         """
+        rules_content, rules_dir = self._resolve_rules(
+            rules_file, rules_content, rules_dir
+        )
         try:
             tmpdir, run_output = self._run_pcap(
                 pcap_path,

@@ -256,21 +256,15 @@ class TestSuricataRead:
     def test_read_pcap_profile_lua_rule(self):
         """Test profiling a Lua-based rule against an HTTP PCAP."""
         pcap_path = os.path.join(os.getcwd(), "tests", "pcap", "short-http.pcap")
-        lua_path = os.path.join(os.getcwd(), "tests", "dump.lua")
-        for path in (pcap_path, lua_path):
+        rules_path = os.path.join(os.getcwd(), "tests", "lua.rules")
+        for path in (pcap_path, rules_path):
             if not os.path.exists(path):
                 pytest.skip(f"Required file not found: {path}")
-
-        rules_content = (
-            'alert http any any -> any any (msg:"Lua HTTP"; flow:to_server,established; '
-            "lua:dump.lua; sid:1; rev:1;)"
-        )
 
         suricmd = SuriCmd()
         perf_json, stats = suricmd.read_pcap_profile(
             pcap_path,
-            rules_content,
-            rules_dir=os.path.dirname(lua_path),
+            rules_file=rules_path,
         )
 
         assert perf_json is not None
