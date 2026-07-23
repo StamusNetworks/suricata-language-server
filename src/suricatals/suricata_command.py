@@ -639,6 +639,16 @@ config classification: command-and-control,Malware Command and Control Activity 
             if app_layer_protos:
                 cf.write(self.APP_LAYER_PROTOS)
             cf.write("mpm-algo: auto\n")
+            magic_dir = "/nix/store/" if os.path.isfile("/etc/NIXOS") else "/usr/"
+            cf.write(
+                "security:\n"
+                "  landlock:\n"
+                "    enabled: yes\n"
+                "    directories:\n"
+                "      read:\n"
+                f"        - {magic_dir}\n"
+                "        - /etc/\n"
+            )
             cf.write("default-rule-path: " + internal_tmpdir + "\n")
             cf.write(
                 "reference-config-file: " + internal_tmpdir + "/reference.config\n"
