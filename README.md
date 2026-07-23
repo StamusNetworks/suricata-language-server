@@ -436,6 +436,18 @@ Profile a rules file against a PCAP (report the top-N most CPU-expensive signatu
 suricata-read --container --rules-file my.rules --profile --profile-top 100 traffic.pcap
 ```
 
+Disable checksum validation to decode traffic with bad checksums (e.g. PCAPs captured with tcpdump on a host where checksum offloading is enabled):
+
+```sh
+suricata-read -k none pcap_file.pcap
+```
+
+Override a Suricata config value at runtime:
+
+```sh
+suricata-read --set stream.checksum-validation=no pcap_file.pcap
+```
+
 ### Options
 
 See `suricata-read -h` for complete and up-to-date help.
@@ -446,6 +458,8 @@ See `suricata-read -h` for complete and up-to-date help.
 - `--image`: Suricata image to use in container mode (default: `jasonish/suricata:latest`)
 - `--suricata-binary`: Path to the Suricata binary (default: `suricata`)
 - `--suricata-config`: Path to the Suricata config file (optional)
+- `-k all|none`: Force checksum checking (`all`) or disable it (`none`). Useful for PCAPs captured on a host with checksum offloading enabled, where the NIC computes checksums after capture.
+- `--set KEY=VALUE`: Override a Suricata config value on the command line (can be repeated). Uses the same syntax as Suricata's native `--set` flag.
 - `--profile`: Enable rules profiling — output the top-N most CPU-expensive signatures (by ticks) instead of EVE JSON alerts. Requires a Suricata build with `--enable-profiling` (the default container image ships with profiling enabled).
 - `--profile-top`: Number of signatures to include in `--profile` output (default: 100)
 - `--version`: Print version number and exit
