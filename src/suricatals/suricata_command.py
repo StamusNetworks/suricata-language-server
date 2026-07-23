@@ -74,8 +74,6 @@ class SuriCmd:
             extended: yes
         - pgsql:
             extended: yes
-        - telnet:
-            extended: yes
         - websocket:
             extended: yes
         - ldap:
