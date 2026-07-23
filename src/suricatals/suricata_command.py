@@ -114,7 +114,7 @@ logging:
 profiling:
   rules:
     enabled: yes
-    append: no
+    append: yes
     filename: rule_perf.json
     sort: ticks
     active: yes
@@ -619,6 +619,10 @@ config classification: command-and-control,Malware Command and Control Activity 
         with open(classification_file, "w", encoding="utf-8") as cf:
             cf.write(classification_config)
 
+        threshold_file = os.path.join(tmpdir, "threshold.config")
+        with open(threshold_file, "w", encoding="utf-8") as tf:
+            tf.write("")
+
         if not config_buffer:
             if self.suricata_config is None:
                 config_buffer = self.CONFIG_FILE
@@ -652,6 +656,7 @@ config classification: command-and-control,Malware Command and Control Activity 
             cf.write(
                 "classification-file: " + internal_tmpdir + "/classification.config\n"
             )
+            cf.write("threshold-file: " + internal_tmpdir + "/threshold.config\n")
             if extra_conf:
                 cf.write(extra_conf.format(tmpdir=tmpdir))
                 cf.write(
@@ -678,7 +683,7 @@ outputs:
 profiling:
   rules:
     enabled: yes
-    append: no
+    append: yes
     filename: rule_perf.json
     sort: ticks
     active: yes

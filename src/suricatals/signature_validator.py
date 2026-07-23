@@ -561,8 +561,7 @@ class SignaturesTester:
             with open(json_path, "r", encoding="utf-8") as profiling_json:
                 for line in profiling_json:
                     try:
-                        rules = json.loads(line).get("rules")
-                        return rules
+                        profiling = json.loads(line).get("rules", profiling)
                     except JSONDecodeError:
                         continue
         except FileNotFoundError:
