@@ -266,9 +266,9 @@ def analyze_engine_and_mpm(rules_path, settings):
     server = LangServer(settings=settings, batch_mode=True)
     try:
         _, _, diags = server.analyse_file(str(rules_path), True)
-    except (
+    except (  # pylint: disable=broad-exception-caught
         Exception
-    ) as exc:  # pragma: no cover  # pylint: disable=broad-exception-caught
+    ) as exc:  # pragma: no cover
         return {"error": f"SLS analysis failed: {exc}"}
 
     warn_categories = Counter()
