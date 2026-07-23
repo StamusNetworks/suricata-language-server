@@ -18,6 +18,7 @@ You should have received a copy of the GNU General Public License
 along with Suricata Language Server.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+import os
 import sys
 import argparse
 import json
@@ -162,14 +163,19 @@ def main():
         suricmd.set_docker_mode(docker_image=args.image)
 
     rules_content = None
+    rules_dir = None
     if args.rules_file:
         with open(args.rules_file, "r", encoding="utf-8") as rf:
             rules_content = rf.read()
+        rules_dir = os.path.dirname(os.path.abspath(args.rules_file))
 
     try:
         if args.profile:
             raw, pcap_stats = suricmd.read_pcap_profile(
-                args.pcap_file, rules_content, top_n=args.profile_top
+                args.pcap_file,
+                rules_content,
+                top_n=args.profile_top,
+                rules_dir=rules_dir,
             )
             reshaped = reshape_profile(
                 raw, build_sid_msg_index(rules_content), args.profile_top
@@ -181,9 +187,11 @@ def main():
             print(json.dumps(output, indent=2, ensure_ascii=False))
         else:
             eve_output = suricmd.read_pcap(
-                args.pcap_file, rules_content,
+                args.pcap_file,
+                rules_content,
                 set_options=args.set_options,
                 checksum_checks=args.checksum_checks,
+                rules_dir=rules_dir,
             )
             print(eve_output)
         sys.exit(0)

@@ -733,10 +733,41 @@ profiling:
             raise RuntimeError("Suricata returned error while getting build info")
         return output.strip()
 
-    def _run_pcap(self, pcap_path, rules_content=None, extra_args=None):
+    @staticmethod
+    def _copy_auxiliary_files(rules_content, rules_dir, tmpdir):
+        """Copy Lua scripts and dataset files referenced in rules_content from rules_dir into tmpdir."""
+        lua_re = re.compile(r"\blua\s*:\s*([^;\s]+\.lua)\s*;")
+        dataset_re = re.compile(r"dataset\s*:.*?,\s*(?:load|state)\s+(\S+)\s*;")
+        for line in (rules_content or "").splitlines():
+            m = lua_re.search(line)
+            if m:
+                lua_file = m.group(1).strip()
+                candidate = os.path.join(rules_dir, lua_file)
+                if os.path.exists(candidate):
+                    shutil.copyfile(
+                        candidate, os.path.join(tmpdir, os.path.basename(lua_file))
+                    )
+                else:
+                    log.warning("Lua file not found: %s", candidate)
+            m = dataset_re.search(line)
+            if m:
+                dataset_file = m.group(1).strip()
+                candidate = os.path.join(rules_dir, dataset_file)
+                if os.path.exists(candidate):
+                    shutil.copyfile(
+                        candidate, os.path.join(tmpdir, os.path.basename(dataset_file))
+                    )
+                else:
+                    log.warning("Dataset file not found: %s", candidate)
+
+    def _run_pcap(self, pcap_path, rules_content=None, extra_args=None, rules_dir=None):
         """Set up config, write rules, stage the pcap, and run Suricata against it.
 
         Caller owns cleanup — always wrap in a try/finally with self.cleanup().
+
+        Args:
+            rules_dir: Optional directory to search for Lua scripts and dataset files
+                referenced in rules_content. Any such files are automatically copied to tmpdir.
 
         Returns:
             tuple[str, str]: (tmpdir path, Suricata console output).
@@ -744,6 +775,9 @@ profiling:
         self.prepare()
         tmpdir = self.get_tmpdir()
         self.generate_config(tmpdir, app_layer_protos=True)
+
+        if rules_dir:
+            self._copy_auxiliary_files(rules_content, rules_dir, tmpdir)
 
         rules_file = os.path.join(tmpdir, "file.rules")
         with open(rules_file, "w", encoding="utf-8") as wf:
@@ -763,7 +797,14 @@ profiling:
         output = self.run(cmd)
         return tmpdir, output
 
-    def read_pcap(self, pcap_path, rules_content=None, set_options=None, checksum_checks=None):
+    def read_pcap(
+        self,
+        pcap_path,
+        rules_content=None,
+        set_options=None,
+        checksum_checks=None,
+        rules_dir=None,
+    ):
         """Run Suricata on a PCAP file and return eve.json content.
 
         Args:
@@ -771,6 +812,8 @@ profiling:
             rules_content: Optional rules content to use (string). If None, uses empty rules.
             set_options: Optional list of "key=value" strings passed as --set to Suricata.
             checksum_checks: Optional value for Suricata -k flag ("all" or "none").
+            rules_dir: Optional directory to search for Lua scripts and dataset files
+                referenced in rules_content.
 
         Returns:
             str: Contents of eve.json output from Suricata
@@ -784,7 +827,12 @@ profiling:
         if checksum_checks is not None:
             extra_args += ["-k", checksum_checks]
         try:
-            tmpdir, _ = self._run_pcap(pcap_path, rules_content, extra_args=extra_args or None)
+            tmpdir, _ = self._run_pcap(
+                pcap_path,
+                rules_content,
+                extra_args=extra_args or None,
+                rules_dir=rules_dir,
+            )
             eve_file = os.path.join(tmpdir, "eve.json")
             if os.path.exists(eve_file):
                 with open(eve_file, "r", encoding="utf-8") as ef:
@@ -830,7 +878,9 @@ profiling:
                 stats["bytes"] = int(m.group(3))
         return stats
 
-    def read_pcap_profile(self, pcap_path, rules_content=None, top_n=100):
+    def read_pcap_profile(
+        self, pcap_path, rules_content=None, top_n=100, rules_dir=None
+    ):
         """Run Suricata on a PCAP with rules profiling active.
 
         The generated config already enables profiling.rules; this method overrides
@@ -846,6 +896,8 @@ profiling:
             pcap_path: Path to PCAP file to process
             rules_content: Optional rules content to use (string). If None, empty rules.
             top_n: Number of top-ticks signatures to record
+            rules_dir: Optional directory to search for Lua scripts and dataset files
+                referenced in rules_content.
 
         Returns:
             tuple[str, dict]: (rule_perf.json content, pcap processing stats).
@@ -860,6 +912,7 @@ profiling:
                 pcap_path,
                 rules_content,
                 extra_args=["-v", "--set", f"profiling.rules.limit={top_n}"],
+                rules_dir=rules_dir,
             )
             perf_file = os.path.join(tmpdir, "rule_perf.json")
             if not os.path.exists(perf_file):

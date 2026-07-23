@@ -252,3 +252,29 @@ class TestSuricataRead:
         assert result.returncode == 0
         events = [json.loads(l) for l in result.stdout.strip().split("\n") if l]
         assert any(e["event_type"] == "smb" for e in events)
+
+    def test_read_pcap_profile_lua_rule(self):
+        """Test profiling a Lua-based rule against an HTTP PCAP."""
+        pcap_path = os.path.join(os.getcwd(), "tests", "pcap", "short-http.pcap")
+        lua_path = os.path.join(os.getcwd(), "tests", "dump.lua")
+        for path in (pcap_path, lua_path):
+            if not os.path.exists(path):
+                pytest.skip(f"Required file not found: {path}")
+
+        rules_content = (
+            'alert http any any -> any any (msg:"Lua HTTP"; flow:to_server,established; '
+            "lua:dump.lua; sid:1; rev:1;)"
+        )
+
+        suricmd = SuriCmd()
+        perf_json, stats = suricmd.read_pcap_profile(
+            pcap_path,
+            rules_content,
+            rules_dir=os.path.dirname(lua_path),
+        )
+
+        assert perf_json is not None
+        perf = json.loads(perf_json)
+        rules = perf.get("rules", perf if isinstance(perf, list) else [])
+        assert len(rules) > 0
+        assert isinstance(stats, dict)
