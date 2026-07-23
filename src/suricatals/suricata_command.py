@@ -56,8 +56,6 @@ class SuriCmd:
             extended: yes
         - nfs:
             extended: yes
-        - ftp-data:
-            extended: yes
         - tftp:
             extended: yes
         - ike:
